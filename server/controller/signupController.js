@@ -1,7 +1,7 @@
 const controller = {
 
     page: (req, res) => {
-        res.render("login");
+        res.render("signup");
     }
     
 }
