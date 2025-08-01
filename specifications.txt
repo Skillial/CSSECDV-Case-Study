@@ -1,0 +1,33 @@
+User Roles
+    Administrator: The highest level of privilege. Can manage Managers and view all system logs.
+    Manager: Elevated permissions within a defined scope. Can manage products and customer orders.
+    Customer: The standard user. Can create an account, view their own data, and make purchases.
+
+Administrator
+    User Management:
+        Create: Add new Administrator and Manager accounts.
+        Read: View a list of all Administrator and Manager accounts.
+        Update: Change user roles for Administrator and Manager accounts.
+        Delete: Remove Administrator and Manager accounts.
+
+    System Logs:
+        Read: View a read-only, filterable list of all system activities (e.g., product updates, new user registrations, order status changes).
+
+Manager
+    Product Management:
+        Create: Add new products, including name, description, and price.
+        Read: View a list of all products.
+        Update: Modify existing product details.
+        Delete: Remove products from the store.
+    Order Management:
+        Read: View all customer orders.
+        Update: Change an order's status (e.g., from "Pending" to "Shipped").
+
+Customer
+    Account:
+        Create: Register for a new account.
+        Read: View their own profile information.
+        Update: Modify their profile details (e.g., password, shipping address).    
+    Shopping:
+        Create: Place a new order.
+        Read: View order history.
