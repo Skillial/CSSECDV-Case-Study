@@ -21,6 +21,10 @@ app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
+app.get('/home', (req, res) => {
+    res.render('home');
+});
+
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
