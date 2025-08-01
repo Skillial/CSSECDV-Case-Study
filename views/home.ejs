@@ -1,187 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Occasio</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Occasio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body class="bg-white text-gray-800 font-sans">
+    <%- include('component/navbar') %>
 
-  <!-- Navbar -->
-  <header class="flex items-center justify-between px-6 py-4 border-b shadow-sm">
-    <div class="text-xl font-semibold">Occasio</div>
-    <div class="text-sm text-gray-500 hover:underline cursor-pointer">username</div>
-  </header>
-
-  <!-- Search Bar -->
-  <div class="flex justify-center px-6 py-4">
-    <div class="flex gap-2 bg-white border border-gray-300 rounded-full shadow-sm px-4 py-2 w-full max-w-4xl items-center">
-      <input type="text" placeholder="Search products..." class="flex-1 outline-none placeholder-gray-500 text-sm px-2" />
-
-      <button class="p-2 rounded-full text-gray-600">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-    <path fill-rule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387a1 1 0 01-1.414 1.414l-4.387-4.387zM8 14a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
-  </svg>
-</button>
-
-    </div>
-  </div>
-
-  <!-- Category Filters -->
-<div class="flex justify-center px-6 py-4 text-sm text-gray-600 border-b">
-  <div class="flex flex-wrap gap-6 justify-center">
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Living Room Icon -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M3 12h18M4 21h16M9 16h6M4 3h16v9H4z"/>
-      </svg>
-    </span>
-    <span>Living Room</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Bedroom Icon -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M3 7h18v13H3zM7 7v6M17 7v6" />
-      </svg>
-    </span>
-    <span>Bedroom</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Dining Room Icon -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M4 10h16M4 10v10M20 10v10M8 10v4M16 10v4" />
-      </svg>
-    </span>
-    <span>Dining Room</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Office Icon -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M4 4h16v16H4zM8 4v16M16 4v16M4 8h16" />
-      </svg>
-    </span>
-    <span>Office</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Outdoor Icon (Tree/Patio) -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M12 2v20M6 8l6-6 6 6M4 14h16M4 18h16" />
-      </svg>
-    </span>
-    <span>Outdoor</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Storage Icon (Box) -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M3 7l9 6 9-6M3 17l9 6 9-6M3 7v10M21 7v10" />
-      </svg>
-    </span>
-    <span>Storage</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Children's Icon (Toy Block) -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <rect x="3" y="3" width="7" height="7" />
-        <rect x="14" y="3" width="7" height="7" />
-        <rect x="3" y="14" width="7" height="7" />
-        <rect x="14" y="14" width="7" height="7" />
-      </svg>
-    </span>
-    <span>Children's</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Entryway Icon (Door) -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M4 4h16v16H4zM14 12h.01" />
-      </svg>
-    </span>
-    <span>Entryway</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Accent Icon (Sparkle) -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42M12 8a4 4 0 0 1 0 8a4 4 0 0 1 0-8z" />
-      </svg>
-    </span>
-    <span>Accent</span>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <span>
-      <!-- Modular Icon (Transform/Expand) -->
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M4 4h6v6H4zM14 14h6v6h-6zM14 4l6 6M4 14l6 6" />
-      </svg>
-    </span>
-    <span>Modular</span>
-  </div>
-</div>
-
-
-</div>
-
-
-  <!-- Cards Section -->
-<div class="px-6 py-6">
-  <div class="flex justify-center gap-4 flex-wrap">
-    <!-- Card 1 -->
-    <div class="w-[250px] rounded-xl overflow-hidden shadow-sm bg-white">
-      <img src="https://via.placeholder.com/250x150?text=Inside+Out+2" class="w-full h-40 object-cover" />
-      <div class="p-4">
-        <p class="text-sm font-medium">Stories with Inside Out 2</p>
-      </div>
+    <!-- Search Bar -->
+    <div class="flex justify-center px-6 py-4">
+        <div class="flex gap-2 bg-white border border-gray-300 rounded-full shadow-sm px-4 py-2 w-full max-w-4xl items-center">
+            <input type="text" placeholder="Search products..." class="flex-1 outline-none placeholder-gray-500 text-sm px-2" />
+            <button class="p-2 rounded-full text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387a1 1 0 01-1.414 1.414l-4.387-4.387zM8 14a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
     </div>
 
-    <!-- Card 2 -->
-    <div class="w-[250px] rounded-xl overflow-hidden shadow-sm bg-white">
-      <img src="https://via.placeholder.com/250x150?text=Purple+Rain" class="w-full h-40 object-cover" />
-      <div class="p-4">
-        <p class="text-sm font-medium">Stay in Prince’s Purple Rain house</p>
-        <p class="text-xs text-gray-500">Hosted by Wendy and Lisa</p>
-        <p class="text-xs text-gray-500">Coming August</p>
-      </div>
+    <!-- Category Filters -->
+    <div class="flex justify-center px-6 py-4 text-sm text-gray-600 border-b">
+        <div class="flex flex-wrap gap-6 justify-center">
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Living Room Icon -->
+                    <i class="fa fa-couch"></i>
+                </span>
+                <span>Living Room</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Bedroom Icon -->
+                    <i class="fa fa-bed"></i>
+                </span>
+                <span>Bedroom</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Dining Room Icon -->
+                    <i class="fa fa-utensils"></i>
+                </span>
+                <span>Dining Room</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Office Icon -->
+                    <i class="fa fa-briefcase"></i>
+                </span>
+                <span>Office</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Outdoor Icon (Tree/Patio) -->
+                    <i class="fa fa-tree"></i>
+                </span>
+                <span>Outdoor</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Storage Icon (Box) -->
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </span>
+                <span>Storage</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Children's Icon (Toy Block) -->
+                    <i class="fa-solid fa-shapes"></i>
+                </span>
+                <span>Children's</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Entryway Icon (Door) -->
+                    <i class="fa-solid fa-dungeon"></i>
+                </span>
+                <span>Entryway</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Accent Icon (Sparkle) -->
+                    <i class="fa-solid fa-star"></i>
+                </span>
+                <span>Accent</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span>
+                <!-- Modular Icon (Transform/Expand) -->
+                    <i class="fa-solid fa-dolly"></i>
+                </span>
+                <span>Modular</span>
+            </div>
+        </div>
     </div>
 
-    <!-- Card 3 -->
-    <div class="w-[250px] rounded-xl overflow-hidden shadow-sm bg-white">
-      <img src="https://via.placeholder.com/250x150?text=Kevin+Hart" class="w-full h-40 object-cover" />
-      <div class="p-4">
-        <p class="text-sm font-medium">Go VIP with Kevin Hart</p>
-        <p class="text-xs text-gray-500">Hosted by Kevin Hart</p>
-        <p class="text-xs text-gray-500">Coming August</p>
-      </div>
+    <!-- Cards Section -->
+    <div class="px-6 py-6">
+        <div class="flex justify-center gap-4 flex-wrap">
+            <!-- Card 1 -->
+            <div class="w-[250px] rounded-xl overflow-hidden shadow-sm bg-white">
+                <img src="https://via.placeholder.com/250x150?text=Inside+Out+2" class="w-full h-40 object-cover" />
+                <div class="p-4">
+                    <p class="text-sm font-medium">Product</p>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="w-[250px] rounded-xl overflow-hidden shadow-sm bg-white">
+                <img src="https://via.placeholder.com/250x150?text=Purple+Rain" class="w-full h-40 object-cover" />
+                <div class="p-4">
+                    <p class="text-sm font-medium">Product</p>
+                    <p class="text-xs text-gray-500">Hosted by Wendy and Lisa</p>
+                    <p class="text-xs text-gray-500">Coming August</p>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="w-[250px] rounded-xl overflow-hidden shadow-sm bg-white">
+                <img src="https://via.placeholder.com/250x150?text=Kevin+Hart" class="w-full h-40 object-cover" />
+                <div class="p-4">
+                    <p class="text-sm font-medium">Product</p>
+                    <p class="text-xs text-gray-500">Hosted by Kevin Hart</p>
+                    <p class="text-xs text-gray-500">Coming August</p>
+                </div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="w-[250px] rounded-xl overflow-hidden shadow-sm bg-white">
+                <img src="https://via.placeholder.com/250x150?text=Doja+Cat" class="w-full h-40 object-cover" />
+                <div class="p-4">
+                    <p class="text-sm font-medium">Product</p>
+                    <p class="text-xs text-gray-500">Hosted by Doja Cat</p>
+                    <p class="text-xs text-gray-500">Coming October</p>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- Card 4 -->
-    <div class="w-[250px] rounded-xl overflow-hidden shadow-sm bg-white">
-      <img src="https://via.placeholder.com/250x150?text=Doja+Cat" class="w-full h-40 object-cover" />
-      <div class="p-4">
-        <p class="text-sm font-medium">Join a living room session</p>
-        <p class="text-xs text-gray-500">Hosted by Doja Cat</p>
-        <p class="text-xs text-gray-500">Coming October</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-
 </body>
 </html>
