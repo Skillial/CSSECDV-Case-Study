@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Hide number input spinners (Chrome, Safari, Edge, Opera) */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom styles for image zoom */
+        .image-zoom-container {
+            overflow: hidden;
+            /* Ensures the zoomed part stays within bounds */
+            cursor: zoom-in;
+            /* Indicate that the image is zoomable */
+        }
+
+        .image-zoom-container img {
+            transition: transform 0.3s ease-out;
+            /* Smooth transition for zoom */
+            transform-origin: center center;
+            /* Default origin */
+        }
+
+        .image-zoom-container:hover img {
+            transform: scale(1.5);
+            /* Zoom in by 50% on hover */
+        }
+
+        /* Active tab styling */
+        .tab-button.active {
+            border-bottom: 2px solid #333;
+            /* Darker border for active tab */
+            color: #333;
+            /* Darker text for active tab */
+            font-weight: 600;
+            /* Semi-bold for active tab */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Header/Breadcrumbs -->
+    <header class="bg-white py-4 px-6 shadow-sm">
+        <nav class="container mx-auto flex items-center text-sm text-gray-600">
+            <a href="#" class="hover:underline">Home</a>
+            <span class="mx-2">/</span>
+            <a href="#" class="hover:underline">Electronics</a>
+            <span class="mx-2">/</span>
+            <a href="#" class="hover:underline">Audio</a>
+            <span class="mx-2">/</span>
+            <span class="font-semibold text-gray-800">Quantum Sound Headset</span>
+        </nav>
+    </header>
+
+    <!-- Main Product Section -->
+    <main class="container mx-auto p-6 bg-white my-6 rounded-lg shadow-lg flex flex-col lg:flex-row">
+
+        <!-- Product Image Gallery (Left Column) -->
+        <div class="lg:w-1/2 flex flex-col items-center lg:pr-8">
+            <div id="mainImageContainer" class="relative w-full max-w-md mb-6 image-zoom-container">
+                <img id="mainProductImage" src="https://placehold.co/600x600/F8F8F8/333333?text=Quantum+Sound+Headset"
+                    onerror="this.onerror=null;this.src='https://placehold.co/600x600/F8F8F8/333333?text=Image+Not+Found';"
+                    alt="Main image of Quantum Sound Headset" class="w-full h-auto rounded-lg border border-gray-200">
+            </div>
+            <div class="flex space-x-4">
+                <img class="thumbnail-image w-24 h-24 rounded-lg border-2 border-gray-400 cursor-pointer hover:border-gray-600 transition"
+                    src="https://placehold.co/100x100/F8F8F8/333333?text=Headset+Main"
+                    onerror="this.onerror=null;this.src='https://placehold.co/100x100/F8F8F8/333333?text=Image+Not+Found';"
+                    alt="Main view of Quantum Sound Headset"
+                    data-main-src="https://placehold.co/600x600/F8F8F8/333333?text=Quantum+Sound+Headset"
+                    data-main-alt="Main image of Quantum Sound Headset">
+
+                <img class="thumbnail-image w-24 h-24 rounded-lg border border-gray-200 cursor-pointer hover:border-gray-600 transition"
+                    src="https://placehold.co/100x100/F8F8F8/333333?text=Headset+Side"
+                    onerror="this.onerror=null;this.src='https://placehold.co/100x100/F8F8F8/333333?text=Image+Not+Found';"
+                    alt="Side view of Quantum Sound Headset"
+                    data-main-src="https://placehold.co/600x600/F8F8F8/333333?text=Headset+Side+View"
+                    data-main-alt="Side view of Quantum Sound Headset">
+
+                <img class="thumbnail-image w-24 h-24 rounded-lg border border-gray-200 cursor-pointer hover:border-gray-600 transition"
+                    src="https://placehold.co/100x100/F8F8F8/333333?text=Headset+Back"
+                    onerror="this.onerror=null;this.src='https://placehold.co/100x100/F8F8F8/333333?text=Image+Not+Found';"
+                    alt="Back view of Quantum Sound Headset"
+                    data-main-src="https://placehold.co/600x600/F8F8F8/333333?text=Headset+Back+View"
+                    data-main-alt="Back view of Quantum Sound Headset">
+            </div>
+        </div>
+
+        <!-- Product Details (Right Column) -->
+        <div class="lg:w-1/2 mt-8 lg:mt-0 lg:pl-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Quantum Sound Headset</h1>
+            <p class="text-2xl font-semibold text-gray-800 mb-4">P799.99</p>
+            <p class="text-green-600 text-sm font-medium mb-6 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd" />
+                </svg>
+                In stock
+            </p>
+
+            <!-- Color Options -->
+            <div class="mb-6">
+                <p class="text-gray-700 font-medium mb-2">Color</p>
+                <div id="colorOptions" class="flex space-x-3">
+                    <button
+                        class="color-option-button px-4 py-2 border rounded-lg text-gray-800 hover:bg-gray-100 transition duration-200 font-medium"
+                        data-color="Black">Black</button>
+                    <button
+                        class="color-option-button px-4 py-2 border rounded-lg text-gray-800 hover:bg-gray-100 transition duration-200 font-medium"
+                        data-color="White">White</button>
+                    <button
+                        class="color-option-button px-4 py-2 border rounded-lg text-gray-800 hover:bg-gray-100 transition duration-200 font-medium"
+                        data-color="Gray">Gray</button>
+                </div>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="mb-8">
+                <p class="text-gray-700 font-medium mb-2">Quantity</p>
+                <div class="flex items-center border border-gray-300 rounded-lg w-32">
+                    <button id="decreaseQuantity"
+                        class="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-l-lg transition">-</button>
+                    <input id="quantityInput" type="number" min="1" max="9999" value="1"
+                        class="w-full text-center border-l border-r border-gray-300 py-2 focus:outline-none bg-white text-gray-800">
+                    <button id="increaseQuantity"
+                        class="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-r-lg transition">+</button>
+                </div>
+            </div>
+
+            <!-- Action Buttons - Only Buy It Now -->
+            <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                <button
+                    class="flex-1 bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+                    BUY IT NOW
+                </button>
+            </div>
+
+            <!-- Brands & SKU -->
+            <div class="text-sm text-gray-700 mb-6">
+                <p class="mb-1"><span class="font-semibold">BRANDS:</span> SonicTech</p>
+                <p><span class="font-semibold">SKU:</span> QSH-7890</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Product Tabs Section -->
+    <section class="container mx-auto p-6 bg-white my-6 rounded-lg shadow-lg">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button
+                    class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 active"
+                    data-tab="description">
+                    DESCRIPTION
+                </button>
+                <!-- Removed other tab buttons -->
+            </nav>
+        </div>
+
+        <div id="tab-content" class="mt-6">
+            <div id="description" class="tab-pane">
+                <h3 class="font-semibold text-gray-800 text-lg mb-2">Quantum Sound Headset - Immersive Audio Experience
+                </h3>
+                <p class="leading-relaxed text-gray-700 mb-4">
+                    Experience unparalleled audio clarity with the Quantum Sound Headset. Designed for immersive gaming,
+                    crystal-clear calls, and rich music playback, this headset features advanced noise-cancellation
+                    technology and comfortable over-ear cups. Its lightweight design ensures long-lasting comfort, while
+                    the built-in microphone provides crisp voice communication. Compatible with a wide range of devices,
+                    the Quantum Sound Headset is your perfect companion for all audio needs.
+                </p>
+                <ul class="list-disc list-inside mt-4 space-y-1 text-gray-700">
+                    <li>High-fidelity audio drivers for superior sound.</li>
+                    <li>Integrated noise-cancelling microphone.</li>
+                    <li>Adjustable headband and plush ear cushions for comfort.</li>
+                    <li>Durable construction for long-term use.</li>
+                    <li>Universal compatibility with 3.5mm jack.</li>
+                </ul>
+            </div>
+            <!-- Removed other tab panes -->
+        </div>
+    </section>
+
+    <script>
+        // --- Color Option Selection ---
+        const colorOptionButtons = document.querySelectorAll('.color-option-button');
+        const defaultSelectedColor = 'Black'; // Set your default selected color here
+
+        function selectColor(selectedButton) {
+            colorOptionButtons.forEach(button => {
+                button.classList.remove('border-gray-900', 'bg-gray-200'); // Remove selected styles
+                button.classList.add('border-gray-400', 'bg-white'); // Add default styles
+            });
+            selectedButton.classList.remove('border-gray-400', 'bg-white'); // Remove default styles
+            selectedButton.classList.add('border-gray-900', 'bg-gray-200'); // Add selected styles
+        }
+
+        // --- Quantity Selector ---
+        const quantityInput = document.getElementById('quantityInput');
+        const decreaseButton = document.getElementById('decreaseQuantity');
+        const increaseButton = document.getElementById('increaseQuantity');
+        quantityInput.addEventListener('input', () => {
+            let val = parseInt(quantityInput.value);
+            if (isNaN(val) || val < 1) {
+                quantityInput.value = 1;
+            } else if (val > 9999) {
+                quantityInput.value = 9999;
+            }
+        });
+
+        decreaseButton.addEventListener('click', () => {
+            let currentQuantity = parseInt(quantityInput.value) || 1;
+            quantityInput.value = Math.max(1, currentQuantity - 1);
+        });
+
+        increaseButton.addEventListener('click', () => {
+            let currentQuantity = parseInt(quantityInput.value) || 1;
+            quantityInput.value = Math.min(9999, currentQuantity + 1);
+        });
+
+
+        // --- Image Zoom on Hovered Area ---
+        const mainImageContainer = document.getElementById('mainImageContainer');
+        const mainProductImage = document.getElementById('mainProductImage');
+
+        mainImageContainer.addEventListener('mousemove', (e) => {
+            const { left, top, width, height } = mainImageContainer.getBoundingClientRect();
+            const x = (e.clientX - left) / width * 100;
+            const y = (e.clientY - top) / height * 100;
+            mainProductImage.style.transformOrigin = `${x}% ${y}%`;
+        });
+
+        // Reset transform-origin when mouse leaves to avoid sticky zoom origin
+        mainImageContainer.addEventListener('mouseleave', () => {
+            mainProductImage.style.transformOrigin = 'center center';
+        });
+
+        // --- Thumbnail Image Switching ---
+        const thumbnailImages = document.querySelectorAll('.thumbnail-image');
+
+        function selectThumbnail(selectedThumbnail) {
+            // Remove selected styling from all thumbnails
+            thumbnailImages.forEach(thumb => {
+                thumb.classList.remove('border-gray-900'); // Or whatever active border color you use
+                thumb.classList.add('border-gray-200'); // Default border color
+            });
+
+            // Add selected styling to the clicked thumbnail
+            selectedThumbnail.classList.remove('border-gray-200');
+            selectedThumbnail.classList.add('border-gray-900'); // Active border color
+
+            // Update the main product image
+            mainProductImage.src = selectedThumbnail.dataset.mainSrc;
+            mainProductImage.alt = selectedThumbnail.dataset.mainAlt;
+        }
+
+        // --- Tabbed Content Functionality (Simplified for Description Only) ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        function showTab(tabId) {
+            // In this simplified version, we only have one tab, so we ensure it's visible and active.
+            // If you add more tabs later, this function would need to hide others.
+            const descriptionTabButton = document.querySelector('.tab-button[data-tab="description"]');
+            const descriptionTabPane = document.getElementById('description');
+
+            if (descriptionTabButton && descriptionTabPane) {
+                descriptionTabButton.classList.add('active', 'border-gray-900', 'text-gray-900');
+                descriptionTabButton.classList.remove('border-transparent', 'text-gray-500');
+                descriptionTabPane.classList.remove('hidden');
+            }
+        }
+
+        // Event listeners for tab buttons (only Description remains)
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                showTab(button.dataset.tab);
+            });
+        });
+
+
+        // Initialize selected color and thumbnail on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize color selection
+            let initialColorButton = null;
+            colorOptionButtons.forEach(button => {
+                if (button.dataset.color === defaultSelectedColor) {
+                    initialColorButton = button;
+                }
+            });
+            if (initialColorButton) {
+                selectColor(initialColorButton);
+            } else if (colorOptionButtons.length > 0) {
+                selectColor(colorOptionButtons[0]);
+            }
+
+            // Initialize thumbnail selection (select the first one by default)
+            if (thumbnailImages.length > 0) {
+                selectThumbnail(thumbnailImages[0]);
+            }
+
+            // Show the default tab (Description) on page load
+            showTab('description');
+        });
+
+        // Add click event listeners to color option buttons
+        colorOptionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                selectColor(button);
+                console.log('Selected Color:', button.dataset.color);
+            });
+        });
+
+        // Add click event listeners to thumbnail images
+        thumbnailImages.forEach(thumbnail => {
+            thumbnail.addEventListener('click', () => {
+                selectThumbnail(thumbnail);
+            });
+        });
+    </script>
+
+</body>
+
+</html>

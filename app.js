@@ -29,3 +29,10 @@ app.listen(PORT, () => {
 
 const loginRoute = require('./server/router/loginRouter')
 app.use('/', loginRoute);
+
+const signUpRoute = require('./server/router/signUpRouter')
+app.use('/', signUpRoute);
+
+app.get('/product', (req, res) => {
+    res.render('product');
+});
