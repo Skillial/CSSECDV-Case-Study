@@ -25,7 +25,8 @@ CREATE TABLE password_history (
 CREATE TABLE security_questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id INTEGER NOT NULL UNIQUE,
-    question_text TEXT NOT NULL,
+    question_text TEXT NOT NULL, -- This will store the text of the pre-defined question chosen by the user
     answer_hash TEXT NOT NULL,
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
+

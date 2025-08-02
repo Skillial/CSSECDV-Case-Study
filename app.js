@@ -2,6 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const app = express();
+const passport = require('passport');
+const passportConfig = require('./server/config/passport');
+passportConfig(passport);
 const flash = require('express-flash');
 const session = require('express-session');
 
@@ -17,18 +20,18 @@ app.use(session({
     saveUninitialized: false
 }))
 
+const PORT = process.env.PORT;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}.`);
+    console.log(`Server running on http://localhost:${PORT}`);
+});
+
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
 app.get('/home', (req, res) => {
     res.render('home');
-});
-
-const PORT = process.env.PORT;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}.`);
-    console.log(`Server running on http://localhost:${PORT}`);
 });
 
 const loginRoute = require('./server/router/loginRouter')
