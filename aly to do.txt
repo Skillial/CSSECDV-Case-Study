@@ -1,0 +1,10 @@
+1. Admin 
+- All Transaction Logs
+
+2. Manager
+- Add/Edit/Delete Product
+- View Products
+- Update Order Status
+
+3. All
+- Forget Password

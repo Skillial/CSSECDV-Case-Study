@@ -30,10 +30,6 @@ app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
-app.get('/home', (req, res) => {
-    res.render('home');
-});
-
 const loginRoute = require('./server/router/loginRouter')
 app.use('/', loginRoute);
 
