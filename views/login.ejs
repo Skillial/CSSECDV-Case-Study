@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +13,14 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans">
     <div class="bg-white flex flex-col md:flex-row rounded-3xl shadow-2xl overflow-hidden max-w-4xl w-full">
         <!-- Left Panel: Image -->
         <div class="md:w-1/2 p-6 hidden md:flex items-center justify-center bg-white">
-            <img class="rounded-2xl max-w-full h-auto object-cover"
-                src="img/logo.png"
+            <img class="rounded-2xl max-w-full h-auto object-cover" src="img/logo.png"
                 onerror="this.onerror=null;this.src='https://placehold.co/600x400/F8F8F8/333333?text=Image+Not+Found';"
-                alt="Placeholder for logo or abstract design"
-            >
+                alt="Placeholder for logo or abstract design">
         </div>
 
         <!-- Right Panel: Form -->
@@ -37,27 +37,19 @@
                 <div class="relative">
                     <input
                         class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="text"
-                        name="username"
-                        placeholder="Username"
-                        aria-label="username"
-                        required
-                    >
+                        type="text" name="username" placeholder="Username" aria-label="username" required>
                 </div>
 
                 <!-- Password Input -->
                 <div class="relative">
-                    <input
-                        id="passwordInput"
+                    <input id="passwordInput"
                         class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        aria-label="Password"
-                        required
-                    >
+                        type="password" name="password" placeholder="Password" aria-label="Password" required>
                     <!-- SVG icons -->
-                    <svg id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg id="togglePassword"
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+                        xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <!-- Base eye icon (always visible) -->
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
@@ -68,8 +60,7 @@
 
                 <button
                     class="bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
-                    type="submit"
-                >
+                    type="submit">
                     Login
                 </button>
             </form>
@@ -80,9 +71,8 @@
 
             <div class="mt-8 text-sm flex flex-col sm:flex-row justify-between items-center text-gray-700">
                 <p class="mb-3 sm:mb-0">Don't have an account?</p>
-                <button
-                    class="py-2 px-6 bg-white border border-gray-400 text-gray-800 rounded-xl font-semibold hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105 shadow-sm"
-                >
+                <button onclick="window.location.href='/signup'"
+                    class="py-2 px-6 bg-white border border-gray-400 text-gray-800 rounded-xl font-semibold hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105 shadow-sm">
                     Sign Up
                 </button>
             </div>
@@ -97,14 +87,15 @@
         togglePassword.addEventListener('click', function () {
             // Check the current type of the input
             const isPassword = passwordInput.type === 'password';
-            
+
             // Toggle the input type
             passwordInput.type = isPassword ? 'text' : 'password';
-            
+
             // Toggle the visibility of the slash icon
             eyeSlashPath.classList.toggle('hidden');
         });
     </script>
 
 </body>
+
 </html>
