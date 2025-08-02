@@ -287,42 +287,14 @@
 
         <script>
             // --- Product Images Data ---
-            // You can add as many image objects here as you need.
-            // The 'src' is the URL for the image, and 'alt' is for accessibility.
-            const productImages = [
-                {
-                    src: "https://joytouse.com/wp-content/uploads/2023/12/Luxurious-Bubble-Cloud-Sofa-Furniture-Color-LilacRedGrayGreenWhite.jpg",
-                    alt: "Main view of Cloud Sofa"
-                },
-                {
-                    src: "https://img1.sellvia.com/uploads/2024/02/29/91orq61v-vl-ac-sl1500.jpg",
-                    alt: "Side view of Cloud Sofa"
-                },
-                {
-                    src: "https://assets.wfcdn.com/im/29193585/resize-h700-w700%5Ecompr-r85/2572/257268512/Keirah+74.8''+Round+Arm+Sofa.jpg",
-                    alt: "Back view of Cloud Sofa"
-                },
-                {
-                    src: "https://i.ebayimg.com/images/g/9LwAAOSw69FiG2Jj/s-l1200.webp",
-                    alt: "Detail view of Cloud Sofa fabric"
-                },
-                {
-                    src: "https://www.ikea.com/us/en/images/products/landskrona-sofa-grann-bomstad-dark-brown-metal__0396457_pe562306_s5.jpg?f=s",
-                    alt: "Lifestyle shot of Cloud Sofa in a living room"
-                },
-                {
-                    src: "https://www.ikea.com/us/en/images/products/landskrona-sofa-grann-bomstad-dark-brown-metal__0396457_pe562306_s5.jpg?f=s",
-                    alt: "Another lifestyle shot"
-                },
-                {
-                    src: "https://www.ikea.com/us/en/images/products/landskrona-sofa-grann-bomstad-dark-brown-metal__0396457_pe562306_s5.jpg?f=s",
-                    alt: "Close up of material"
-                },
-                {
-                    src: "https://www.ikea.com/us/en/images/products/landskrona-sofa-grann-bomstad-dark-brown-metal__0396457_pe562306_s5.jpg?f=s",
-                    alt: "Different angle"
-                }
-            ];
+            // Generating 50 sample images for demonstration of lazy loading
+            const productImages = [];
+            for (let i = 1; i <= 50; i++) {
+                productImages.push({
+                    src: `https://placehold.co/600x600/F8F8F8/333333?text=Image+${i}`,
+                    alt: `Product image ${i}`
+                });
+            }
 
             // --- DOM Elements ---
             const mainProductImage = document.getElementById('mainProductImage');
@@ -340,6 +312,11 @@
             // --- Configuration ---
             const defaultSelectedColor = 'Black'; // Set your default selected color here
             const scrollAmount = 128; // Amount to scroll (thumbnail width + gap, e.g., 96px + 16px = 112px, adjusted for visual flow)
+
+            // Global state for pagination
+            let loadedThumbnailCount = 0;
+            const thumbnailsPerBatch = 8; // Number of thumbnails to load at once
+            let isLoadingMore = false; // Flag to prevent multiple loads
 
             // --- Functions ---
 
@@ -378,17 +355,17 @@
             }
 
             /**
-             * Generates and appends thumbnail images to the scroll container.
-             * The thumbnails are set up for lazy loading using data-src.
+             * Appends a batch of thumbnail images to the scroll container.
+             * Each image uses native lazy loading.
+             * @param {number} startIndex - The starting index in the productImages array.
+             * @param {number} count - The number of thumbnails to append.
              */
-            function renderThumbnails() {
-                thumbnailScrollContainer.innerHTML = ''; // Clear existing thumbnails
-
-                productImages.forEach((image) => {
+            function appendThumbnails(startIndex, count) {
+                const endIndex = Math.min(startIndex + count, productImages.length);
+                for (let i = startIndex; i < endIndex; i++) {
+                    const image = productImages[i];
                     const img = document.createElement('img');
-                    // Use data-src for lazy loading and a placeholder for the initial src
-                    img.dataset.src = image.src;
-                    img.src = 'https://placehold.co/100x100/F8F8F8/333333?text=Loading...'; // Placeholder
+                    img.src = image.src; // Set src directly for native lazy loading
                     img.alt = image.alt;
                     img.loading = "lazy"; // Native lazy loading
                     img.classList.add(
@@ -396,14 +373,14 @@
                         'w-24',
                         'h-24',
                         'rounded-lg',
-                        'border-2', // Use border-2 for better visibility of active state
+                        'border-2',
                         'border-gray-200',
                         'cursor-pointer',
                         'hover:border-gray-600',
                         'transition',
-                        'flex-shrink-0' // Ensure thumbnails don't shrink
+                        'flex-shrink-0'
                     );
-                    img.dataset.mainSrc = image.src;
+                    img.dataset.mainSrc = image.src; // Store main image source for click
                     img.dataset.mainAlt = image.alt;
 
                     // Add onerror fallback for dynamic images
@@ -414,10 +391,9 @@
 
                     // Add click event listener to each thumbnail
                     img.addEventListener('click', () => {
-                        // Before selecting, ensure the high-res image is loaded
+                        // Preload the main image to prevent flash of placeholder
                         const highResImageSrc = img.dataset.mainSrc;
                         if (highResImageSrc) {
-                            // Preload the main image to prevent flash of placeholder
                             const tempImg = new Image();
                             tempImg.src = highResImageSrc;
                             tempImg.onload = () => {
@@ -427,35 +403,51 @@
                             selectThumbnail(img);
                         }
                     });
-
                     thumbnailScrollContainer.appendChild(img);
-                });
-                // Call updateNavigationButtons after rendering, but with a slight delay
-                // to allow browser to calculate layout correctly.
-                setTimeout(updateNavigationButtons, 0);
+                }
+                loadedThumbnailCount = endIndex; // Update the count of loaded thumbnails
             }
 
             /**
-             * lazy loads thumbnail images using IntersectionObserver.
-             * This is a modern and efficient way to lazy load.
+             * Renders the initial batch of thumbnails and selects the first one.
              */
-            function lazyLoadThumbnails() {
-                const lazyImages = document.querySelectorAll('.thumbnail-image');
+            function renderInitialThumbnails() {
+                thumbnailScrollContainer.innerHTML = ''; // Clear any existing placeholders
+                appendThumbnails(0, thumbnailsPerBatch);
 
-                const observer = new IntersectionObserver((entries, observer) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            // Set the src from data-src
-                            img.src = img.dataset.src;
-                            observer.unobserve(img); // Stop observing the image
-                        }
-                    });
-                });
+                // Select the first thumbnail after initial render
+                const renderedThumbnails = document.querySelectorAll('.thumbnail-image');
+                if (renderedThumbnails.length > 0) {
+                    selectThumbnail(renderedThumbnails[0]);
+                }
+                updateNavigationButtons();
+            }
 
-                lazyImages.forEach(img => {
-                    observer.observe(img); // Start observing each image
-                });
+            /**
+             * Checks if more thumbnails should be loaded based on scroll position
+             * and appends them if needed.
+             */
+            function loadMoreOnScroll() {
+                // Only load more if not already loading and there are more images to load
+                if (isLoadingMore || loadedThumbnailCount >= productImages.length) {
+                    return;
+                }
+
+                // Check if scrolled near the end (e.g., within 100px of the end)
+                const scrollThreshold = 100; // Pixels from the end to trigger loading
+                const scrollLeft = thumbnailScrollContainer.scrollLeft;
+                const scrollWidth = thumbnailScrollContainer.scrollWidth;
+                const clientWidth = thumbnailScrollContainer.clientWidth;
+
+                if (scrollLeft + clientWidth >= scrollWidth - scrollThreshold) {
+                    isLoadingMore = true;
+                    // Simulate a slight delay for loading (e.g., from an API call)
+                    setTimeout(() => {
+                        appendThumbnails(loadedThumbnailCount, thumbnailsPerBatch);
+                        updateNavigationButtons(); // Update buttons after new content is added
+                        isLoadingMore = false;
+                    }, 100); // Small delay to prevent rapid firing
+                }
             }
 
             /**
@@ -561,8 +553,11 @@
                 thumbnailScrollContainer.scrollLeft += scrollAmount;
             });
 
-            // Update navigation buttons on scroll
-            thumbnailScrollContainer.addEventListener('scroll', updateNavigationButtons);
+            // Update navigation buttons and load more on scroll
+            thumbnailScrollContainer.addEventListener('scroll', () => {
+                updateNavigationButtons();
+                loadMoreOnScroll(); // Check and load more on scroll
+            });
 
             // Update navigation buttons on window resize for responsiveness
             window.addEventListener('resize', updateNavigationButtons);
@@ -570,11 +565,8 @@
 
             // Initialize on page load
             document.addEventListener('DOMContentLoaded', () => {
-                // Render all thumbnails first
-                renderThumbnails();
-                
-                // Set up lazy loading
-                lazyLoadThumbnails();
+                // Render initial batch of thumbnails
+                renderInitialThumbnails();
 
                 // Initialize color selection
                 let initialColorButton = null;
@@ -587,13 +579,6 @@
                     selectColor(initialColorButton);
                 } else if (colorOptionButtons.length > 0) {
                     selectColor(colorOptionButtons[0]); // Select the first color if default not found
-                }
-
-                // Initialize thumbnail selection (select the first one by default)
-                // Need to query again after rendering as they are dynamically created
-                const renderedThumbnails = document.querySelectorAll('.thumbnail-image');
-                if (renderedThumbnails.length > 0) {
-                    selectThumbnail(renderedThumbnails[0]);
                 }
 
                 // Show the default tab (Description) on page load
