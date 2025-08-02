@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Occasio Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans min-h-screen flex flex-col">
+    <%- include('component/navbar') %>
+
+    <!-- Main Profile Content -->
+    <main class="flex-grow container mx-auto px-6 py-8 max-w-6xl flex-col">
+        <div class="flex flex-col md:flex-row items-start md:items-stretch gap-8 md:gap-12"> <!-- Changed md:items-center to md:items-stretch -->
+            <!-- Left Column: Profile Picture and Basic Info -->
+            <div class="flex flex-col items-center gap-4 w-full md:w-1/4 lg:w-1/5 bg-white rounded-xl shadow-md p-6">
+                <!-- Profile Picture Section with Hover Upload -->
+                <div id="profilePictureContainer" class="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-300 flex items-center justify-center group cursor-pointer">
+                    <img id="profileImage" src="https://placehold.co/128x128/cccccc/333333?text=User" alt="Profile Picture" class="object-cover w-full h-full transition-opacity duration-300 group-hover:opacity-50">
+                    <!-- Overlay for upload option -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full">
+                        <i class="fas fa-camera text-white text-2xl"></i>
+                        <span class="text-white text-sm mt-1">Upload Photo</span>
+                    </div>
+                    <!-- Hidden file input for actual upload functionality -->
+                    <input type="file" id="profilePictureUpload" class="hidden" accept="image/*">
+                </div>
+
+                <!-- Save/Cancel buttons for profile picture -->
+                <div id="profilePicActions" class="flex gap-2 mt-4 w-full justify-center hidden">
+                    <button id="cancelProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button id="saveProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-sm hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                        Save
+                    </button>
+                </div>
+
+                <!-- Basic User Info -->
+                <p class="text-lg font-medium text-gray-800">John Doe</p>
+                <p class="text-sm text-gray-600">john.doe@example.com</p>
+                <p class="text-sm text-gray-600 text-center">123 Main Street, Anytown, USA</p>
+            </div>
+
+            <!-- Right Column: Edit Forms and Management Cards -->
+            <div class="flex flex-col gap-6 w-full md:w-3/4 lg:w-4/5">
+
+                <!-- Edit Profile Card -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-user-edit mr-3 text-gray-700"></i> Edit Profile Information
+                    </h3>
+                    <form id="editProfileForm" class="space-y-4">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input type="text" id="username" value="JohnDoe" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input type="email" id="email" value="john.doe@example.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        </div>
+                        <div>
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <textarea id="address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">123 Main Street, Anytown, USA 12345</textarea>
+                        </div>
+                        <div id="editProfileActions" class="flex justify-end gap-3 pt-4 hidden">
+                            <button type="button" id="cancelEditProfileBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
+                                Cancel Changes
+                            </button>
+                            <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Management & Security Questions in a row for larger screens -->
+        <div class="flex flex-col md:flex-row gap-6 mt-4">
+            <!-- Password Management Card -->
+            <div class="w-full md:w-1/2 bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-lock mr-3 text-gray-700"></i> Password Management
+                </h3>
+                <p class="text-gray-700 mb-4 text-sm">Need to reset your password?</p>
+                <button id="changePasswordBtn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                    Change Password
+                </button>
+            </div>
+
+            <!-- Security Questions Card -->
+            <div class="w-full md:w-1/2 bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-question-circle mr-3 text-gray-700"></i> Security Questions
+                </h3>
+                <p class="text-gray-700 mb-4 text-sm">
+                    Set up or update your security questions for enhanced account recovery.
+                </p>
+                <button id="manageSecurityQuestionsBtn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                    Manage Security Questions
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Security Questions Modal -->
+    <div id="securityQuestionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Manage Security Questions</h3>
+
+            <form class="space-y-5">
+                <!-- Question 1 -->
+                <div>
+                    <label for="question1" class="block text-sm font-medium text-gray-700 mb-1">Security Question 1</label>
+                    <select id="question1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <option value="">Select a question</option>
+                        <option value="pet">What was the name of your first pet?</option>
+                        <option value="city">In what city were you born?</option>
+                        <option value="mother">What is your mother's maiden name?</option>
+                        <option value="car">What was the model of your first car?</option>
+                        <option value="childhood_friend">What is the name of your favorite childhood friend?</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="answer1" class="block text-sm font-medium text-gray-700 mb-1">Answer 1</label>
+                    <input type="text" id="answer1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                </div>
+
+                <!-- Password Confirmation -->
+                <div>
+                    <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm with Password</label>
+                    <input type="password" id="currentPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancelSecurityQuestionsBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Change Password</h3>
+
+            <form class="space-y-5">
+                <div>
+                    <label for="oldPassword" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                    <input type="password" id="oldPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                </div>
+                <div>
+                    <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <input type="password" id="newPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                </div>
+                <div>
+                    <label for="confirmNewPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancelChangePasswordBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Store the original profile image source
+        const ORIGINAL_PROFILE_IMAGE_SRC = "https://placehold.co/128x128/cccccc/333333?text=User";
+        let tempProfileImageSrc = null; // To hold the new image URL temporarily
+
+        // Get references to the elements for profile picture upload
+        const profilePictureContainer = document.getElementById('profilePictureContainer');
+        const profilePictureUpload = document.getElementById('profilePictureUpload');
+        const profileImage = document.getElementById('profileImage');
+        const profilePicActions = document.getElementById('profilePicActions'); // New div for buttons
+        const saveProfilePicBtn = document.getElementById('saveProfilePicBtn');
+        const cancelProfilePicBtn = document.getElementById('cancelProfilePicBtn');
+
+        // Add a click listener to the container (which includes the overlay)
+        profilePictureContainer.addEventListener('click', () => {
+            // Programmatically click the hidden file input
+            profilePictureUpload.click();
+        });
+
+        // Listen for changes on the file input (when a file is selected)
+        profilePictureUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0]; // Get the first selected file
+
+            if (file) {
+                const reader = new FileReader(); // Create a FileReader object
+
+                reader.onload = (e) => {
+                    // Set the image source to the result for immediate preview
+                    profileImage.src = e.target.result;
+                    // Store the temporary image source
+                    tempProfileImageSrc = e.target.result;
+                    // Show the save/cancel buttons
+                    profilePicActions.classList.remove('hidden');
+                };
+
+                // Read the file as a Data URL (base64 encoded string)
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Event listener for Save Profile Pic button
+        saveProfilePicBtn.addEventListener('click', () => {
+            // In a real application, you would send tempProfileImageSrc to your backend here
+            // For this demo, the image is already displayed, so we just hide the buttons.
+            profilePicActions.classList.add('hidden');
+            tempProfileImageSrc = null; // Clear temporary storage
+            // Optionally, show a success message
+            // console.log('Profile picture saved!');
+        });
+
+        // Event listener for Cancel Profile Pic button
+        cancelProfilePicBtn.addEventListener('click', () => {
+            // Revert the image to the original placeholder
+            profileImage.src = ORIGINAL_PROFILE_IMAGE_SRC;
+            tempProfileImageSrc = null; // Clear temporary storage
+            // Hide the save/cancel buttons
+            profilePicActions.classList.add('hidden');
+        });
+
+
+        // Get references for the security questions modal
+        const manageSecurityQuestionsBtn = document.getElementById('manageSecurityQuestionsBtn');
+        const securityQuestionsModal = document.getElementById('securityQuestionsModal');
+        const cancelSecurityQuestionsBtn = document.getElementById('cancelSecurityQuestionsBtn');
+        const question1Select = document.getElementById('question1');
+
+        // Show the modal when "Manage Security Questions" button is clicked
+        manageSecurityQuestionsBtn.addEventListener('click', () => {
+            securityQuestionsModal.classList.remove('hidden');
+            // Reset options when modal opens to ensure fresh state
+            question1Select.value = '';
+        });
+
+        // Hide the modal when "Cancel" button is clicked
+        cancelSecurityQuestionsBtn.addEventListener('click', () => {
+            securityQuestionsModal.classList.add('hidden');
+        });
+
+        // Optional: Hide modal if user clicks outside of it
+        securityQuestionsModal.addEventListener('click', (event) => {
+            if (event.target === securityQuestionsModal) {
+                securityQuestionsModal.classList.add('hidden');
+            }
+        });
+
+        // Get references for the change password modal
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const changePasswordModal = document.getElementById('changePasswordModal');
+        const cancelChangePasswordBtn = document.getElementById('cancelChangePasswordBtn');
+
+        // Show the modal when "Change Password" button is clicked
+        changePasswordBtn.addEventListener('click', () => {
+            changePasswordModal.classList.remove('hidden');
+        });
+
+        // Hide the modal when "Cancel" button is clicked
+        cancelChangePasswordBtn.addEventListener('click', () => {
+            changePasswordModal.classList.add('hidden');
+        });
+
+        // Optional: Hide modal if user clicks outside of it
+        changePasswordModal.addEventListener('click', (event) => {
+            if (event.target === changePasswordModal) {
+                changePasswordModal.classList.add('hidden');
+            }
+        });
+
+        // Store initial values for Edit Profile Information form
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const addressTextarea = document.getElementById('address');
+
+        // These variables will hold the TRUE original values loaded with the page.
+        const originalUsername = usernameInput.value;
+        const originalEmail = emailInput.value;
+        const originalAddress = addressTextarea.value;
+
+        // Get reference for the Cancel Changes button in Edit Profile Information form
+        const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
+        const editProfileActions = document.getElementById('editProfileActions'); // Get the div containing save/cancel buttons
+
+        // Function to check if any profile field has been edited
+        function checkProfileEdits() {
+            // Compare current values against the ORIGINAL values
+            const isUsernameEdited = usernameInput.value !== originalUsername;
+            const isEmailEdited = emailInput.value !== originalEmail;
+            const isAddressEdited = addressTextarea.value !== originalAddress;
+
+            if (isUsernameEdited || isEmailEdited || isAddressEdited) {
+                editProfileActions.classList.remove('hidden');
+            } else {
+                editProfileActions.classList.add('hidden');
+            }
+        }
+
+        // Add input event listeners to track changes in profile fields
+        usernameInput.addEventListener('input', checkProfileEdits);
+        emailInput.addEventListener('input', checkProfileEdits);
+        addressTextarea.addEventListener('input', checkProfileEdits);
+
+        // Add event listener to Save Changes button in Edit Profile form
+        document.getElementById('editProfileForm').addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent default form submission
+            // In a real application, you would send the updated data to your backend here
+            // For this demo, we can optionally update the 'original' values if the save was successful
+            // For now, we'll just hide the buttons.
+            editProfileActions.classList.add('hidden'); // Hide buttons after saving
+            // console.log('Profile information saved!');
+
+            // If a real save operation was successful, you would then update the original values:
+            // originalUsername = usernameInput.value;
+            // originalEmail = emailInput.value;
+            // originalAddress = addressTextarea.value;
+        });
+
+        // Add event listener to Cancel Changes button
+        cancelEditProfileBtn.addEventListener('click', () => {
+            // Revert fields to their TRUE original values
+            usernameInput.value = originalUsername;
+            emailInput.value = originalEmail;
+            addressTextarea.value = originalAddress;
+            editProfileActions.classList.add('hidden'); // Hide buttons after cancelling
+        });
+    </script>
+</body>
+</html>

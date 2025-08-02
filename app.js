@@ -40,6 +40,15 @@ app.use('/', loginRoute);
 const signUpRoute = require('./server/router/signUpRouter')
 app.use('/', signUpRoute);
 
+// Temporary routes for testing
+app.get('/home', (req, res) => {
+    res.render('home');
+});
+
 app.get('/product', (req, res) => {
     res.render('product');
+});
+
+app.get('/profile', (req, res) => {
+    res.render('profile');
 });
