@@ -1,10 +1,10 @@
 *** FRONTEND ***
 1. Admin 
-- All Transaction Logs
+[DONE-dashboard.ejs] All Transaction Logs
 
 2. Manager
-- Add/Edit/Delete Product
-- View Products
+- View/Edit/Delete Products
+- Add Products
 - Update Order Status
 
 3. All
