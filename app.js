@@ -56,3 +56,7 @@ app.get('/dashboard', (req, res) => {
 app.get('/error', (req, res) => {
     res.render('error');
 });
+
+app.get('/ordersinventory', (req, res) => {
+    res.render('ordersinventory');
+});

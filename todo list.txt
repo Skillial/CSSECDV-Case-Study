@@ -3,9 +3,9 @@
 [DONE-dashboard.ejs] All Transaction Logs
 
 2. Manager
-- View/Edit/Delete Products
-- Add Products
-- Update Order Status
+[DONE-ordersinventory.ejs] View/Edit/Delete Products
+[DONE-ordersinventory.ejs] Add Products
+[DONE-ordersinventory.ejs] Update Order Status
 
 3. All
 - Forget Password
