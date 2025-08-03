@@ -52,3 +52,7 @@ app.get('/profile', (req, res) => {
 app.get('/dashboard', (req, res) => {
     res.render('dashboard');
 });
+
+app.get('/error', (req, res) => {
+    res.render('error');
+});
