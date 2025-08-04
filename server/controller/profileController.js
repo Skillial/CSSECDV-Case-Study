@@ -1,21 +1,79 @@
-const { OccasioDB } = require('./../config/db');
+// Import necessary modules
+const { OccasioDB } = require('./../config/db'); // Adjust the path if your db.js is located elsewhere.
 const bcrypt = require('bcrypt');
 const { hashString } = require('./../config/hash');
+const multer = require('multer'); // For handling multipart/form-data (file uploads)
+const path = require('path');     // For working with file and directory paths (needed for default image fallback)
+const fs = require('fs');         // For file system operations (needed for default image fallback)
+
+
+// --- Database Prepared Statements ---
+// These prepared statements are defined once for efficiency.
+// Ensure these statements are initialized when your database is set up (e.g., in your `db.js` file).
+const updateProfileImageBlobStmt = OccasioDB.prepare('UPDATE accounts SET profile_image_blob = ?, profile_image_mimetype = ? WHERE id = ?');
+// Modified getProfileImageBlobStmt to also be used in the 'page' function
+const getProfileImageBlobStmt = OccasioDB.prepare('SELECT profile_image_blob, profile_image_mimetype FROM accounts WHERE id = ?');
+
+
+// --- Multer Storage Configuration (Memory Storage) ---
+// This defines that uploaded files will be stored in memory as a Buffer,
+// making the binary data directly accessible via req.file.buffer.
+const storage = multer.memoryStorage();
+
+// --- Multer File Filter ---
+// This function filters incoming files, allowing only image files to be uploaded.
+// It checks the MIME type of the file.
+const fileFilter = (req, file, cb) => {
+    // Check if the MIME type starts with 'image/' (e.g., 'image/jpeg', 'image/png')
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true); // Accept the file
+    } else {
+        // Reject the file and provide an error message.
+        cb(new Error('Only image files are allowed!'), false);
+    }
+};
+
+// --- Multer Upload Middleware Instance ---
+// This creates a multer instance with the defined memory storage and file filter.
+// .single('profileImage') means it expects a single file upload with the field name 'profileImage'.
+// It also sets a file size limit (5MB in this case).
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // Limit file size to 5MB
+}).single('profileImage'); // 'profileImage' must match the 'name' attribute of your file input in profile.ejs
+
 
 const controller = {
 
+    // Renders the profile page, now fetching image BLOB data explicitly
     page: (req, res) => {
+        let userProfileData = { ...req.user }; // Start with data from req.user
+
+        // If user is logged in, try to fetch their profile image BLOB
+        if (req.user && req.user.id) {
+            try {
+                const imageResult = getProfileImageBlobStmt.get(req.user.id);
+                if (imageResult) {
+                    userProfileData.profile_image_blob = imageResult.profile_image_blob;
+                    userProfileData.profile_image_mimetype = imageResult.profile_image_mimetype;
+                }
+            } catch (error) {
+                console.error("Error fetching profile image BLOB for page load:", error.message);
+                // Continue rendering the page even if image fetch fails
+            }
+        }
+
         res.render('profile', {
-            user: req.user
+            user: userProfileData, // Pass the augmented user data
+            error_messages: res.locals.error_messages || [],
+            success_messages: res.locals.success_messages || []
         });
     },
 
     editProfile: async (req, res) => {
-
-
         const { address } = req.body;
         const userId = req.user.id;
-
 
         try {
             // Start a database transaction for atomicity
@@ -120,7 +178,7 @@ const controller = {
                 const updateInfo = updateAccountStmt.run(hashedNewPassword, currentTime, userId);
 
                 if (updateInfo.changes === 0) {
-                    throw new Error('Failed to update password in accounts table.');
+                    throw new new Error('Failed to update password in accounts table.');
                 }
 
                 const insertHistoryStmt = OccasioDB.prepare('INSERT INTO password_history (user_id, password_hash, changed_at) VALUES (?, ?, ?)');
@@ -229,7 +287,103 @@ const controller = {
         }
     },
 
+    // --- Profile Picture Upload Controller Function ---
+    // This asynchronous function handles the actual upload and database update for BLOB storage.
+    profilePicture: async (req, res) => {
+        // Wrap the multer upload process in a Promise-like structure to use async/await.
+        upload(req, res, async (err) => {
+            // --- Handle Multer Errors ---
+            if (err instanceof multer.MulterError) {
+                // Specific Multer errors (e.g., file size limit exceeded, wrong field name)
+                console.error('Multer Error:', err.message);
+                return res.status(400).json({ message: err.message });
+            } else if (err) {
+                // Other errors during the upload process (e.g., file filter rejection)
+                console.error('Unknown upload error:', err.message);
+                return res.status(400).json({ message: err.message });
+            }
 
+            // --- Check if a file was actually uploaded ---
+            if (!req.file) {
+                return res.status(400).json({ message: 'No image file provided.' });
+            }
+
+            // --- Authenticate User (Crucial Security Check) ---
+            // This assumes Passport.js or similar authentication middleware has already run
+            // and populated `req.user` with the authenticated user's data (including `id`).
+            if (!req.user || !req.user.id) {
+                console.error('Unauthorized attempt to upload profile picture: User not logged in or ID missing.');
+                return res.status(401).json({ message: 'Unauthorized: Please log in to update your profile.' });
+            }
+
+            const userId = req.user.id;
+            const imageBuffer = req.file.buffer; // The binary data of the uploaded image
+            const imageMimeType = req.file.mimetype; // The MIME type of the uploaded image (e.g., 'image/jpeg')
+
+            try {
+                // --- Update Database ---
+                // Execute the prepared statement to update the user's profile_image_blob and mimetype.
+                updateProfileImageBlobStmt.run(imageBuffer, imageMimeType, userId);
+                console.log(`Profile image (BLOB) updated for user ID: ${userId}`);
+
+                // --- Send Success Response ---
+                // Respond to the frontend. We don't send back the BLOB directly in the JSON,
+                // but rather indicate success. The frontend will then request the image via a new endpoint.
+                res.status(200).json({
+                    message: 'Profile picture uploaded successfully!',
+                    // Optionally, if you want the frontend to immediately update without a full reload,
+                    // you could send back a Base64 representation here, but it's generally better
+                    // to have the frontend request the BLOB through the dedicated endpoint.
+                    // For simplicity and direct BLOB usage, we'll rely on the new endpoint.
+                });
+            } catch (dbError) {
+                // --- Handle Database Errors ---
+                console.error('Database error updating profile image (BLOB):', dbError.message);
+                res.status(500).json({ message: 'Failed to update profile picture in database. Please try again.' });
+            }
+        });
+    },
+
+    // --- Controller Function to Retrieve Profile Image BLOB ---
+    // This new function will serve the BLOB image from the database to the browser.
+    getProfileImage: (req, res) => {
+        // This endpoint should be accessible without full authentication for public profiles,
+        // but for a user's *own* profile, you might want to ensure req.user.id matches req.params.userId.
+        // For simplicity, we'll assume the user ID is passed in the URL.
+        const userId = req.params.id; // FIX: Changed from req.params.userId to req.params.id
+
+        if (!userId) {
+            return res.status(400).send('User ID is required.');
+        }
+
+        try {
+            const result = getProfileImageBlobStmt.get(userId);
+
+            if (result && result.profile_image_blob) {
+                // Set the appropriate Content-Type header based on the stored MIME type
+                res.setHeader('Content-Type', result.profile_image_mimetype || 'application/octet-stream');
+                // Add Cache-Control headers to prevent caching of dynamic image data
+                res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+                res.setHeader('Pragma', 'no-cache');
+                res.setHeader('Expires', '0');
+                // Send the binary data
+                res.send(result.profile_image_blob);
+            } else {
+                // If no image is found, send a default placeholder image or a 404
+                // For a placeholder, you could serve a static image file or a Base64 default.
+                // Ensure you have a default image at 'public/images/default-user.png'
+                const defaultImagePath = path.join(__dirname, '../../public/images/default-user.png');
+                if (fs.existsSync(defaultImagePath)) {
+                    res.sendFile(defaultImagePath);
+                } else {
+                    res.status(404).send('Profile image not found.');
+                }
+            }
+        } catch (dbError) {
+            console.error('Database error retrieving profile image BLOB:', dbError.message);
+            res.status(500).send('Failed to retrieve profile image.');
+        }
+    }
 };
 
 module.exports = controller;

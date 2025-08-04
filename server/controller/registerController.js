@@ -89,9 +89,9 @@ const controller = {
             const registerTransaction = OccasioDB.transaction(() => {
                 // Insert into accounts table
                 const insertAccountStmt = OccasioDB.prepare(
-                    'INSERT INTO accounts (username, password_hash, role, login_attempts, lockout_until, last_successful_login, last_login_attempt, last_password_change, created_at, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    'INSERT INTO accounts (username, password_hash, role, login_attempts, lockout_until, last_successful_login, last_login_attempt, last_password_change, created_at, address, profile_image_blob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
                 );
-                const accountInfo = insertAccountStmt.run(username, hashedPassword, 'customer', 0, null, null, currentTime, currentTime, currentTime, null);
+                const accountInfo = insertAccountStmt.run(username, hashedPassword, 'customer', 0, null, null, currentTime, currentTime, currentTime, null, null);
 
                 // Get the ID of the newly inserted account
                 const newAccountId = accountInfo.lastInsertRowid;

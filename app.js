@@ -15,8 +15,10 @@ const session = require('express-session');
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Body parser for form data and JSON
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// IMPORTANT: Increase the limit to handle larger payloads like image BLOBs.
+// This must be configured *before* any routes that might receive large bodies.
+app.use(express.json({ limit: '50mb' })); // Increased limit to 50MB
+app.use(express.urlencoded({ extended: true, limit: '50mb' })); // Increased limit to 50MB
 
 // Set up your view engine (assuming EJS)
 app.set("view engine", "ejs"); // This is a setting, not middleware, so its position is flexible
@@ -58,33 +60,26 @@ const homeRoute = require('./server/router/homeRouter');
 app.use('/', homeRoute);
 
 const profileRoute = require('./server/router/profileRouter');
-app.use('/', profileRoute);
+app.use('/', profileRoute); // This will now handle /profile and the new image routes
 
 // Default route (redirect to login)
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
+// Removed: app.get('/profile', ...) as it's handled by profileRoute
+// Removed: app.get('/ordersinventory', ...) as requested
+// Removed: app.get('/dashboard', ...) as requested
+
+// Keep other specific routes if they are not part of a dedicated router
 app.get('/product', (req, res) => {
     res.render('product');
-});
-
-app.get('/profile', (req, res) => {
-    res.render('profile');
 });
 
 app.get('/error', (req, res) => {
     res.render('error');
 });
 
-
-// to remove
-app.get('/ordersinventory', (req, res) => {
-    res.render('ordersinventory');
-});
-app.get('/dashboard', (req, res) => {
-    res.render('dashboard');
-});
 
 // --- Start Server ---
 const PORT = process.env.PORT || 3000; // Use environment variable or default to 3000

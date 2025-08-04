@@ -137,13 +137,31 @@
         <div id="mainPageSuccessMessageDisplay" class="page-success-display" role="alert">
             <!-- Content will be set by EJS for server-side messages, or by JavaScript -->
         </div>
+        <!-- Error Message Display for main page content (e.g., for profile picture upload errors) -->
+        <div id="mainPageErrorMessageDisplay" class="page-error-display" role="alert">
+            <!-- Content will be set by JavaScript -->
+        </div>
 
         <div class="flex flex-col md:flex-row items-start md:items-stretch gap-8 md:gap-12">
             <!-- Left Column: Profile Picture and Basic Info -->
             <div class="flex flex-col items-center gap-4 w-full md:w-1/4 lg:w-1/5 bg-white rounded-xl shadow-md p-6">
                 <!-- Profile Picture Section with Hover Upload -->
                 <div id="profilePictureContainer" class="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-300 flex items-center justify-center group cursor-pointer">
-                    <img id="profileImage" src="https://placehold.co/128x128/cccccc/333333?text=User" alt="Profile Picture" class="object-cover w-full h-full transition-opacity duration-300 group-hover:opacity-50">
+                    <%
+                        // Define ORIGINAL_PROFILE_IMAGE_SRC here so EJS can access it during rendering
+                        const ORIGINAL_PROFILE_IMAGE_SRC = 'https://placehold.co/128x128/cccccc/333333?text=User';
+
+                        // Determine the image source based on whether a BLOB exists
+                        let profileImageSrc = ORIGINAL_PROFILE_IMAGE_SRC; // Default placeholder
+                        if (user.profile_image_blob && user.id) {
+                            // If a BLOB exists, construct the URL to the new BLOB serving endpoint
+                            profileImageSrc = `/profile/image/${user.id}`;
+                        } else if (user.profile_image_url) {
+                            // Fallback to old URL if BLOB not present but URL is (for migration period)
+                            profileImageSrc = user.profile_image_url;
+                        }
+                    %>
+                    <img id="profileImage" src="<%= profileImageSrc %>" alt="Profile Picture" class="object-cover w-full h-full transition-opacity duration-300 group-hover:opacity-50">
                     <!-- Overlay for upload option -->
                     <div class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full">
                         <i class="fas fa-camera text-white text-2xl"></i>
@@ -155,10 +173,10 @@
 
                 <!-- Save/Cancel buttons for profile picture -->
                 <div id="profilePicActions" class="flex gap-2 mt-4 w-full justify-center hidden">
-                    <button id="cancelProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition-colors font-medium">
+                    <button type="button" id="cancelProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition-colors font-medium">
                         Cancel
                     </button>
-                    <button id="saveProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors font-medium shadow-sm">
+                    <button type="button" id="saveProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors font-medium shadow-sm">
                         Save
                     </button>
                 </div>
@@ -242,7 +260,10 @@
             <div id="securityQuestionsErrorMessageDisplay" class="modal-error-display" role="alert">
                 <!-- Content will be set by JavaScript -->
             </div>
-
+            <!-- Success Message Display for Security Questions Modal -->
+            <div id="securityQuestionsSuccessMessageDisplay" class="modal-success-display" role="alert">
+                <!-- Content will be set by JavaScript -->
+            </div>
 
             <form id="securityQuestionsForm" class="space-y-5">
                 <!-- Question 1 -->
@@ -386,10 +407,12 @@
 
 
     <script>
+        // Store the original profile image source globally so EJS can access it
+        const ORIGINAL_PROFILE_IMAGE_SRC = "https://placehold.co/128x128/cccccc/333333?text=User";
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Store the original profile image source
-            const ORIGINAL_PROFILE_IMAGE_SRC = "https://placehold.co/128x128/cccccc/333333?text=User";
-            let tempProfileImageSrc = null; // To hold the new image URL temporarily
+            // Initialize tempProfileImageSrc with the user's current profile image or default
+            let tempProfileImageSrc = document.getElementById('profileImage').src;
 
             // Get references to the elements for profile picture upload
             const profilePictureContainer = document.getElementById('profilePictureContainer');
@@ -398,6 +421,9 @@
             const profilePicActions = document.getElementById('profilePicActions'); // New div for buttons
             const saveProfilePicBtn = document.getElementById('saveProfilePicBtn');
             const cancelProfilePicBtn = document.getElementById('cancelProfilePicBtn');
+            const mainPageSuccessMessageDisplay = document.getElementById('mainPageSuccessMessageDisplay'); // Reference to main page success display
+            const mainPageErrorMessageDisplay = document.getElementById('mainPageErrorMessageDisplay'); // Reference to main page error display
+
 
             // Add a click listener to the container (which includes the overlay)
             profilePictureContainer.addEventListener('click', () => {
@@ -419,6 +445,8 @@
                         tempProfileImageSrc = e.target.result;
                         // Show the save/cancel buttons
                         profilePicActions.classList.remove('hidden');
+                        hideMessage(mainPageErrorMessageDisplay); // Hide any previous errors
+                        hideMessage(mainPageSuccessMessageDisplay); // Hide any previous successes
                     };
 
                     // Read the file as a Data URL (base64 encoded string)
@@ -427,22 +455,61 @@
             });
 
             // Event listener for Save Profile Pic button
-            saveProfilePicBtn.addEventListener('click', () => {
-                // In a real application, you would send tempProfileImageSrc to your backend here
-                // For this demo, the image is already displayed, so we just hide the buttons.
-                profilePicActions.classList.add('hidden');
-                tempProfileImageSrc = null; // Clear temporary storage
-                // Optionally, show a success message
-                // console.log('Profile picture saved!');
+            saveProfilePicBtn.addEventListener('click', async () => {
+                const file = profilePictureUpload.files[0];
+                if (!file) {
+                    displayMessage(mainPageErrorMessageDisplay, ['Please select an image to upload.'], 'error');
+                    return;
+                }
+
+                // --- FIX: Send as FormData for Multer to process BLOB ---
+                const formData = new FormData();
+                formData.append('profileImage', file); // 'profileImage' is the field name for the backend
+
+                try {
+                    const response = await fetch('/profile/picture', { // Backend endpoint expects multipart/form-data
+                        method: 'POST',
+                        body: formData, // Send the FormData object directly. Browser sets Content-Type automatically.
+                        // DO NOT set 'Content-Type': 'application/json' here, as it conflicts with FormData.
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        console.log('Profile picture uploaded successfully:', result.message);
+                        // After successful upload, update the image src to point to the BLOB retrieval endpoint
+                        // This ensures the image is fetched from the database on subsequent loads
+                        // Reset temporary state
+                        tempProfileImageSrc = null;
+                        profilePictureUpload.value = ''; // Clear the file input
+                        profilePicActions.classList.add('hidden');
+                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Profile picture updated!'], 'success');
+                        hideMessage(mainPageErrorMessageDisplay); // Hide any error messages
+                    } else {
+                        console.error('Profile picture upload failed:', result.message);
+                        displayMessage(mainPageErrorMessageDisplay, [result.message || 'Failed to upload profile picture.'], 'error');
+                        hideMessage(mainPageSuccessMessageDisplay); // Hide any success messages
+                    }
+                } catch (error) {
+                    console.error('Network or unexpected error during profile picture upload:', error);
+                    displayMessage(mainPageErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+                    hideMessage(mainPageSuccessMessageDisplay);
+                }
             });
 
             // Event listener for Cancel Profile Pic button
             cancelProfilePicBtn.addEventListener('click', () => {
-                // Revert the image to the original placeholder
-                profileImage.src = ORIGINAL_PROFILE_IMAGE_SRC;
+                // Revert the image to the original source (either initial or last saved)
+                // If user.profile_image_blob exists, it will point to the BLOB retrieval endpoint
+                // Otherwise, it falls back to the default placeholder.
+                // The EJS logic for profileImageSrc handles this on initial load.
+                profileImage.src = "<%= user.profile_image_blob ? `/profile/image/${user.id}` : ORIGINAL_PROFILE_IMAGE_SRC %>";
+                profilePictureUpload.value = ''; // Clear the file input
                 tempProfileImageSrc = null; // Clear temporary storage
                 // Hide the save/cancel buttons
                 profilePicActions.classList.add('hidden');
+                hideMessage(mainPageErrorMessageDisplay); // Hide any errors
+                hideMessage(mainPageSuccessMessageDisplay); // Hide any successes
             });
 
 
@@ -455,6 +522,7 @@
             const answerInput = document.getElementById('answer'); // Changed from answer1Input
             const currentPasswordInput = document.getElementById('currentPassword'); // Added for security questions modal password
             const securityQuestionsErrorMessageDisplay = document.getElementById('securityQuestionsErrorMessageDisplay'); // New: Error display for security questions
+            const securityQuestionsSuccessMessageDisplay = document.getElementById('securityQuestionsSuccessMessageDisplay'); // New: Success display for security questions
 
 
             // Toggle password visibility elements for current password in security questions modal
@@ -491,9 +559,9 @@
             manageSecurityQuestionsBtn.addEventListener('click', () => {
                 securityQuestionsModal.classList.remove('hidden');
                 hideMessage(securityQuestionsErrorMessageDisplay); // Clear errors on open
-                hideMessage(mainPageSuccessMessageDisplay); // Clear success on open
+                hideMessage(securityQuestionsSuccessMessageDisplay); // Clear success on open
                 questionSelect.value = ''; // Changed from question1Select
-                answerInput.value = ''; // Changed from answer1Input
+                answerInput.value = ''; // Clear answer field
                 currentPasswordInput.value = ''; // Clear password field
                 // Ensure eye icon is reset
                 currentPasswordInput.setAttribute('type', 'password');
@@ -522,15 +590,15 @@
             // Event listeners to hide messages when user interacts with fields
             questionSelect.addEventListener('change', () => { // Changed from question1Select
                 hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(mainPageSuccessMessageDisplay);
+                hideMessage(securityQuestionsSuccessMessageDisplay);
             });
             answerInput.addEventListener('input', () => { // Changed from answer1Input
                 hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(mainPageSuccessMessageDisplay);
+                hideMessage(securityQuestionsSuccessMessageDisplay);
             });
             currentPasswordInput.addEventListener('input', () => {
                 hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(mainPageSuccessMessageDisplay);
+                hideMessage(securityQuestionsSuccessMessageDisplay);
             });
 
 
@@ -579,24 +647,24 @@
 
                     if (response.ok) {
                         console.log('Security questions updated successfully:', result.message);
-                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Security question updated successfully!'], 'success');
+                        displayMessage(securityQuestionsSuccessMessageDisplay, [result.message || 'Security question updated successfully!'], 'success');
                         hideMessage(securityQuestionsErrorMessageDisplay); // Ensure error is hidden
                         // Clear fields on success
                         questionSelect.value = ''; // Changed from question1Select
                         answerInput.value = ''; // Changed from answer1Input
                         currentPasswordInput.value = '';
                         securityQuestionsModal.classList.add('hidden');
-                        hideMessage(mainPageSuccessMessageDisplay); // Clear success after modal closes
+                        hideMessage(securityQuestionsSuccessMessageDisplay); // Clear success after modal closes
 
                     } else {
                         console.error('Security questions update failed:', result.message);
                         displayMessage(securityQuestionsErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
-                        hideMessage(mainPageSuccessMessageDisplay); // Ensure success is hidden
+                        hideMessage(securityQuestionsSuccessMessageDisplay); // Ensure success is hidden
                     }
                 } catch (error) {
                     console.error('Network or unexpected error during security questions update:', error);
                     displayMessage(securityQuestionsErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
-                    hideMessage(mainPageSuccessMessageDisplay);
+                    hideMessage(securityQuestionsSuccessMessageDisplay);
                 }
             });
 
@@ -610,7 +678,8 @@
             const newPasswordInput = document.getElementById('newPassword');
             const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
             const changePasswordErrorMessageDisplay = document.getElementById('changePasswordErrorMessageDisplay');
-            const mainPageSuccessMessageDisplay = document.getElementById('mainPageSuccessMessageDisplay'); // New: Reference to main page success display
+            // mainPageSuccessMessageDisplay is already defined globally
+
 
             // Password complexity elements for new password
             const newStrengthBarFill = document.getElementById('newStrengthBarFill');

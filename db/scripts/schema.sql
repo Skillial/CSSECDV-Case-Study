@@ -10,7 +10,8 @@ CREATE TABLE accounts (
     last_successful_login TEXT,
     last_password_change TEXT,
     last_login_attempt TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    profile_image_blob BLOB
 );
 
 -- password_history table
