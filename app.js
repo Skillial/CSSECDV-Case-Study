@@ -75,6 +75,10 @@ app.get('/error', (req, res) => {
 });
 
 
+app.get('/ordersinventory', (req, res) => {
+    res.render('ordersinventory');
+});
+
 // --- Start Server ---
 const PORT = process.env.PORT || 3000; // Use environment variable or default to 3000
 app.listen(PORT, () => {
