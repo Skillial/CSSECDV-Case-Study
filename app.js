@@ -70,23 +70,8 @@ app.get('/profile', (req, res) => {
     res.render('profile');
 });
 
-// Example protected dashboard route
-app.get('/dashboard', (req, res) => {
-    // You should add a check here to ensure the user is authenticated
-    if (!req.isAuthenticated()) {
-        req.flash('error', 'Please log in to view this resource.');
-        return res.redirect('/login');
-    }
-    console.log(req.user); // This should now correctly log the user object
-    res.render('dashboard', { user: req.user }); // Pass user data to your dashboard template
-});
-
 app.get('/error', (req, res) => {
     res.render('error');
-});
-
-app.get('/ordersinventory', (req, res) => {
-    res.render('ordersinventory');
 });
 
 

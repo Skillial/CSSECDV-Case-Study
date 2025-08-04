@@ -6,13 +6,85 @@
     <title>Occasio Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        /* Custom styles for password complexity bar and modal */
+        .password-strength-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0; /* Gray background for empty bar */
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .password-strength-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #e0e0e0; /* Default fill color */
+            transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+            border-radius: 4px;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        /* Unified Error Message Display within modals */
+        .modal-error-display {
+            background-color: #fee2e2; /* Red-100 */
+            border: 1px solid #ef4444; /* Red-400 */
+            color: #b91c1c; /* Red-700 */
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            margin-bottom: 16px; /* mb-4 */
+            display: none; /* hidden */
+        }
+        .modal-error-display.show {
+            display: block;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-900 font-sans min-h-screen flex flex-col">
     <%- include('component/navbar') %>
 
     <!-- Main Profile Content -->
     <main class="flex-grow container mx-auto px-6 py-8 max-w-6xl flex-col">
-        <div class="flex flex-col md:flex-row items-start md:items-stretch gap-8 md:gap-12"> <!-- Changed md:items-center to md:items-stretch -->
+        <div class="flex flex-col md:flex-row items-start md:items-stretch gap-8 md:gap-12">
             <!-- Left Column: Profile Picture and Basic Info -->
             <div class="flex flex-col items-center gap-4 w-full md:w-1/4 lg:w-1/5 bg-white rounded-xl shadow-md p-6">
                 <!-- Profile Picture Section with Hover Upload -->
@@ -39,7 +111,6 @@
 
                 <!-- Basic User Info -->
                 <p class="text-lg font-medium text-gray-800">John Doe</p>
-                <p class="text-sm text-gray-600">john.doe@example.com</p>
                 <p class="text-sm text-gray-600 text-center">123 Main Street, Anytown, USA</p>
             </div>
 
@@ -55,10 +126,6 @@
                         <div>
                             <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
                             <input type="text" id="username" value="JohnDoe" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
-                        </div>
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                            <input type="email" id="email" value="john.doe@example.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
                         </div>
                         <div>
                             <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
@@ -133,7 +200,15 @@
                 <!-- Password Confirmation -->
                 <div>
                     <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm with Password</label>
-                    <input type="password" id="currentPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                    <div class="relative">
+                        <input type="password" id="currentPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <!-- Eye icon for confirm password visibility toggle -->
+                        <svg id="toggleCurrentPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path id="currentEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                        </svg>
+                    </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4">
@@ -153,18 +228,61 @@
         <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
             <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Change Password</h3>
 
-            <form class="space-y-5">
+            <!-- Unified Error Message Display for Change Password Modal -->
+            <div id="changePasswordErrorMessageDisplay" class="modal-error-display" role="alert">
+                <!-- Content will be set by JavaScript for client-side errors -->
+            </div>
+
+            <form id="changePasswordForm" class="space-y-5">
                 <div>
                     <label for="oldPassword" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                    <input type="password" id="oldPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                    <div class="relative">
+                        <input type="password" id="oldPassword" name="oldPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <!-- Eye icon for old password visibility toggle -->
+                        <svg id="toggleOldPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path id="oldEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                        </svg>
+                    </div>
                 </div>
+                <!-- New Password Input Group -->
                 <div>
                     <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                    <input type="password" id="newPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                    <div class="relative">
+                        <input type="password" id="newPassword" name="newPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <!-- Eye icon for new password visibility toggle -->
+                        <svg id="toggleNewPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path id="newEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                        </svg>
+                    </div>
+                    <!-- Password Strength and Requirements Section for New Password -->
+                    <div class="mt-2">
+                        <div class="password-strength-bar">
+                            <div id="newStrengthBarFill" class="password-strength-bar-fill"></div>
+                        </div>
+                        <div class="flex justify-between items-center mt-1.5">
+                            <p id="newStrengthText" class="text-sm text-gray-600">Password Strength: Very Weak</p>
+                            <button type="button" id="openNewComplexityModal" class="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded-md px-1">
+                                Requirements
+                            </button>
+                        </div>
+                    </div>
                 </div>
+                <!-- Confirm New Password Input Group -->
                 <div>
                     <label for="confirmNewPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                    <input type="password" id="confirmNewPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                    <div class="relative">
+                        <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <!-- Eye icon for confirm new password visibility toggle -->
+                        <svg id="toggleConfirmNewPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path id="confirmNewEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                        </svg>
+                    </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4">
@@ -179,168 +297,436 @@
         </div>
     </div>
 
+    <!-- Password Complexity Modal (for New Password) -->
+    <div id="newComplexityModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Password Requirements</h3>
+                <button id="closeNewComplexityModal" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="newPasswordComplexityList" class="text-sm text-gray-700">
+                <p class="font-semibold mb-1">Your password must contain:</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li id="newModalLengthCheck" class="text-gray-700">At least 8 characters</li>
+                    <li id="newModalUppercaseCheck" class="text-gray-700">An uppercase letter</li>
+                    <li id="newModalLowercaseCheck" class="text-gray-700">A lowercase letter</li>
+                    <li id="newModalNumberCheck" class="text-gray-700">A number</li>
+                    <li id="newModalSpecialCharCheck" class="text-gray-700">A special character (!@#$%^&*)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
     <script>
-        // Store the original profile image source
-        const ORIGINAL_PROFILE_IMAGE_SRC = "https://placehold.co/128x128/cccccc/333333?text=User";
-        let tempProfileImageSrc = null; // To hold the new image URL temporarily
+        document.addEventListener('DOMContentLoaded', function() {
+            // Store the original profile image source
+            const ORIGINAL_PROFILE_IMAGE_SRC = "https://placehold.co/128x128/cccccc/333333?text=User";
+            let tempProfileImageSrc = null; // To hold the new image URL temporarily
 
-        // Get references to the elements for profile picture upload
-        const profilePictureContainer = document.getElementById('profilePictureContainer');
-        const profilePictureUpload = document.getElementById('profilePictureUpload');
-        const profileImage = document.getElementById('profileImage');
-        const profilePicActions = document.getElementById('profilePicActions'); // New div for buttons
-        const saveProfilePicBtn = document.getElementById('saveProfilePicBtn');
-        const cancelProfilePicBtn = document.getElementById('cancelProfilePicBtn');
+            // Get references to the elements for profile picture upload
+            const profilePictureContainer = document.getElementById('profilePictureContainer');
+            const profilePictureUpload = document.getElementById('profilePictureUpload');
+            const profileImage = document.getElementById('profileImage');
+            const profilePicActions = document.getElementById('profilePicActions'); // New div for buttons
+            const saveProfilePicBtn = document.getElementById('saveProfilePicBtn');
+            const cancelProfilePicBtn = document.getElementById('cancelProfilePicBtn');
 
-        // Add a click listener to the container (which includes the overlay)
-        profilePictureContainer.addEventListener('click', () => {
-            // Programmatically click the hidden file input
-            profilePictureUpload.click();
-        });
+            // Add a click listener to the container (which includes the overlay)
+            profilePictureContainer.addEventListener('click', () => {
+                // Programmatically click the hidden file input
+                profilePictureUpload.click();
+            });
 
-        // Listen for changes on the file input (when a file is selected)
-        profilePictureUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0]; // Get the first selected file
+            // Listen for changes on the file input (when a file is selected)
+            profilePictureUpload.addEventListener('change', (event) => {
+                const file = event.target.files[0]; // Get the first selected file
 
-            if (file) {
-                const reader = new FileReader(); // Create a FileReader object
+                if (file) {
+                    const reader = new FileReader(); // Create a FileReader object
 
-                reader.onload = (e) => {
-                    // Set the image source to the result for immediate preview
-                    profileImage.src = e.target.result;
-                    // Store the temporary image source
-                    tempProfileImageSrc = e.target.result;
-                    // Show the save/cancel buttons
-                    profilePicActions.classList.remove('hidden');
+                    reader.onload = (e) => {
+                        // Set the image source to the result for immediate preview
+                        profileImage.src = e.target.result;
+                        // Store the temporary image source
+                        tempProfileImageSrc = e.target.result;
+                        // Show the save/cancel buttons
+                        profilePicActions.classList.remove('hidden');
+                    };
+
+                    // Read the file as a Data URL (base64 encoded string)
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Event listener for Save Profile Pic button
+            saveProfilePicBtn.addEventListener('click', () => {
+                // In a real application, you would send tempProfileImageSrc to your backend here
+                // For this demo, the image is already displayed, so we just hide the buttons.
+                profilePicActions.classList.add('hidden');
+                tempProfileImageSrc = null; // Clear temporary storage
+                // Optionally, show a success message
+                // console.log('Profile picture saved!');
+            });
+
+            // Event listener for Cancel Profile Pic button
+            cancelProfilePicBtn.addEventListener('click', () => {
+                // Revert the image to the original placeholder
+                profileImage.src = ORIGINAL_PROFILE_IMAGE_SRC;
+                tempProfileImageSrc = null; // Clear temporary storage
+                // Hide the save/cancel buttons
+                profilePicActions.classList.add('hidden');
+            });
+
+
+            // Get references for the security questions modal
+            const manageSecurityQuestionsBtn = document.getElementById('manageSecurityQuestionsBtn');
+            const securityQuestionsModal = document.getElementById('securityQuestionsModal');
+            const cancelSecurityQuestionsBtn = document.getElementById('cancelSecurityQuestionsBtn');
+            const question1Select = document.getElementById('question1');
+            const currentPasswordInput = document.getElementById('currentPassword'); // Added for security questions modal password
+
+            // Toggle password visibility elements for current password in security questions modal
+            const toggleCurrentPassword = document.getElementById('toggleCurrentPassword');
+            const currentEyeSlashPath = document.getElementById('currentEyeSlashPath');
+
+            // Show the modal when "Manage Security Questions" button is clicked
+            manageSecurityQuestionsBtn.addEventListener('click', () => {
+                securityQuestionsModal.classList.remove('hidden');
+                // Reset options when modal opens to ensure fresh state
+                question1Select.value = '';
+                currentPasswordInput.value = ''; // Clear password field
+                // Ensure eye icon is reset
+                currentPasswordInput.setAttribute('type', 'password');
+                currentEyeSlashPath.classList.add('hidden');
+            });
+
+            // Hide security questions modal when cancel button is clicked
+            cancelSecurityQuestionsBtn.addEventListener('click', () => {
+                securityQuestionsModal.classList.add('hidden');
+            });
+
+            // Hide security questions modal when clicking outside
+            securityQuestionsModal.addEventListener('click', (event) => {
+                if (event.target === securityQuestionsModal) {
+                    securityQuestionsModal.classList.add('hidden');
+                }
+            });
+
+            // Hide security questions modal when Escape key is pressed
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && securityQuestionsModal.classList.contains('hidden') === false) {
+                    securityQuestionsModal.classList.add('hidden');
+                }
+            });
+
+            // --- Change Password Modal Logic ---
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            const changePasswordModal = document.getElementById('changePasswordModal');
+            const cancelChangePasswordBtn = document.getElementById('cancelChangePasswordBtn');
+            const changePasswordForm = document.getElementById('changePasswordForm');
+            const oldPasswordInput = document.getElementById('oldPassword');
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+            const changePasswordErrorMessageDisplay = document.getElementById('changePasswordErrorMessageDisplay');
+
+            // Password complexity elements for new password
+            const newStrengthBarFill = document.getElementById('newStrengthBarFill');
+            const newStrengthText = document.getElementById('newStrengthText');
+            const newComplexityModal = document.getElementById('newComplexityModal');
+            const openNewComplexityModalBtn = document.getElementById('openNewComplexityModal');
+            const closeNewComplexityModalBtn = document.getElementById('closeNewComplexityModal');
+            const newModalLengthCheck = document.getElementById('newModalLengthCheck');
+            const newModalUppercaseCheck = document.getElementById('newModalUppercaseCheck');
+            const newModalLowercaseCheck = document.getElementById('newModalLowercaseCheck');
+            const newModalNumberCheck = document.getElementById('newModalNumberCheck');
+            const newModalSpecialCharCheck = document.getElementById('newModalSpecialCharCheck');
+
+            // Toggle password visibility elements for new password
+            const toggleNewPassword = document.getElementById('toggleNewPassword');
+            const newEyeSlashPath = document.getElementById('newEyeSlashPath');
+            const toggleConfirmNewPassword = document.getElementById('toggleConfirmNewPassword');
+            const confirmNewEyeSlashPath = document.getElementById('confirmNewEyeSlashPath');
+            const toggleOldPassword = document.getElementById('toggleOldPassword'); // Added for old password
+            const oldEyeSlashPath = document.getElementById('oldEyeSlashPath'); // Added for old password
+
+            // Helper function to update check UI for password complexity
+            function updateCheckUI(element, isMet) {
+                element.classList.remove('text-red-600', 'text-green-600', 'text-gray-700');
+                if (isMet) {
+                    element.classList.add('text-green-600');
+                } else {
+                    element.classList.add('text-red-600');
+                }
+            }
+
+            // Function to check password complexity and update UI for a given password input
+            function checkPasswordComplexity(passwordInput, strengthBarFill, strengthText, modalLengthCheck, modalUppercaseCheck, modalLowercaseCheck, modalNumberCheck, modalSpecialCharCheck) {
+                const password = passwordInput.value;
+                let checksMet = 0;
+
+                const checks = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[!@#$%^&*]/.test(password),
                 };
 
-                // Read the file as a Data URL (base64 encoded string)
-                reader.readAsDataURL(file);
+                updateCheckUI(modalLengthCheck, checks.length);
+                updateCheckUI(modalUppercaseCheck, checks.uppercase);
+                updateCheckUI(modalLowercaseCheck, checks.lowercase);
+                updateCheckUI(modalNumberCheck, checks.number);
+                updateCheckUI(modalSpecialCharCheck, checks.special);
+
+                checksMet = Object.values(checks).filter(Boolean).length;
+
+                const totalChecks = 5;
+                const strengthPercentage = (checksMet / totalChecks) * 100;
+                strengthBarFill.style.width = `${strengthPercentage}%`;
+
+                let strengthColor = '#e0e0e0'; // Default gray
+                let strengthMessage = 'Very Weak';
+
+                if (checksMet === 1) {
+                    strengthColor = '#f87171'; // Red
+                    strengthMessage = 'Weak';
+                } else if (checksMet === 2) {
+                    strengthColor = '#fbbf24'; // Amber
+                    strengthMessage = 'Fair';
+                } else if (checksMet === 3) {
+                    strengthColor = '#fcd34d'; // Yellow
+                    strengthMessage = 'Good';
+                } else if (checksMet === 4) {
+                    strengthColor = '#84cc16'; // Lime Green
+                    strengthMessage = 'Strong';
+                } else if (checksMet === 5) {
+                    strengthColor = '#22c55e'; // Green
+                    strengthMessage = 'Very Strong';
+                }
+
+                strengthBarFill.style.backgroundColor = strengthColor;
+                strengthText.textContent = `Password Strength: ${strengthMessage}`;
+
+                return checksMet === totalChecks;
             }
-        });
 
-        // Event listener for Save Profile Pic button
-        saveProfilePicBtn.addEventListener('click', () => {
-            // In a real application, you would send tempProfileImageSrc to your backend here
-            // For this demo, the image is already displayed, so we just hide the buttons.
-            profilePicActions.classList.add('hidden');
-            tempProfileImageSrc = null; // Clear temporary storage
-            // Optionally, show a success message
-            // console.log('Profile picture saved!');
-        });
-
-        // Event listener for Cancel Profile Pic button
-        cancelProfilePicBtn.addEventListener('click', () => {
-            // Revert the image to the original placeholder
-            profileImage.src = ORIGINAL_PROFILE_IMAGE_SRC;
-            tempProfileImageSrc = null; // Clear temporary storage
-            // Hide the save/cancel buttons
-            profilePicActions.classList.add('hidden');
-        });
-
-
-        // Get references for the security questions modal
-        const manageSecurityQuestionsBtn = document.getElementById('manageSecurityQuestionsBtn');
-        const securityQuestionsModal = document.getElementById('securityQuestionsModal');
-        const cancelSecurityQuestionsBtn = document.getElementById('cancelSecurityQuestionsBtn');
-        const question1Select = document.getElementById('question1');
-
-        // Show the modal when "Manage Security Questions" button is clicked
-        manageSecurityQuestionsBtn.addEventListener('click', () => {
-            securityQuestionsModal.classList.remove('hidden');
-            // Reset options when modal opens to ensure fresh state
-            question1Select.value = '';
-        });
-
-        // Hide the modal when "Cancel" button is clicked
-        cancelSecurityQuestionsBtn.addEventListener('click', () => {
-            securityQuestionsModal.classList.add('hidden');
-        });
-
-        // Optional: Hide modal if user clicks outside of it
-        securityQuestionsModal.addEventListener('click', (event) => {
-            if (event.target === securityQuestionsModal) {
-                securityQuestionsModal.classList.add('hidden');
+            // Function to display errors in the unified message area
+            function showUnifiedErrors(displayElement, messages) {
+                if (messages && messages.length > 0) {
+                    displayElement.innerHTML = `<p>${messages[0]}</p>`;
+                    displayElement.classList.add('show');
+                } else {
+                    hideUnifiedErrors(displayElement);
+                }
             }
-        });
 
-        // Get references for the change password modal
-        const changePasswordBtn = document.getElementById('changePasswordBtn');
-        const changePasswordModal = document.getElementById('changePasswordModal');
-        const cancelChangePasswordBtn = document.getElementById('cancelChangePasswordBtn');
+            // Function to hide the unified error message area
+            function hideUnifiedErrors(displayElement) {
+                displayElement.classList.remove('show');
+                displayElement.innerHTML = ''; // Clear content
+            }
 
-        // Show the modal when "Change Password" button is clicked
-        changePasswordBtn.addEventListener('click', () => {
-            changePasswordModal.classList.remove('hidden');
-        });
+            // Show Change Password Modal
+            changePasswordBtn.addEventListener('click', () => {
+                changePasswordModal.classList.remove('hidden');
+                hideUnifiedErrors(changePasswordErrorMessageDisplay); // Clear errors on open
+                oldPasswordInput.value = ''; // Clear password fields
+                newPasswordInput.value = '';
+                confirmNewPasswordInput.value = '';
+                // Reset complexity UI on modal open
+                checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
+                // Reset eye icons
+                oldPasswordInput.setAttribute('type', 'password');
+                oldEyeSlashPath.classList.add('hidden');
+                newPasswordInput.setAttribute('type', 'password');
+                newEyeSlashPath.classList.add('hidden');
+                confirmNewPasswordInput.setAttribute('type', 'password');
+                confirmNewEyeSlashPath.classList.add('hidden');
+            });
 
-        // Hide the modal when "Cancel" button is clicked
-        cancelChangePasswordBtn.addEventListener('click', () => {
-            changePasswordModal.classList.add('hidden');
-        });
-
-        // Optional: Hide modal if user clicks outside of it
-        changePasswordModal.addEventListener('click', (event) => {
-            if (event.target === changePasswordModal) {
+            // Hide Change Password Modal
+            cancelChangePasswordBtn.addEventListener('click', () => {
                 changePasswordModal.classList.add('hidden');
+            });
+
+            // Hide Change Password Modal when clicking outside
+            changePasswordModal.addEventListener('click', (event) => {
+                if (event.target === changePasswordModal) {
+                    changePasswordModal.classList.add('hidden');
+                }
+            });
+
+            // Hide Change Password Modal when Escape key is pressed
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && changePasswordModal.classList.contains('hidden') === false) {
+                    changePasswordModal.classList.add('hidden');
+                }
+            });
+
+            // --- NEW: Prevent copy/paste/cut on password fields ---
+            const preventClipboardActions = (event) => {
+                event.preventDefault();
+            };
+
+            oldPasswordInput.addEventListener('copy', preventClipboardActions);
+            oldPasswordInput.addEventListener('paste', preventClipboardActions);
+            oldPasswordInput.addEventListener('cut', preventClipboardActions);
+
+            newPasswordInput.addEventListener('copy', preventClipboardActions);
+            newPasswordInput.addEventListener('paste', preventClipboardActions);
+            newPasswordInput.addEventListener('cut', preventClipboardActions);
+
+            confirmNewPasswordInput.addEventListener('copy', preventClipboardActions);
+            confirmNewPasswordInput.addEventListener('paste', preventClipboardActions);
+            confirmNewPasswordInput.addEventListener('cut', preventClipboardActions);
+
+            currentPasswordInput.addEventListener('copy', preventClipboardActions);
+            currentPasswordInput.addEventListener('paste', preventClipboardActions);
+            currentPasswordInput.addEventListener('cut', preventClipboardActions);
+
+            // Event listener for new password input
+            newPasswordInput.addEventListener('input', function() {
+                checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
+                hideUnifiedErrors(changePasswordErrorMessageDisplay); // Hide errors as user types
+            });
+
+            // Event listener for confirm new password input
+            confirmNewPasswordInput.addEventListener('input', function() {
+                hideUnifiedErrors(changePasswordErrorMessageDisplay); // Hide errors as user types
+            });
+
+            // Event listener for Change Password form submission
+            changePasswordForm.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default HTML submission initially
+                let clientErrors = []; // Array to collect client-side validation errors
+
+                const isNewPasswordComplex = checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
+
+                // Client-side password match check
+                if (newPasswordInput.value !== confirmNewPasswordInput.value) {
+                    clientErrors.push('New passwords do not match.');
+                }
+                // Client-side password complexity check
+                if (!isNewPasswordComplex) {
+                    clientErrors.push('New password does not meet complexity requirements.');
+                }
+
+                // If there are client-side errors, display them and prevent form submission
+                if (clientErrors.length > 0) {
+                    showUnifiedErrors(changePasswordErrorMessageDisplay, clientErrors);
+                } else {
+                    // If client-side validation passes, hide any existing errors and proceed
+                    hideUnifiedErrors(changePasswordErrorMessageDisplay);
+                    // In a real application, you would send the oldPassword, newPassword to your backend here
+                    // For this demo, we'll just log success and hide the modal
+                    console.log('Password change initiated successfully!');
+                    changePasswordModal.classList.add('hidden');
+                    // Optionally, show a success message to the user outside the modal
+                    // For example: showUnifiedErrors(mainPageErrorMessageDisplay, ['Password changed successfully!']);
+                }
+            });
+
+            // --- Toggle Old Password Visibility Logic ---
+            toggleOldPassword.addEventListener('click', function() {
+                const type = oldPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                oldPasswordInput.setAttribute('type', type);
+                oldEyeSlashPath.classList.toggle('hidden');
+            });
+
+            // --- Toggle New Password Visibility Logic ---
+            toggleNewPassword.addEventListener('click', function() {
+                const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                newPasswordInput.setAttribute('type', type);
+                newEyeSlashPath.classList.toggle('hidden');
+            });
+
+            // --- Toggle Confirm New Password Visibility Logic ---
+            toggleConfirmNewPassword.addEventListener('click', function() {
+                const type = confirmNewPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                confirmNewPasswordInput.setAttribute('type', type);
+                confirmNewEyeSlashPath.classList.toggle('hidden');
+            });
+
+            // --- Toggle Current Password (Security Questions Modal) Visibility Logic ---
+            toggleCurrentPassword.addEventListener('click', function() {
+                const type = currentPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                currentPasswordInput.setAttribute('type', type);
+                currentEyeSlashPath.classList.toggle('hidden');
+            });
+
+            // --- New Complexity Modal Functionality ---
+            openNewComplexityModalBtn.addEventListener('click', () => {
+                newComplexityModal.classList.add('show');
+                // Ensure modal content is up-to-date based on current new password input
+                checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
+            });
+
+            closeNewComplexityModalBtn.addEventListener('click', () => {
+                newComplexityModal.classList.remove('show');
+            });
+
+            newComplexityModal.addEventListener('click', (event) => {
+                if (event.target === newComplexityModal) {
+                    newComplexityModal.classList.remove('show');
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && newComplexityModal.classList.contains('show')) {
+                    newComplexityModal.classList.remove('show');
+                }
+            });
+
+            // --- Edit Profile Form Logic ---
+            const usernameInput = document.getElementById('username');
+            const emailInput = document.getElementById('email');
+            const addressInput = document.getElementById('address');
+            const editProfileActions = document.getElementById('editProfileActions');
+            const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
+            const editProfileForm = document.getElementById('editProfileForm');
+
+            // Store original values
+            let originalUsername = usernameInput.value;
+            let originalEmail = emailInput.value;
+            let originalAddress = addressInput.value;
+
+            // Function to check if any field has been edited
+            function checkIfEdited() {
+                const isUsernameEdited = usernameInput.value !== originalUsername;
+                const isEmailEdited = emailInput.value !== originalEmail;
+                const isAddressEdited = addressInput.value !== originalAddress;
+
+                if (isUsernameEdited || isEmailEdited || isAddressEdited) {
+                    editProfileActions.classList.remove('hidden');
+                } else {
+                    editProfileActions.classList.add('hidden');
+                }
             }
-        });
 
-        // Store initial values for Edit Profile Information form
-        const usernameInput = document.getElementById('username');
-        const emailInput = document.getElementById('email');
-        const addressTextarea = document.getElementById('address');
+            // Add event listeners to input fields
+            usernameInput.addEventListener('input', checkIfEdited);
+            emailInput.addEventListener('input', checkIfEdited);
+            addressInput.addEventListener('input', checkIfEdited);
 
-        // These variables will hold the TRUE original values loaded with the page.
-        const originalUsername = usernameInput.value;
-        const originalEmail = emailInput.value;
-        const originalAddress = addressTextarea.value;
+            // Handle Cancel Changes button click
+            cancelEditProfileBtn.addEventListener('click', () => {
+                usernameInput.value = originalUsername;
+                emailInput.value = originalEmail;
+                addressInput.value = originalAddress;
+                editProfileActions.classList.add('hidden'); // Hide buttons after canceling
+            });
 
-        // Get reference for the Cancel Changes button in Edit Profile Information form
-        const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
-        const editProfileActions = document.getElementById('editProfileActions'); // Get the div containing save/cancel buttons
-
-        // Function to check if any profile field has been edited
-        function checkProfileEdits() {
-            // Compare current values against the ORIGINAL values
-            const isUsernameEdited = usernameInput.value !== originalUsername;
-            const isEmailEdited = emailInput.value !== originalEmail;
-            const isAddressEdited = addressTextarea.value !== originalAddress;
-
-            if (isUsernameEdited || isEmailEdited || isAddressEdited) {
-                editProfileActions.classList.remove('hidden');
-            } else {
+            // Handle form submission (for demo purposes, just logs)
+            editProfileForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                console.log('Profile changes saved (demo)!');
+                // In a real app, send data to backend and then update original values
+                originalUsername = usernameInput.value;
+                originalEmail = emailInput.value;
+                originalAddress = addressInput.value;
                 editProfileActions.classList.add('hidden');
-            }
-        }
-
-        // Add input event listeners to track changes in profile fields
-        usernameInput.addEventListener('input', checkProfileEdits);
-        emailInput.addEventListener('input', checkProfileEdits);
-        addressTextarea.addEventListener('input', checkProfileEdits);
-
-        // Add event listener to Save Changes button in Edit Profile form
-        document.getElementById('editProfileForm').addEventListener('submit', (event) => {
-            event.preventDefault(); // Prevent default form submission
-            // In a real application, you would send the updated data to your backend here
-            // For this demo, we can optionally update the 'original' values if the save was successful
-            // For now, we'll just hide the buttons.
-            editProfileActions.classList.add('hidden'); // Hide buttons after saving
-            // console.log('Profile information saved!');
-
-            // If a real save operation was successful, you would then update the original values:
-            // originalUsername = usernameInput.value;
-            // originalEmail = emailInput.value;
-            // originalAddress = addressTextarea.value;
-        });
-
-        // Add event listener to Cancel Changes button
-        cancelEditProfileBtn.addEventListener('click', () => {
-            // Revert fields to their TRUE original values
-            usernameInput.value = originalUsername;
-            emailInput.value = originalEmail;
-            addressTextarea.value = originalAddress;
-            editProfileActions.classList.add('hidden'); // Hide buttons after cancelling
+            });
         });
     </script>
 </body>

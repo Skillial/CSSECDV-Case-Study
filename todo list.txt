@@ -1,6 +1,7 @@
 *** FRONTEND ***
 1. Admin 
 [DONE-dashboard.ejs] All Transaction Logs
+- make manager and admin roles
 
 2. Manager
 [DONE-ordersinventory.ejs] View/Edit/Delete Products
@@ -9,7 +10,8 @@
 
 3. All
 [DONE-forgetpassword.ejs] Forget Password
-- Password Complexity (Forget Password, Change Password, [DONE] Sign Up)
+[DONE-forgetpassword.ejs, profile.ejs, signup.ejs] Password Complexity 
+    - ([DONE] Forget Password, [DONE] Change Password, [DONE] Sign Up)
 [DONE-error.ejs] Error 404 Page
 
 *** BACKEND ***
