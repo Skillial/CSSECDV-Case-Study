@@ -60,3 +60,7 @@ app.get('/error', (req, res) => {
 app.get('/ordersinventory', (req, res) => {
     res.render('ordersinventory');
 });
+
+app.get('/forgetpassword', (req, res) => {
+    res.render('forgetpassword');
+});

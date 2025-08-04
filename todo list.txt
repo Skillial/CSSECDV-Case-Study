@@ -8,9 +8,8 @@
 [DONE-ordersinventory.ejs] Update Order Status
 
 3. All
-- Forget Password
-- Checkout Page
-- Password Complexity (Forget Password, Change Password, Sign Up)
+[DONE-forgetpassword.ejs] Forget Password
+- Password Complexity (Forget Password, Change Password, [DONE] Sign Up)
 [DONE-error.ejs] Error 404 Page
 
 *** BACKEND ***
