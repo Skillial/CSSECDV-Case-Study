@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for light theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e5e7eb; /* gray-200 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9ca3af; /* gray-400 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* gray-500 */
+        }
+
+        /* Modal overlay styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* Fixed Message Box Styles */
+        #dashboard-message-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 999; /* Ensure it's above other content but below modals */
+            padding-top: 1rem; /* Tailwind px-4 py-3 gives padding, but need to ensure it's consistent with fixed position */
+            padding-bottom: 1rem;
+            box-sizing: border-box; /* Include padding in the width calculation */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
+    <%- include('component/navbar') %>
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Message Box for User Feedback -->
+        <!-- This box will appear when an "Edit" button is clicked -->
+        <div id="dashboard-message-box" class="hidden bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-xl relative mb-6" role="alert">
+            <strong class="font-bold">Employee Assignment:</strong>
+            <span class="block sm:inline" id="dashboard-message-content"></span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('dashboard-message-box').classList.add('hidden')">
+                <svg class="fill-current h-6 w-6 text-blue-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 1 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z"/></svg>
+            </span>
+        </div>
+
+        <!-- Main Dashboard Content Grid -->
+        <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Monthly Sales Card -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col justify-between items-center text-center">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Total Sales This Month</h2>
+                <div id="monthly-sales" class="text-5xl md:text-6xl font-extrabold text-gray-900 mb-4">
+                    $0.00
+                </div>
+                <p class="text-gray-600 text-md">As of <span id="current-date"></span></p>
+            </div>
+
+            <!-- Customer Records Section -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Customer Records</h2>
+                <div class="overflow-x-auto max-h-96 custom-scrollbar">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-100 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider rounded-tl-lg">
+                                    Customer ID
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                    Name
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider rounded-tr-lg">
+                                    Email
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="customers-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Customer rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-gray-500 text-sm mt-4">Scroll to see more customer details.</p>
+            </div>
+
+            <!-- Employee Transaction Records Section -->
+            <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Employee Transaction Records</h2>
+                <div class="overflow-x-auto max-h-96 custom-scrollbar">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-100 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider rounded-tl-lg">
+                                    Transaction ID
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                    Employee
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                    Customer
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                    Item
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                    Quantity
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                    Price
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                    Date
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider rounded-tr-lg">
+                                    Status
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Transaction rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-gray-500 text-sm mt-4">Scroll to see more transactions.</p>
+            </div>
+
+            <!-- New: Employee Item Assignments Section -->
+            <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Employee Item Assignments</h2>
+                <div id="employee-assignments-list" class="space-y-4">
+                    <!-- Employee assignments will be inserted here by JavaScript -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Edit Employee Assignment Modal -->
+    <div id="edit-assignment-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Assigned Items for <span id="modal-employee-name"></span></h3>
+            <label for="modal-assigned-items" class="block text-sm font-medium text-gray-700 mb-2">Assigned Categories:</label>
+            <select id="modal-assigned-items" multiple class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-6 h-40">
+                <!-- Options will be populated by JavaScript -->
+            </select>
+
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-edit-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-200">
+                    Cancel
+                </button>
+                <button id="save-edit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Helper function to display messages ---
+            const showMessage = (message, type = 'info') => {
+                const messageBox = document.getElementById('dashboard-message-box');
+                const messageContent = document.getElementById('dashboard-message-content');
+                messageContent.textContent = message;
+
+                // Reset classes for the message box and its close icon
+                messageBox.classList.remove('bg-blue-100', 'border-blue-400', 'text-blue-700', 'bg-green-100', 'border-green-400', 'text-green-700', 'bg-red-100', 'border-red-400', 'text-red-700');
+                const closeIcon = messageBox.querySelector('svg');
+                if (closeIcon) {
+                    closeIcon.classList.remove('text-blue-500', 'text-green-500', 'text-red-500');
+                }
+
+                // Apply new classes based on message type
+                switch (type) {
+                    case 'success':
+                        messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+                        if (closeIcon) closeIcon.classList.add('text-green-500');
+                        break;
+                    case 'error':
+                        messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+                        if (closeIcon) closeIcon.classList.add('text-red-500');
+                        break;
+                    case 'info':
+                    default:
+                        messageBox.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-700');
+                        if (closeIcon) closeIcon.classList.add('text-blue-500');
+                        break;
+                }
+                // Explicitly set display to block to ensure visibility
+                messageBox.style.display = 'block';
+
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 5000);
+            };
+
+
+            // --- Mock Data ---
+            const mockEmployees = [
+                { id: 'E001', name: 'Alice Smith', email: 'alice.s@example.com', position: 'Sales Associate', assignedItems: ['Living Room', 'Office'] },
+                { id: 'E002', name: 'Bob Johnson', email: 'bob.j@example.com', position: 'Team Lead', assignedItems: ['Bedroom', 'Dining Room'] },
+                { id: 'E003', name: 'Charlie Brown', email: 'charlie.b@example.com', position: 'Manager', assignedItems: ['Storage'] },
+                { id: 'E004', name: 'Diana Prince', email: 'diana.p@example.com', position: 'Sales Associate', assignedItems: ['Outdoor', 'Children\'s'] },
+                { id: 'E005', name: 'Eve Adams', email: 'eve.a@example.com', position: 'Sales Associate', assignedItems: ['Accent'] }
+            ];
+
+            const mockCustomers = [
+                { id: 'C101', name: 'John Doe', email: 'john.doe@example.com' },
+                { id: 'C102', name: 'Jane Miller', email: 'jane.miller@example.com' },
+                { id: 'C103', name: 'Peter Jones', email: 'peter.jones@example.com' },
+                { id: 'C104', name: 'Sarah Davis', email: 'sarah.davis@example.com' },
+                { id: 'C105', name: 'Michael White', email: 'michael.white@example.com' },
+                { id: 'C106', name: 'Laura Green', email: 'laura.green@example.com' },
+                { id: 'C107', name: 'Chris Black', email: 'chris.black@example.com' },
+                { id: 'C108', name: 'Olivia Red', email: 'olivia.red@example.com' },
+                { id: 'C109', name: 'Daniel Blue', email: 'daniel.blue@example.com' },
+                { id: 'C110', name: 'Sophia Yellow', email: 'sophia.yellow@example.com' }
+            ];
+
+            // Updated mockItems to be the fixed categories
+            const mockItems = [
+                { id: 'CAT001', name: 'Living Room' },
+                { id: 'CAT002', name: 'Bedroom' },
+                { id: 'CAT003', name: 'Dining Room' },
+                { id: 'CAT004', name: 'Office' },
+                { id: 'CAT005', name: 'Outdoor' },
+                { id: 'CAT006', name: 'Storage' },
+                { id: 'CAT007', name: 'Children\'s' },
+                { id: 'CAT008', name: 'Entryway' },
+                { id: 'CAT009', name: 'Accent' },
+                { id: 'CAT010', name: 'Modular' }
+            ];
+
+            // Generate mock transactions for the current month
+            const generateMockTransactions = () => {
+                const transactions = [];
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const statuses = ['Completed', 'Pending', 'Failed', 'Refunded'];
+
+                for (let i = 0; i < 50; i++) { // Generate 50 transactions
+                    const randomEmployee = mockEmployees[Math.floor(Math.random() * mockEmployees.length)];
+                    const randomCustomer = mockCustomers[Math.floor(Math.random() * mockCustomers.length)];
+                    const randomItem = mockItems[Math.floor(Math.random() * mockItems.length)]; // Now picks from categories
+                    const quantity = Math.floor(Math.random() * 3) + 1; // 1 to 3 items
+                    const transactionDate = new Date(currentYear, currentMonth, Math.floor(Math.random() * daysInMonth) + 1);
+                    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+                    transactions.push({
+                        id: `TRX${1000 + i}`,
+                        employeeName: randomEmployee.name,
+                        customerName: randomCustomer.name,
+                        itemName: randomItem.name, // Will be a category name
+                        quantity: quantity,
+                        price: (Math.random() * 500 + 20).toFixed(2), // Random price for category items
+                        date: transactionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+                        status: randomStatus
+                    });
+                }
+                return transactions;
+            };
+
+            const mockTransactions = generateMockTransactions();
+
+            // --- Render Functions ---
+
+            /**
+             * Renders the employee transaction records in a table.
+             */
+            const renderTransactions = () => {
+                const tableBody = document.getElementById('transactions-table-body');
+                tableBody.innerHTML = ''; // Clear existing rows
+
+                mockTransactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    // Changed hover effect for light theme
+                    row.classList.add('hover:bg-gray-100');
+
+                    // Determine status badge color
+                    let statusColorClass = '';
+                    switch (transaction.status) {
+                        case 'Completed':
+                            statusColorClass = 'bg-green-100 text-green-800';
+                            break;
+                        case 'Pending':
+                            statusColorClass = 'bg-yellow-100 text-yellow-800';
+                            break;
+                        case 'Failed':
+                            statusColorClass = 'bg-red-100 text-red-800';
+                            break;
+                        case 'Refunded':
+                            statusColorClass = 'bg-blue-100 text-blue-800';
+                            break;
+                        default:
+                            statusColorClass = 'bg-gray-100 text-gray-800';
+                    }
+
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${transaction.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.employeeName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.customerName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.itemName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.quantity}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">$${transaction.price}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColorClass}">
+                                ${transaction.status}
+                            </span>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            };
+
+            /**
+             * Renders the customer records in a table.
+             */
+            const renderCustomers = () => {
+                const tableBody = document.getElementById('customers-table-body');
+                tableBody.innerHTML = ''; // Clear existing rows
+
+                mockCustomers.forEach(customer => {
+                    const row = document.createElement('tr');
+                    // Changed hover effect for light theme
+                    row.classList.add('hover:bg-gray-100');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${customer.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.email}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            };
+
+            /**
+             * Calculates and displays the total sales for the current month.
+             */
+            const renderMonthlySales = () => {
+                const totalSalesElement = document.getElementById('monthly-sales');
+                const currentDateElement = document.getElementById('current-date');
+
+                let totalSales = 0;
+                mockTransactions.forEach(transaction => {
+                    totalSales += parseFloat(transaction.price);
+                });
+
+                totalSalesElement.textContent = `$${totalSales.toFixed(2)}`;
+                currentDateElement.textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            };
+
+            /**
+             * Renders the list of employees with their assigned items and an edit option.
+             */
+            const renderEmployeeAssignments = () => {
+                const listContainer = document.getElementById('employee-assignments-list');
+                listContainer.innerHTML = ''; // Clear existing content
+
+                mockEmployees.forEach(employee => {
+                    const employeeDiv = document.createElement('div');
+                    employeeDiv.classList.add('flex', 'flex-col', 'md:flex-row', 'md:items-center', 'justify-between', 'p-4', 'bg-gray-50', 'rounded-lg', 'border', 'border-gray-200', 'hover:bg-gray-100', 'transition', 'duration-150');
+
+                    const assignedItemsText = employee.assignedItems.length > 0
+                        ? employee.assignedItems.map(item => `<span class="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">${item}</span>`).join(' ')
+                        : '<span class="text-gray-500 text-sm">No items assigned</span>';
+
+                    employeeDiv.innerHTML = `
+                        <div class="flex-1 mb-2 md:mb-0">
+                            <h3 class="text-lg font-medium text-gray-900">${employee.name}</h3>
+                            <p class="text-sm text-gray-600">${employee.position} <span class="text-gray-500">•</span> <a href="mailto:${employee.email}" class="text-blue-600 hover:underline">${employee.email}</a></p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                ${assignedItemsText}
+                            </div>
+                        </div>
+                        <button class="edit-assigned-items-btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-200 text-sm" data-employee-id="${employee.id}">
+                            Edit Assigned Items
+                        </button>
+                    `;
+                    listContainer.appendChild(employeeDiv);
+                });
+
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-assigned-items-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const employeeId = event.target.dataset.employeeId;
+                        openEditModal(employeeId);
+                    });
+                });
+            };
+
+            // --- Modal Functions ---
+            const editModal = document.getElementById('edit-assignment-modal');
+            const modalEmployeeName = document.getElementById('modal-employee-name');
+            const modalAssignedItems = document.getElementById('modal-assigned-items'); // This is now the select element
+            const saveEditBtn = document.getElementById('save-edit-btn');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+            let currentEditingEmployeeId = null; // To keep track of which employee is being edited
+
+            /**
+             * Populates the assigned items dropdown with available items.
+             */
+            const populateAssignedItemsDropdown = () => {
+                modalAssignedItems.innerHTML = ''; // Clear existing options
+                mockItems.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.name;
+                    option.textContent = item.name;
+                    modalAssignedItems.appendChild(option);
+                });
+            };
+
+            /**
+             * Opens the edit modal and populates it with employee data.
+             * @param {string} employeeId - The ID of the employee to edit.
+             */
+            const openEditModal = (employeeId) => {
+                const employee = mockEmployees.find(emp => emp.id === employeeId);
+                if (employee) {
+                    currentEditingEmployeeId = employeeId;
+                    modalEmployeeName.textContent = employee.name;
+
+                    // Populate and set selected options for the dropdown
+                    populateAssignedItemsDropdown(); // Ensure options are fresh
+                    Array.from(modalAssignedItems.options).forEach(option => {
+                        option.selected = employee.assignedItems.includes(option.value);
+                    });
+
+                    editModal.classList.remove('hidden');
+                }
+            };
+
+            /**
+             * Closes the edit modal.
+             */
+            const closeEditModal = () => {
+                editModal.classList.add('hidden');
+                currentEditingEmployeeId = null;
+                // No need to clear value for select, just unselect options if needed
+            };
+
+            // Event listener for Save button
+            saveEditBtn.addEventListener('click', () => {
+                if (currentEditingEmployeeId) {
+                    const employeeIndex = mockEmployees.findIndex(emp => emp.id === currentEditingEmployeeId);
+                    if (employeeIndex !== -1) {
+                        // Get selected options from the multi-select dropdown
+                        const newAssignedItems = Array.from(modalAssignedItems.selectedOptions).map(option => option.value);
+                        mockEmployees[employeeIndex].assignedItems = newAssignedItems;
+                        renderEmployeeAssignments(); // Re-render the list to show changes
+                        showMessage(`Assigned items for ${mockEmployees[employeeIndex].name} updated successfully!`, 'success');
+                        closeEditModal();
+                    } else {
+                        showMessage('Error: Employee not found.', 'error');
+                    }
+                }
+            });
+
+            // Event listener for Cancel button
+            cancelEditBtn.addEventListener('click', () => {
+                showMessage('Edit cancelled.', 'info');
+                closeEditModal();
+            });
+
+            // --- Initial Render ---
+            renderTransactions();
+            renderCustomers();
+            renderMonthlySales();
+            renderEmployeeAssignments(); // Call the new rendering function
+        });
+    </script>
+</body>
+</html>

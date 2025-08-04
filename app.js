@@ -48,3 +48,15 @@ app.get('/product', (req, res) => {
 app.get('/profile', (req, res) => {
     res.render('profile');
 });
+
+app.get('/dashboard', (req, res) => {
+    res.render('dashboard');
+});
+
+app.get('/error', (req, res) => {
+    res.render('error');
+});
+
+app.get('/ordersinventory', (req, res) => {
+    res.render('ordersinventory');
+});

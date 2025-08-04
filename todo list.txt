@@ -1,16 +1,17 @@
 *** FRONTEND ***
 1. Admin 
-- All Transaction Logs
+[DONE-dashboard.ejs] All Transaction Logs
 
 2. Manager
-- Add/Edit/Delete Product
-- View Products
-- Update Order Status
+[DONE-ordersinventory.ejs] View/Edit/Delete Products
+[DONE-ordersinventory.ejs] Add Products
+[DONE-ordersinventory.ejs] Update Order Status
 
 3. All
 - Forget Password
+- Checkout Page
 - Password Complexity (Forget Password, Change Password, Sign Up)
-- Error 404 Page
+[DONE-error.ejs] Error 404 Page
 
 *** BACKEND ***
 - check Google Docs
