@@ -15,7 +15,6 @@ const controller = {
         });
     },
 
-
     // Handles user registration
     register: async (req, res) => {
         // Destructure username, password, and confirmPassword from the request body
@@ -25,7 +24,6 @@ const controller = {
         // --- Input Validation ---
 
         // Check if all fields are filled
-        // Corrected: Use !confirmPassword to check if it's missing or empty
         if (!username || !password || !confirmPassword) {
             errors.push('Please fill in all fields.');
         }
@@ -61,15 +59,26 @@ const controller = {
             errors.push('Password must contain a special character (!@#$%^&*).');
         }
 
-        // If there are any validation errors, flash them and redirect back to the registration page
+        // --- Database Operations (Username Existence Check) ---
+        // Perform this check early so it can contribute to the 'errors' array
+        try {
+            const stmt = OccasioDB.prepare('SELECT id FROM accounts WHERE username = ?');
+            const existingUser = stmt.get(username);
+            if (existingUser) {
+                errors.push('Registration failed. Please try again with different information.'); // Vague error for security
+            }
+        } catch (dbError) {
+            console.error("Database check for existing user error:", dbError.message);
+            errors.push('An unexpected database error occurred during registration.');
+        }
+
+        // If there are any validation or existence errors, flash only the first one and redirect
         if (errors.length > 0) {
-            req.flash('error', errors.join('<br>')); // Join errors for display
-            console.log("Validation errors:", errors);  
+            req.flash('error', errors[0]); // Flash only the first error message
             return res.redirect('/register');
         }
 
-        // --- Database Operations ---
-
+        // --- Proceed with Registration if no errors found so far ---
         try {
             console.log("Registering user:", username);
             // Hash the password before starting the transaction, as hashing is asynchronous
@@ -78,22 +87,20 @@ const controller = {
 
             // Define the transaction operations
             const registerTransaction = OccasioDB.transaction(() => {
-                // Check if username already exists within the transaction using a prepared statement
-                const stmt = OccasioDB.prepare('SELECT id FROM accounts WHERE username = ?');
-                const existingUser = stmt.get(username);
-
-                // If a user with the given username already exists, throw an error to roll back the transaction
-                if (existingUser) {
-                    // Throw a custom error that can be caught and translated into a user-friendly message
-                    throw new Error('USERNAME_EXISTS');
-                }
-
-                // Prepare the INSERT statement once
-                const insertStmt = OccasioDB.prepare(
+                // Insert into accounts table
+                const insertAccountStmt = OccasioDB.prepare(
                     'INSERT INTO accounts (username, password_hash, role, login_attempts, lockout_until, last_successful_login, last_login_attempt, last_password_change, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
                 );
-                // Execute the prepared INSERT statement
-                insertStmt.run(username, hashedPassword, 'customer', 0, null, null, currentTime, currentTime, currentTime);
+                const accountInfo = insertAccountStmt.run(username, hashedPassword, 'customer', 0, null, null, currentTime, currentTime, currentTime);
+
+                // Get the ID of the newly inserted account
+                const newAccountId = accountInfo.lastInsertRowid;
+
+                // Insert into password_history table
+                const insertPasswordHistoryStmt = OccasioDB.prepare(
+                    'INSERT INTO password_history (account_id, password_hash, created_at) VALUES (?, ?, ?)'
+                );
+                insertPasswordHistoryStmt.run(newAccountId, hashedPassword, currentTime);
             });
 
             // Execute the transaction
@@ -109,7 +116,7 @@ const controller = {
             if (error.message === 'USERNAME_EXISTS') {
                 req.flash('error', 'Registration failed. Please try again with different information.'); // Vague error for security
             } else {
-                console.error("Registration error:", error.message);
+                console.error("Registration transaction error:", error.message);
                 req.flash('error', 'An unexpected error occurred during registration.');
             }
             res.redirect('/register');

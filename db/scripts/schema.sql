@@ -30,3 +30,44 @@ CREATE TABLE security_questions (
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
 
+-- products table
+CREATE TABLE products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_name TEXT NOT NULL,
+    product_full_name TEXT NOT NULL,
+    description TEXT,
+    category TEXT NOT NULL,
+    brand TEXT NOT NULL,
+    sku TEXT NOT NULL UNIQUE,
+    price REAL NOT NULL,
+    type TEXT, -- e.g., "Color", "Size"
+    type_options TEXT, -- Stores JSON string, e.g., '["Yellow", "White", "Blue"]'
+    features TEXT, -- Stores JSON string, e.g., '["100% Cotton", "Breathable", "Unisex"]'
+    created_at TEXT NOT NULL, -- ISO 8601 format
+    updated_at TEXT -- ISO 8601 format
+);
+
+-- product_images table (NEW: for multiple images per product)
+CREATE TABLE product_images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL, -- Foreign key linking to the products table
+    image_data BLOB NOT NULL,   -- Stores the raw binary data of the image
+    image_mime_type TEXT NOT NULL, -- e.g., 'image/png', 'image/jpeg' - crucial for serving
+    display_order INTEGER,      -- Optional: to define the order of images (e.g., main image first)
+    created_at TEXT NOT NULL,   -- ISO 8601 format
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- orders table
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER NOT NULL,
+    order_date TEXT NOT NULL, -- ISO 8601 format
+    status TEXT NOT NULL CHECK (status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')) DEFAULT 'pending',
+    total_amount REAL NOT NULL,
+    products_ordered TEXT NOT NULL, -- JSON string: '[{"product_id": 1, "name": "T-Shirt", "price_at_order": 29.99, "quantity": 2, "selected_options": {"color": "Yellow"}}]'
+    shipping_address TEXT, -- Optional JSON string of shipping details
+    payment_status TEXT, -- Optional: 'paid', 'unpaid', 'refunded'
+    updated_at TEXT, -- ISO 8601 format, for status changes
+    FOREIGN KEY (customer_id) REFERENCES accounts(id)
+);
