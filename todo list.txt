@@ -1,7 +1,7 @@
 *** FRONTEND ***
 1. Admin 
 [DONE-dashboard.ejs] All Transaction Logs
-- make manager and admin roles
+[DONE-dashboard.ejs] Create manager and admin roles
 
 2. Manager
 [DONE-ordersinventory.ejs] View/Edit/Delete Products

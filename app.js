@@ -75,8 +75,12 @@ app.get('/error', (req, res) => {
 });
 
 
+// to remove
 app.get('/ordersinventory', (req, res) => {
     res.render('ordersinventory');
+});
+app.get('/dashboard', (req, res) => {
+    res.render('dashboard');
 });
 
 // --- Start Server ---
