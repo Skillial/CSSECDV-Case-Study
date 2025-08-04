@@ -4,41 +4,62 @@ const path = require('path');
 const app = express();
 const passport = require('passport');
 const passportConfig = require('./server/config/passport');
-passportConfig(passport);
+passportConfig(passport); // Initialize Passport configuration
 const flash = require('express-flash');
 const session = require('express-session');
 
 
+// --- Middleware Setup ---
+
+// Serve static files (e.g., CSS, JS, images)
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Body parser for form data and JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.set("view engine", "ejs")
-app.use(flash());
+
+// Set up your view engine (assuming EJS)
+app.set("view engine", "ejs"); // This is a setting, not middleware, so its position is flexible
+
+// Express Session Middleware - MUST come before flash and passport session
 app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false
-}))
+    secret: process.env.SESSION_SECRET, // Use a strong, random string from your .env
+    resave: false, // Don't save session if unmodified
+    saveUninitialized: false, // Don't create session until something stored
+    cookie: { maxAge: 1000 * 60 * 60 * 24 } // Optional: Session expires after 1 day
+}));
 
-const PORT = process.env.PORT;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}.`);
-    console.log(`Server running on http://localhost:${PORT}`);
+// Connect Flash Middleware - MUST come after session
+app.use(flash());
+
+// Passport.js Middleware - MUST come after session and flash
+app.use(passport.initialize()); // Initializes Passport
+app.use(passport.session());    // Enables Passport session support (uses express-session)
+
+// Make flash messages and user object available to all templates (optional, but good practice)
+app.use((req, res, next) => {
+    res.locals.success_messages = req.flash('success');
+    res.locals.error_messages = req.flash('error');
+    res.locals.user = req.user || null; // Make authenticated user available
+    next();
 });
 
-app.get('/', (req, res) => {
-    res.redirect('/login');
-});
 
-const loginRoute = require('./server/router/loginRouter')
+// --- Routes ---
+
+// Import your route modules
+const loginRoute = require('./server/router/loginRouter');
 app.use('/', loginRoute);
 
-const registerRoute = require('./server/router/registerRouter')
+const registerRoute = require('./server/router/registerRouter');
 app.use('/', registerRoute);
 
-// Temporary routes for testing
-app.get('/home', (req, res) => {
-    res.render('home');
+const homeRoute = require('./server/router/homeRouter');
+app.use('/', homeRoute);
+
+// Default route (redirect to login)
+app.get('/', (req, res) => {
+    res.redirect('/login');
 });
 
 app.get('/product', (req, res) => {
@@ -49,8 +70,15 @@ app.get('/profile', (req, res) => {
     res.render('profile');
 });
 
+// Example protected dashboard route
 app.get('/dashboard', (req, res) => {
-    res.render('dashboard');
+    // You should add a check here to ensure the user is authenticated
+    if (!req.isAuthenticated()) {
+        req.flash('error', 'Please log in to view this resource.');
+        return res.redirect('/login');
+    }
+    console.log(req.user); // This should now correctly log the user object
+    res.render('dashboard', { user: req.user }); // Pass user data to your dashboard template
 });
 
 app.get('/error', (req, res) => {
@@ -59,4 +87,12 @@ app.get('/error', (req, res) => {
 
 app.get('/ordersinventory', (req, res) => {
     res.render('ordersinventory');
+});
+
+
+// --- Start Server ---
+const PORT = process.env.PORT || 3000; // Use environment variable or default to 3000
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}.`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });

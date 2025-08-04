@@ -22,4 +22,14 @@ function ensureCustomer(req, res, next) {
     }
 }
 
-module.exports = { ensureAdmin, ensureManager, ensureCustomer };
+function ensureAuthenticated(req, res, next) {
+    console.log("Authentication check for user:", req.user);
+    if (req.isAuthenticated()) {
+        return next();
+    } else {
+        req.flash('error', 'Please log in to view this resource.');
+        res.redirect('/login');
+    }
+}
+
+module.exports = { ensureAdmin, ensureManager, ensureCustomer, ensureAuthenticated };

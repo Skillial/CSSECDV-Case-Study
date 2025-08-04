@@ -5,12 +5,16 @@ const controller = {
 
     // Renders the signup page
     page: (req, res) => {
-        // Pass flash messages to the template
+        // Pass flash messages to the template from res.locals, which were set by app.js middleware
+        const errorMessages = res.locals.error_messages || [];
+        const successMessages = res.locals.success_messages || [];
+
         res.render("signup", {
-            error_messages: req.flash('error'),   // Retrieve 'error' flash messages
-            success_messages: req.flash('success') // Retrieve 'success' flash messages
+            error_messages: errorMessages,   // Use messages from res.locals
+            success_messages: successMessages // Use messages from res.locals
         });
     },
+
 
     // Handles user registration
     register: async (req, res) => {
@@ -22,7 +26,7 @@ const controller = {
 
         // Check if all fields are filled
         // Corrected: Use !confirmPassword to check if it's missing or empty
-        if (!username || !password || !!confirmPassword) {
+        if (!username || !password || !confirmPassword) {
             errors.push('Please fill in all fields.');
         }
 
@@ -60,6 +64,7 @@ const controller = {
         // If there are any validation errors, flash them and redirect back to the registration page
         if (errors.length > 0) {
             req.flash('error', errors.join('<br>')); // Join errors for display
+            console.log("Validation errors:", errors);  
             return res.redirect('/register');
         }
 

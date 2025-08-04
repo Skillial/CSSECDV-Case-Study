@@ -1,33 +1,31 @@
-// passport-config.js (or similar file)
-
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
-const OccasioDB = require('./db.js'); // Adjust the path as necessary
+const { OccasioDB } = require('./db'); // Adjust the path as necessary, assuming db.js exports { OccasioDB }
+
 module.exports = function (passport) {
 
-    // Helper function to get account by username (returns a Promise)
-    // This makes database operations asynchronous and easier to manage with async/await
+    // Prepared statements for common queries (defined once for efficiency)
+    const getAccountByUsernameStmt = OccasioDB.prepare('SELECT * FROM accounts WHERE username = ?');
+    const getAccountByIdStmt = OccasioDB.prepare('SELECT * FROM accounts WHERE id = ?');
+    const updateLastLoginAttemptStmt = OccasioDB.prepare('UPDATE accounts SET last_login_attempt = ? WHERE username = ?');
+    const resetLockoutStmt = OccasioDB.prepare('UPDATE accounts SET login_attempts = 0, lockout_until = NULL WHERE id = ?');
+    const updateSuccessfulLoginStmt = OccasioDB.prepare('UPDATE accounts SET login_attempts = 0, last_successful_login = ?, last_login_attempt = ? WHERE id = ?');
+    const updateFailedLoginAttemptStmt = OccasioDB.prepare('UPDATE accounts SET login_attempts = ?, last_login_attempt = ? WHERE id = ?');
+    const lockAccountStmt = OccasioDB.prepare('UPDATE accounts SET login_attempts = ?, lockout_until = ?, last_login_attempt = ? WHERE id = ?');
+
+
+    // Helper function to get account by username (synchronous with better-sqlite3)
+    // This function will return the row directly or undefined if not found.
+    // Errors will be thrown synchronously and caught by the caller's try/catch.
     function getAccountByUsername(username) {
-        return new Promise((resolve, reject) => {
-            OccasioDB.get('SELECT * FROM accounts WHERE username = ?', [username], (err, row) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(row);
-            });
-        });
+        return getAccountByUsernameStmt.get(username);
     }
 
-    // Helper function to get account by ID (returns a Promise)
+    // Helper function to get account by ID (synchronous with better-sqlite3)
+    // This function will return the row directly or undefined if not found.
+    // Errors will be thrown synchronously and caught by the caller's try/catch.
     function getAccountById(id) {
-        return new Promise((resolve, reject) => {
-            OccasioDB.get('SELECT * FROM accounts WHERE id = ?', [id], (err, row) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(row);
-            });
-        });
+        return getAccountByIdStmt.get(id);
     }
 
     // Configure the LocalStrategy for username/password authentication
@@ -35,12 +33,13 @@ module.exports = function (passport) {
         { usernameField: 'username', passReqToCallback: true }, // 'usernameField' matches your schema, 'passReqToCallback' allows access to req
         async (req, username, password, done) => { // Added 'req' parameter
             try {
-                const user = await getAccountByUsername(username);
+                const user = getAccountByUsername(username); // Synchronous call
 
                 // --- Vague Error Message & User Not Found Handling ---
                 if (!user) {
                     // Update last login attempt for non-existent user (optional, for logging/auditing)
-                    OccasioDB.run('UPDATE accounts SET last_login_attempt = ? WHERE username = ?', [new Date().toISOString(), username]);
+                    // Use prepared statement for run
+                    updateLastLoginAttemptStmt.run(new Date().toISOString(), username);
                     return done(null, false, { message: 'Invalid username and/or password' });
                 }
 
@@ -54,9 +53,8 @@ module.exports = function (passport) {
                         return done(null, false, { message: 'Invalid username and/or password' }); // Vague message
                     } else {
                         // Lockout period has expired, reset lockout status
-                        OccasioDB.run('UPDATE accounts SET login_attempts = 0, lockout_until = NULL WHERE id = ?', [user.id], (err) => {
-                            if (err) console.error("Error resetting lockout for expired account:", err.message);
-                        });
+                        // Use prepared statement for run
+                        resetLockoutStmt.run(user.id);
                         // Continue to password comparison
                     }
                 }
@@ -66,8 +64,6 @@ module.exports = function (passport) {
 
                 if (isMatch) {
                     // Password is correct. Reset login attempts and update last successful login.
-                    // Also, report last login attempt to the user (via session flash message)
-
                     let lastLoginReportMessage = '';
                     const lastAttemptTimestamp = user.last_login_attempt;
                     const lastSuccessfulTimestamp = user.last_successful_login;
@@ -76,9 +72,6 @@ module.exports = function (passport) {
                         const lastAttemptDate = new Date(lastAttemptTimestamp);
                         const lastSuccessfulDate = lastSuccessfulTimestamp ? new Date(lastSuccessfulTimestamp) : null;
 
-                        // Check if the last recorded attempt was successful or unsuccessful
-                        // If last_successful_login is null or older than last_login_attempt, it implies the last one was unsuccessful.
-                        // If they are the same, it implies the last one was successful.
                         if (lastSuccessfulDate && lastSuccessfulDate.getTime() === lastAttemptDate.getTime()) {
                             lastLoginReportMessage = `Your last login was successful at: ${lastAttemptDate.toLocaleString()}.`;
                         } else {
@@ -90,10 +83,8 @@ module.exports = function (passport) {
 
                     req.session.lastLoginReport = lastLoginReportMessage; // Store this detailed message in session
 
-                    OccasioDB.run('UPDATE accounts SET login_attempts = 0, last_successful_login = ?, last_login_attempt = ? WHERE id = ?',
-                        [new Date().toISOString(), new Date().toISOString(), user.id], (updateErr) => {
-                            if (updateErr) console.error("Error updating successful login:", updateErr.message);
-                        });
+                    // Use prepared statement for run
+                    updateSuccessfulLoginStmt.run(new Date().toISOString(), new Date().toISOString(), user.id);
                     return done(null, user); // Authentication successful
                 } else {
                     // --- Incorrect Password & Lockout Increment ---
@@ -103,18 +94,12 @@ module.exports = function (passport) {
 
                     if (newAttempts >= lockoutThreshold) {
                         const lockoutUntil = new Date(Date.now() + lockoutPeriodSeconds * 1000).toISOString();
-                        OccasioDB.run(
-                            'UPDATE accounts SET login_attempts = ?, lockout_until = ?, last_login_attempt = ? WHERE id = ?',
-                            [newAttempts, lockoutUntil, new Date().toISOString(), user.id], (updateErr) => {
-                                if (updateErr) console.error("Error locking account:", updateErr.message);
-                            }
-                        );
+                        // Use prepared statement for run
+                        lockAccountStmt.run(newAttempts, lockoutUntil, new Date().toISOString(), user.id);
                         return done(null, false, { message: 'Invalid username and/or password' }); // Vague message
                     } else {
-                        OccasioDB.run('UPDATE accounts SET login_attempts = ?, last_login_attempt = ? WHERE id = ?',
-                            [newAttempts, new Date().toISOString(), user.id], (updateErr) => {
-                                if (updateErr) console.error("Error updating failed login attempt:", updateErr.message);
-                            });
+                        // Use prepared statement for run
+                        updateFailedLoginAttemptStmt.run(newAttempts, new Date().toISOString(), user.id);
                         return done(null, false, { message: 'Invalid username and/or password' }); // Vague message
                     }
                 }
@@ -133,7 +118,7 @@ module.exports = function (passport) {
     // Deserialize user: Retrieve user object from the database using ID from session
     passport.deserializeUser(async (id, done) => {
         try {
-            const user = await getAccountById(id); // Query by ID
+            const user = getAccountById(id); // Synchronous call
             return done(null, user);
         } catch (error) {
             console.error("Passport Deserialize error:", error.message);
