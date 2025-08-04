@@ -78,6 +78,14 @@ app.get('/error', (req, res) => {
 });
 
 
+// to remove
+app.get('/ordersinventory', (req, res) => {
+    res.render('ordersinventory');
+});
+app.get('/dashboard', (req, res) => {
+    res.render('dashboard');
+});
+
 // --- Start Server ---
 const PORT = process.env.PORT || 3000; // Use environment variable or default to 3000
 app.listen(PORT, () => {

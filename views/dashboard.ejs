@@ -79,19 +79,43 @@
         <!-- Main Dashboard Content Grid -->
         <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            <!-- Monthly Sales Card -->
-            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col justify-between items-center text-center">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Total Sales This Month</h2>
-                <div id="monthly-sales" class="text-5xl md:text-6xl font-extrabold text-gray-900 mb-4">
-                    $0.00
+            <!-- Left Column: Contains Sales, Add Admin, Add Employee -->
+            <div class="lg:col-span-1 flex flex-col gap-6">
+                <!-- Monthly Sales Card -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col justify-between items-center text-center">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Total Sales This Month</h2>
+                    <div id="monthly-sales" class="text-5xl md:text-6xl font-extrabold text-gray-900 mb-4">
+                        $0.00
+                    </div>
+                    <p class="text-gray-600 text-md">As of <span id="current-date"></span></p>
                 </div>
-                <p class="text-gray-600 text-md">As of <span id="current-date"></span></p>
+
+                <!-- New Admin and Employee Sections (grouped) -->
+                <div class="flex flex-col gap-6">
+                    <!-- Add New Admin Card -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col justify-between items-center text-center h-full">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add New Admin</h2>
+                        <p class="text-gray-600 text-md mb-4">Register new administrators to manage the system.</p>
+                        <button id="add-admin-btn" class="mt-auto bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105" onclick="openModal('admin-modal')">
+                            Add Admin
+                        </button>
+                    </div>
+
+                    <!-- New Employee Card -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col justify-between items-center text-center h-full">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add New Employee</h2>
+                        <p class="text-gray-600 text-md mb-4">Onboard new employees and assign roles.</p>
+                        <button id="add-employee-btn" class="mt-auto bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                            Add Employee
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Customer Records Section -->
+            <!-- Right Column: Customer Records Section -->
             <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Customer Records</h2>
-                <div class="overflow-x-auto max-h-96 custom-scrollbar">
+                <div class="overflow-x-auto max-h-[30rem] custom-scrollbar">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-100 sticky top-0">
                             <tr>
@@ -108,6 +132,36 @@
                         </thead>
                         <tbody id="customers-table-body" class="bg-white divide-y divide-gray-200">
                             <!-- Customer rows will be inserted here by JavaScript -->
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST001</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Alice Smith</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">alice.s@example.com</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST002</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Bob Johnson</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">bob.j@example.com</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST003</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Charlie Brown</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">charlie.b@example.com</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST004</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Diana Prince</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">diana.p@example.com</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST005</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Eve Adams</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">eve.a@example.com</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST006</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Frank White</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">frank.w@example.com</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -179,15 +233,145 @@
                 <button id="cancel-edit-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-200">
                     Cancel
                 </button>
-                <button id="save-edit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                <button id="save-edit-btn" class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition duration-200">
                     Save Changes
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Add Admin Modal -->
+    <div id="admin-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="close-button absolute top-6 right-8 text-gray-500 hover:text-black text-xl font-bold" onclick="closeModal('admin-modal')">&times;</button>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Add New Admin</h2>
+            <form class="space-y-4">
+                <div>
+                    <label for="admin-username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="admin-username" name="admin-username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter admin's username">
+                </div>
+                <div class="relative">
+                    <label for="admin-password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="admin-password" name="admin-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10" placeholder="Set password">
+                    <svg id="toggleAdminPassword" class="absolute right-3 transform translate-y-2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="top:40%">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path id="adminEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                    </svg>
+                </div>
+                <div class="relative">
+                    <label for="admin-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <input type="password" id="admin-confirm-password" name="admin-confirm-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10" placeholder="Confirm password">
+                    <svg id="toggleAdminConfirmPassword" class="absolute right-3 transform translate-y-2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="top:40%">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path id="adminConfirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                    </svg>
+                </div>
+                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                    Create Admin
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div id="employee-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="close-button absolute top-6 right-8 text-gray-500 hover:text-black text-xl font-bold" onclick="closeModal('employee-modal')">&times;</button>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Add New Employee</h2>
+            <form class="space-y-4">
+                <div>
+                    <label for="employee-username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="employee-username" name="employee-username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Enter employee's username">
+                </div>
+                <div class="relative">
+                    <label for="employee-password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="employee-password" name="employee-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm pr-10" placeholder="Set password">
+                    <svg id="toggleEmployeePassword" class="absolute right-3 transform translate-y-2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="top:40%">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path id="employeeEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                    </svg>
+                </div>
+                <div class="relative">
+                    <label for="employee-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <input type="password" id="employee-confirm-password" name="employee-confirm-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm pr-10" placeholder="Confirm password">
+                    <svg id="toggleEmployeeConfirmPassword" class="absolute right-3 transform translate-y-2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="top:40%">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path id="employeeConfirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                    </svg>
+                </div>
+                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                    Create Employee
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script>
+        // Modal functionality
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');  // <- this is needed
+            modal.classList.add('flex');
+        }
+
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');  // <- add this
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // Event listeners for opening modals
+            document.getElementById('add-admin-btn').addEventListener('click', () => openModal('admin-modal'));
+            document.getElementById('add-employee-btn').addEventListener('click', () => openModal('employee-modal'));
+
+            // Event listeners for closing modals using the close button
+            document.querySelectorAll('.admin-close-btn').forEach(button => {
+                button.addEventListener('click', () => closeModal('admin-modal'));
+            });
+            document.querySelectorAll('.employee-close-btn').forEach(button => {
+                button.addEventListener('click', () => closeModal('employee-modal'));
+            });
+
+
+            // Close modal when clicking outside the content
+            document.getElementById('admin-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'admin-modal') {
+                    closeModal('admin-modal');
+                }
+            });
+            document.getElementById('employee-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'employee-modal') {
+                    closeModal('employee-modal');
+                }
+            });
+
+            // Password toggle functionality
+            function setupPasswordToggle(toggleId, inputId, eyeSlashPathId) {
+                const toggleButton = document.getElementById(toggleId);
+                const passwordInput = document.getElementById(inputId);
+                const eyeSlashPath = document.getElementById(eyeSlashPathId);
+
+                if (toggleButton && passwordInput && eyeSlashPath) {
+                    toggleButton.addEventListener('click', () => {
+                        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                        passwordInput.setAttribute('type', type);
+                        eyeSlashPath.classList.toggle('hidden');
+                    });
+                }
+            }
+
+            // Setup toggles for admin and employee modals
+            setupPasswordToggle('toggleAdminPassword', 'admin-password', 'adminEyeSlashPath');
+            setupPasswordToggle('toggleAdminConfirmPassword', 'admin-confirm-password', 'adminConfirmEyeSlashPath');
+            setupPasswordToggle('toggleEmployeePassword', 'employee-password', 'employeeEyeSlashPath');
+            setupPasswordToggle('toggleEmployeeConfirmPassword', 'employee-confirm-password', 'employeeConfirmEyeSlashPath');
+            
             // --- Helper function to display messages ---
             const showMessage = (message, type = 'info') => {
                 const messageBox = document.getElementById('dashboard-message-box');
