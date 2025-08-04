@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,131 +11,364 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        /* Custom styles for the strength bar */
+        .password-strength-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            /* Default gray for empty bar */
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+            border-radius: 4px;
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
     </style>
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans">
 
-    <div class="bg-white flex flex-col md:flex-row rounded-3xl shadow-2xl overflow-hidden max-w-4xl w-full">
+    <div class="bg-white flex flex-col md:flex-row rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full">
 
+        <!-- Left Section: Image (Hidden on small screens) -->
         <div class="md:w-1/2 p-6 hidden md:flex items-center justify-center bg-white">
-            <img class="rounded-2xl max-w-full h-auto object-cover"
-                src="img/logo.png"
-                onerror="this.onerror=null;this.src='https://placehold.co/600x400/F8F8F8/333333?text=Image+Not+Found';"
-                alt="Placeholder for logo or abstract design"
-            >
+            <img class="rounded-2xl max-w-full h-auto object-cover shadow-lg transform hover:scale-105 transition duration-300" src="https://placehold.co/600x400/F0F0F0/333333?text=Welcome!" onerror="this.onerror=null;this.src='https://placehold.co/600x400/F8F8F8/333333?text=Welcome!';" alt="Abstract design or company logo">
         </div>
 
-        <div class="md:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
-            <h2 class="font-extrabold text-3xl text-center text-gray-900 mb-2">Create Your Account</h2>
-            <p class="text-sm text-center text-gray-700 mb-8">Join us and discover new opportunities.</p>
+        <!-- Right Section: Signup Form -->
+        <div class="md:w-1/2 p-8 sm:p-12 flex flex-col justify-center bg-white">
+            <h2 class="font-extrabold text-4xl text-center text-gray-900 mb-3">Create Your Account</h2>
+            <p class="text-base text-center text-gray-700 mb-8">Join us and discover new opportunities.</p>
 
-            <form id="signupForm" action="#" class="flex flex-col gap-5">
-                <div id="errorMessage" class="text-red-600 text-sm text-center hidden">
-                    Password must be at least 8 characters long.
+            <!-- Unified Error Message Display -->
+            <div id="unifiedErrorMessageDisplay" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative text-sm text-center mb-4 hidden" role="alert">
+                <!-- Content will be set by EJS for server-side errors, or by JavaScript for client-side errors -->
+            </div>
+
+            <form id="signupForm" action="#" method="POST" class="flex flex-col">
+                <!-- Username Input -->
+                <div class="relative">
+                    <input class="w-full p-4 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800 placeholder-gray-500" type="text" name="username" placeholder="Username" aria-label="Username" required>
                 </div>
 
-                <div class="relative">
-                    <input
-                        class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="text"
-                        name="username"
-                        placeholder="Username"
-                        aria-label="Username"
-                        required
-                    >
-                </div>
-
-                <div class="relative">
-                    <input
-                        id="passwordInput"
-                        class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        aria-label="Password"
-                        required
-                    >
-                    <!-- UPDATED SVG ICON -->
-                    <svg id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Base eye icon (always visible) -->
+                <!-- Password Input Group (ADDED mt-6) -->
+                <div class="relative mt-6">
+                    <input id="passwordInput" class="w-full p-4 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800 placeholder-gray-500" type="password" name="password" placeholder="Password" aria-label="Password" required>
+                    <!-- Eye icon for password visibility toggle -->
+                    <svg id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
-                        <!-- The slash, which is toggled on and off -->
                         <path id="eyeSlashPath" class="hidden" d="M1 1l22 22"></path>
                     </svg>
                 </div>
 
-                <div class="relative">
-                    <input
-                        id="confirmPasswordInput"
-                        class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="password"
-                        name="confirmPassword"
-                        placeholder="Confirm Password"
-                        aria-label="Confirm Password"
-                        required
-                    >
-                    <!-- UPDATED SVG ICON -->
-                    <svg id="toggleConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Base eye icon (always visible) -->
+                <!-- Password Strength and Requirements Section -->
+                <div class="mt-2">
+                    <div class="password-strength-bar">
+                        <div id="strengthBarFill" class="password-strength-bar-fill"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-1.5">
+                        <p id="strengthText" class="text-sm text-gray-600">Password Strength: Very Weak</p>
+                        <button type="button" id="openComplexityModal" class="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded-md px-1">
+                            Requirements
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirm Password Input (ADDED mt-6) -->
+                <div class="relative mt-6">
+                    <input id="confirmPasswordInput" class="w-full p-4 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800 placeholder-gray-500" type="password" name="confirmPassword" placeholder="Confirm Password" aria-label="Confirm Password" required>
+                    <!-- Eye icon for confirm password visibility toggle -->
+                    <svg id="toggleConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
-                        <!-- The slash, which is toggled on and off -->
                         <path id="confirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
                     </svg>
                 </div>
 
-                <button
-                    class="bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
-                    type="submit"
-                >
+                <!-- Submit Button (ADDED mt-8 for larger gap) -->
+                <button class="mt-8 bg-gray-900 text-white py-3.5 rounded-xl font-semibold text-lg hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50" type="submit">
                     Sign Up
                 </button>
             </form>
 
-            <div class="mt-8 text-sm flex flex-col sm:flex-row justify-between items-center text-gray-700">
-                <p class="mb-3 sm:mb-0">Already have an account?</p>
-                <button
-                    onclick="window.location.href='/login'"
-                    class="py-2 px-6 bg-white border border-gray-400 text-gray-800 rounded-xl font-semibold hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105 shadow-sm"
-                >
+            <div class="mt-10 text-base flex flex-col sm:flex-row justify-between items-center text-gray-700">
+                <p class="mb-4 sm:mb-0">Already have an account?</p>
+                <button onclick="window.location.href='#'" class="py-2.5 px-8 bg-white border border-gray-400 text-gray-800 rounded-xl font-semibold hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105 shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">
                     Login
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- SIMPLIFIED SCRIPT -->
+    <!-- Password Complexity Modal -->
+    <div id="complexityModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Password Requirements</h3>
+                <button id="closeComplexityModal" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="passwordComplexityList" class="text-sm text-gray-700">
+                <p class="font-semibold mb-1">Your password must contain:</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li id="modalLengthCheck" class="text-gray-700">At least 8 characters</li>
+                    <li id="modalUppercaseCheck" class="text-gray-700">An uppercase letter</li>
+                    <li id="modalLowercaseCheck" class="text-gray-700">A lowercase letter</li>
+                    <li id="modalNumberCheck" class="text-gray-700">A number</li>
+                    <li id="modalSpecialCharCheck" class="text-gray-700">A special character (!@#$%^&*)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const passwordInput = document.getElementById('passwordInput');
-        const togglePassword = document.getElementById('togglePassword');
-        const eyeSlashPath = document.getElementById('eyeSlashPath');
+        document.addEventListener('DOMContentLoaded', function() {
+            const signupForm = document.getElementById('signupForm');
+            const passwordInput = document.getElementById('passwordInput');
+            const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+            const unifiedErrorMessageDisplay = document.getElementById('unifiedErrorMessageDisplay'); // New unified error display
 
-        togglePassword.addEventListener('click', function () {
-            // Check the current type of the input
-            const isPassword = passwordInput.type === 'password';
-            
-            // Toggle the input type
-            passwordInput.type = isPassword ? 'text' : 'password';
-            
-            // Toggle the visibility of the slash icon
-            eyeSlashPath.classList.toggle('hidden');
-        });
+            // Strength bar elements
+            const strengthBarFill = document.getElementById('strengthBarFill');
+            const strengthText = document.getElementById('strengthText');
 
-        const confirmPasswordInput = document.getElementById('confirmPasswordInput');
-        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
-        const confirmEyeSlashPath = document.getElementById('confirmEyeSlashPath');
-        toggleConfirmPassword.addEventListener('click', function () {
-            // Check the current type of the input
-            const isPassword = confirmPasswordInput.type === 'password';
-            
-            // Toggle the input type
-            confirmPasswordInput.type = isPassword ? 'text' : 'password';
-            
-            // Toggle the visibility of the slash icon
-            confirmEyeSlashPath.classList.toggle('hidden');
+            // Modal elements
+            const complexityModal = document.getElementById('complexityModal');
+            const openComplexityModalBtn = document.getElementById('openComplexityModal');
+            const closeComplexityModalBtn = document.getElementById('closeComplexityModal');
+
+            // Modal complexity list items
+            const modalLengthCheck = document.getElementById('modalLengthCheck');
+            const modalUppercaseCheck = document.getElementById('modalUppercaseCheck');
+            const modalLowercaseCheck = document.getElementById('modalLowercaseCheck');
+            const modalNumberCheck = document.getElementById('modalNumberCheck');
+            const modalSpecialCharCheck = document.getElementById('modalSpecialCharCheck');
+
+            // --- NEW: Prevent copy/paste/cut on password fields ---
+            const preventClipboardActions = (event) => {
+                event.preventDefault();
+            };
+
+            passwordInput.addEventListener('copy', preventClipboardActions);
+            passwordInput.addEventListener('paste', preventClipboardActions);
+            passwordInput.addEventListener('cut', preventClipboardActions);
+
+            confirmPasswordInput.addEventListener('copy', preventClipboardActions);
+            confirmPasswordInput.addEventListener('paste', preventClipboardActions);
+            confirmPasswordInput.addEventListener('cut', preventClipboardActions);
+
+            // Helper function to update check UI for password complexity
+            function updateCheckUI(element, isMet) {
+                element.classList.remove('text-red-600', 'text-green-600', 'text-gray-700');
+                if (isMet) {
+                    element.classList.add('text-green-600');
+                } else {
+                    element.classList.add('text-red-600');
+                }
+            }
+
+            // Function to check password complexity and update UI
+            function checkPasswordComplexity() {
+                const password = passwordInput.value;
+                let checksMet = 0;
+
+                const checks = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[!@#$%^&*]/.test(password),
+                };
+
+                updateCheckUI(modalLengthCheck, checks.length);
+                updateCheckUI(modalUppercaseCheck, checks.uppercase);
+                updateCheckUI(modalLowercaseCheck, checks.lowercase);
+                updateCheckUI(modalNumberCheck, checks.number);
+                updateCheckUI(modalSpecialCharCheck, checks.special);
+
+                checksMet = Object.values(checks).filter(Boolean).length;
+
+                const totalChecks = 5;
+                const strengthPercentage = (checksMet / totalChecks) * 100;
+                strengthBarFill.style.width = `${strengthPercentage}%`;
+
+                let strengthColor = '#e0e0e0'; // Default gray
+                let strengthMessage = 'Very Weak';
+
+                if (checksMet === 1) {
+                    strengthColor = '#f87171'; // Red
+                    strengthMessage = 'Weak';
+                } else if (checksMet === 2) {
+                    strengthColor = '#fbbf24'; // Amber
+                    strengthMessage = 'Fair';
+                } else if (checksMet === 3) {
+                    strengthColor = '#fcd34d'; // Yellow
+                    strengthMessage = 'Good';
+                } else if (checksMet === 4) {
+                    strengthColor = '#84cc16'; // Lime Green
+                    strengthMessage = 'Strong';
+                } else if (checksMet === 5) {
+                    strengthColor = '#22c55e'; // Green
+                    strengthMessage = 'Very Strong';
+                }
+
+                strengthBarFill.style.backgroundColor = strengthColor;
+                strengthText.textContent = `Password Strength: ${strengthMessage}`;
+
+                return checksMet === totalChecks;
+            }
+
+            // Function to display errors in the unified message area
+            function showUnifiedErrors(messages) {
+                // Display only the first message
+                if (messages && messages.length > 0) {
+                    unifiedErrorMessageDisplay.innerHTML = `<p>${messages[0]}</p>`;
+                    unifiedErrorMessageDisplay.classList.remove('hidden');
+                } else {
+                    hideUnifiedErrors();
+                }
+            }
+
+            // Function to hide the unified error message area
+            function hideUnifiedErrors() {
+                unifiedErrorMessageDisplay.classList.add('hidden');
+                unifiedErrorMessageDisplay.innerHTML = ''; // Clear content
+            }
+
+            // --- Initial Load: Display server-side flash messages if any ---
+            // This relies on EJS to pass error_messages from the server.
+            // If error_messages is defined and has content (meaning server-side errors exist), display them.
+            // Otherwise, ensure the error display is hidden.
+            <% if (error_messages && error_messages.length > 0) { %>
+                showUnifiedErrors([
+                    <% error_messages.forEach(function(msg, index) { %>
+                        `<%= msg.replace(/`/g, '\\`') %>`<%= (index < error_messages.length - 1) ? ',' : '' %>
+                    <% }); %>
+                ]);
+            <% } else { %>
+                hideUnifiedErrors();
+            <% } %>
+
+
+            // Event listener for password input
+            passwordInput.addEventListener('input', function() {
+                checkPasswordComplexity();
+                hideUnifiedErrors(); // Hide errors as user types
+            });
+
+            // Event listener for confirm password input
+            confirmPasswordInput.addEventListener('input', function() {
+                hideUnifiedErrors(); // Hide errors as user types
+            });
+
+            // Event listener for form submission
+            signupForm.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default HTML submission initially
+                let clientErrors = []; // Array to collect client-side validation errors
+                const isPasswordComplex = checkPasswordComplexity();
+
+                // Client-side password match check
+                if (passwordInput.value !== confirmPasswordInput.value) {
+                    clientErrors.push('Passwords do not match.');
+                }
+                // Client-side password complexity check
+                if (!isPasswordComplex) {
+                    clientErrors.push('Password does not meet complexity requirements.');
+                }
+
+                // If there are client-side errors, display them and prevent form submission
+                if (clientErrors.length > 0) {
+                    showUnifiedErrors(clientErrors); // Only the first error will be shown by showUnifiedErrors
+                } else {
+                    // If client-side validation passes, hide any existing errors and submit the form to the backend
+                    hideUnifiedErrors();
+                    signupForm.action = '/register'; // Set the action attribute to the backend route
+                    signupForm.submit(); // Programmatically submit the form
+                }
+            });
+
+            // --- Toggle Password Visibility Logic ---
+            const togglePassword = document.getElementById('togglePassword');
+            const eyeSlashPath = document.getElementById('eyeSlashPath');
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                eyeSlashPath.classList.toggle('hidden');
+            });
+
+            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+            const confirmEyeSlashPath = document.getElementById('confirmEyeSlashPath');
+            toggleConfirmPassword.addEventListener('click', function() {
+                const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                confirmPasswordInput.setAttribute('type', type);
+                confirmEyeSlashPath.classList.toggle('hidden');
+            });
+
+            // --- Modal Functionality ---
+            openComplexityModalBtn.addEventListener('click', () => {
+                complexityModal.classList.add('show');
+                checkPasswordComplexity(); // Ensure modal content is up-to-date
+            });
+
+            closeComplexityModalBtn.addEventListener('click', () => {
+                complexityModal.classList.remove('show');
+            });
+
+            complexityModal.addEventListener('click', (event) => {
+                if (event.target === complexityModal) {
+                    complexityModal.classList.remove('show');
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && complexityModal.classList.contains('show')) {
+                    complexityModal.classList.remove('show');
+                }
+            });
         });
     </script>
 
 </body>
+
 </html>

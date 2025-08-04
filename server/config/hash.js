@@ -6,4 +6,4 @@ async function hashString(string) {
     return string;
 }
 
-module.exports = hashString;
+module.exports = { hashString };
