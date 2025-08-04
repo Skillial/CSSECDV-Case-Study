@@ -2,6 +2,7 @@
 CREATE TABLE accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
+    address TEXT,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL, -- Stores 'admin', 'manager', or 'customer'
     login_attempts INTEGER DEFAULT 0 NOT NULL,

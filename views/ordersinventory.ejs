@@ -6,6 +6,12 @@
     <title>Manager Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-white text-black flex flex-col antialiased font-sans">
     <%- include('component/navbar') %>
@@ -158,7 +164,7 @@
     </div>
 
     <script>
-        // Initial Data
+        // Initial Data (will eventually come from backend)
         let products = [
             { id: 'p1', name: 'Wireless Headphones', price: 99.99, stock: 150, description: 'High-fidelity audio with noise cancellation.' },
             { id: 'p2', name: 'Ergonomic Keyboard', price: 75.00, stock: 80, description: 'Comfortable typing experience for long hours.' },
@@ -396,21 +402,35 @@
          * @param {string} tabName - 'products' or 'orders'.
          */
         function switchTab(tabName) {
+            // Define common classes for active and inactive states
+            const activeClasses = ['bg-black', 'text-white', 'hover:bg-gray-800'];
+            const inactiveClasses = ['bg-gray-200', 'text-gray-800', 'hover:bg-gray-300'];
+
             if (tabName === 'products') {
                 productsSection.classList.remove('hidden');
                 ordersSection.classList.add('hidden');
-                productsTabBtn.classList.add('bg-black', 'text-white');
-                productsTabBtn.classList.remove('text-gray-700', 'hover:bg-gray-200');
-                ordersTabBtn.classList.remove('bg-black', 'text-white');
-                ordersTabBtn.classList.add('text-gray-700', 'hover:bg-gray-200');
+
+                // Products tab becomes active
+                productsTabBtn.classList.add(...activeClasses);
+                productsTabBtn.classList.remove(...inactiveClasses);
+
+                // Orders tab becomes inactive
+                ordersTabBtn.classList.add(...inactiveClasses);
+                ordersTabBtn.classList.remove(...activeClasses);
+
                 renderProducts();
             } else if (tabName === 'orders') {
                 productsSection.classList.add('hidden');
                 ordersSection.classList.remove('hidden');
-                ordersTabBtn.classList.add('bg-black', 'text-white');
-                ordersTabBtn.classList.remove('text-gray-700', 'hover:bg-gray-200');
-                productsTabBtn.classList.remove('bg-black', 'text-white');
-                productsTabBtn.classList.add('text-gray-700', 'hover:bg-gray-200');
+
+                // Orders tab becomes active
+                ordersTabBtn.classList.add(...activeClasses);
+                ordersTabBtn.classList.remove(...inactiveClasses);
+
+                // Products tab becomes inactive
+                productsTabBtn.classList.add(...inactiveClasses);
+                productsTabBtn.classList.remove(...activeClasses);
+
                 renderOrders();
             }
         }

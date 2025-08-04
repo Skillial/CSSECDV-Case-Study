@@ -1,9 +1,7 @@
-const passport = require('passport');
 
 const controller = {
 
-    // Renders the home page
-    home: (req, res) => {
+    page: (req, res) => {
         if (req.user){
             if (req.user.role === 'admin') {
                 res.render('dashboard'); 

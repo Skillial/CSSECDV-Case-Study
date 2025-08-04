@@ -57,6 +57,9 @@ app.use('/', registerRoute);
 const homeRoute = require('./server/router/homeRouter');
 app.use('/', homeRoute);
 
+const profileRoute = require('./server/router/profileRouter');
+app.use('/', profileRoute);
+
 // Default route (redirect to login)
 app.get('/', (req, res) => {
     res.redirect('/login');

@@ -77,6 +77,55 @@
         .modal-error-display.show {
             display: block;
         }
+
+        /* Unified Success Message Display within modals */
+        .modal-success-display {
+            background-color: #d1fae5; /* Green-100 */
+            border: 1px solid #34d399; /* Green-400 */
+            color: #065f46; /* Green-800 */
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            margin-bottom: 16px; /* mb-4 */
+            display: none; /* hidden */
+        }
+        .modal-success-display.show {
+            display: block;
+        }
+
+
+        /* General error display for main page content */
+        .page-error-display {
+            background-color: #fee2e2; /* Red-100 */
+            border: 1px solid #ef4444; /* Red-400 */
+            color: #b91c1c; /* Red-700 */
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            margin-bottom: 16px; /* mb-4 */
+            display: none; /* hidden */
+        }
+        .page-error-display.show {
+            display: block;
+        }
+
+        /* General success display for main page content */
+        .page-success-display {
+            background-color: #d1fae5; /* Green-100 */
+            border: 1px solid #34d399; /* Green-400 */
+            color: #065f46; /* Green-800 */
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            margin-bottom: 16px; /* mb-4 */
+            display: none; /* hidden */
+        }
+        .page-success-display.show {
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900 font-sans min-h-screen flex flex-col">
@@ -84,6 +133,11 @@
 
     <!-- Main Profile Content -->
     <main class="flex-grow container mx-auto px-6 py-8 max-w-6xl flex-col">
+        <!-- Success Message Display for main page content -->
+        <div id="mainPageSuccessMessageDisplay" class="page-success-display" role="alert">
+            <!-- Content will be set by EJS for server-side messages, or by JavaScript -->
+        </div>
+
         <div class="flex flex-col md:flex-row items-start md:items-stretch gap-8 md:gap-12">
             <!-- Left Column: Profile Picture and Basic Info -->
             <div class="flex flex-col items-center gap-4 w-full md:w-1/4 lg:w-1/5 bg-white rounded-xl shadow-md p-6">
@@ -104,14 +158,14 @@
                     <button id="cancelProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition-colors font-medium">
                         Cancel
                     </button>
-                    <button id="saveProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-sm hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                    <button id="saveProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors font-medium shadow-sm">
                         Save
                     </button>
                 </div>
 
                 <!-- Basic User Info -->
-                <p class="text-lg font-medium text-gray-800">John Doe</p>
-                <p class="text-sm text-gray-600 text-center">123 Main Street, Anytown, USA</p>
+                <p class="text-lg font-medium text-gray-800"><%= user.username %></p>
+                <p class="text-sm text-gray-600 text-center"><%= user.address %></p>
             </div>
 
             <!-- Right Column: Edit Forms and Management Cards -->
@@ -122,20 +176,27 @@
                     <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                         <i class="fas fa-user-edit mr-3 text-gray-700"></i> Edit Profile Information
                     </h3>
-                    <form id="editProfileForm" class="space-y-4">
+                    <!-- Error Message Display for Edit Profile Form -->
+                    <div id="editProfileErrorMessageDisplay" class="page-error-display" role="alert">
+                        <!-- Content will be set by EJS for server-side errors, or by JavaScript for client-side errors -->
+                    </div>
+                    <form id="editProfileForm" action="/profile/edit" method="POST" class="space-y-4">
                         <div>
-                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                            <input type="text" id="username" value="JohnDoe" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                            <label for="usernameDisplay" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <!-- Display username as static text -->
+                            <p id="usernameDisplay" class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700 select-none">
+                                <%= user.username %>
+                            </p>
                         </div>
                         <div>
                             <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                            <textarea id="address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">123 Main Street, Anytown, USA 12345</textarea>
+                            <textarea id="address" name="address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm"><%= user.address %></textarea>
                         </div>
                         <div id="editProfileActions" class="flex justify-end gap-3 pt-4 hidden">
                             <button type="button" id="cancelEditProfileBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
                                 Cancel Changes
                             </button>
-                            <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                            <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
                                 Save Changes
                             </button>
                         </div>
@@ -152,7 +213,7 @@
                     <i class="fas fa-lock mr-3 text-gray-700"></i> Password Management
                 </h3>
                 <p class="text-gray-700 mb-4 text-sm">Need to reset your password?</p>
-                <button id="changePasswordBtn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                <button id="changePasswordBtn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm">
                     Change Password
                 </button>
             </div>
@@ -165,7 +226,7 @@
                 <p class="text-gray-700 mb-4 text-sm">
                     Set up or update your security questions for enhanced account recovery.
                 </p>
-                <button id="manageSecurityQuestionsBtn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                <button id="manageSecurityQuestionsBtn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm">
                     Manage Security Questions
                 </button>
             </div>
@@ -177,11 +238,17 @@
         <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
             <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Manage Security Questions</h3>
 
-            <form class="space-y-5">
+            <!-- Error Message Display for Security Questions Modal -->
+            <div id="securityQuestionsErrorMessageDisplay" class="modal-error-display" role="alert">
+                <!-- Content will be set by JavaScript -->
+            </div>
+
+
+            <form id="securityQuestionsForm" class="space-y-5">
                 <!-- Question 1 -->
                 <div>
-                    <label for="question1" class="block text-sm font-medium text-gray-700 mb-1">Security Question 1</label>
-                    <select id="question1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                    <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Security Question</label>
+                    <select id="question" name="question" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
                         <option value="">Select a question</option>
                         <option value="fictional_character">What was the name of your favorite fictional character?</option>
                         <option value="first_album">What was the first album you ever fully listened to?</option>
@@ -193,15 +260,15 @@
                     </select>
                 </div>
                 <div>
-                    <label for="answer1" class="block text-sm font-medium text-gray-700 mb-1">Answer 1</label>
-                    <input type="text" id="answer1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                    <label for="answer" class="block text-sm font-medium text-gray-700 mb-1">Answer</label>
+                    <input type="text" id="answer" name="answer" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
                 </div>
 
                 <!-- Password Confirmation -->
                 <div>
                     <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm with Password</label>
                     <div class="relative">
-                        <input type="password" id="currentPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <input type="password" id="currentPassword" name="currentPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
                         <!-- Eye icon for confirm password visibility toggle -->
                         <svg id="toggleCurrentPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -215,7 +282,7 @@
                     <button type="button" id="cancelSecurityQuestionsBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
                         Cancel
                     </button>
-                    <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
                         Save
                     </button>
                 </div>
@@ -289,7 +356,7 @@
                     <button type="button" id="cancelChangePasswordBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
                         Cancel
                     </button>
-                    <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition-colors font-medium shadow-sm">
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
                         Save Changes
                     </button>
                 </div>
@@ -383,18 +450,50 @@
             const manageSecurityQuestionsBtn = document.getElementById('manageSecurityQuestionsBtn');
             const securityQuestionsModal = document.getElementById('securityQuestionsModal');
             const cancelSecurityQuestionsBtn = document.getElementById('cancelSecurityQuestionsBtn');
-            const question1Select = document.getElementById('question1');
+            const securityQuestionsForm = document.getElementById('securityQuestionsForm'); // New: Reference to the form
+            const questionSelect = document.getElementById('question'); // Changed from question1Select
+            const answerInput = document.getElementById('answer'); // Changed from answer1Input
             const currentPasswordInput = document.getElementById('currentPassword'); // Added for security questions modal password
+            const securityQuestionsErrorMessageDisplay = document.getElementById('securityQuestionsErrorMessageDisplay'); // New: Error display for security questions
+
 
             // Toggle password visibility elements for current password in security questions modal
             const toggleCurrentPassword = document.getElementById('toggleCurrentPassword');
             const currentEyeSlashPath = document.getElementById('currentEyeSlashPath');
 
+            // Function to display messages (errors or success) in a unified area
+            function displayMessage(displayElement, messages, type) {
+                // Clear previous states and content
+                displayElement.classList.remove('show', 'bg-red-100', 'text-red-700', 'border-red-400', 'bg-green-100', 'text-green-800', 'border-green-400');
+                displayElement.innerHTML = '';
+
+                if (messages && messages.length > 0) {
+                    displayElement.innerHTML = `<p>${messages[0]}</p>`; // Display only the first message for simplicity
+                    displayElement.classList.add('show');
+                    if (type === 'error') {
+                        displayElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                        displayElement.classList.remove('bg-green-100', 'text-green-800', 'border-green-400'); // Ensure success classes are removed
+                    } else if (type === 'success') {
+                        displayElement.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+                        displayElement.classList.remove('bg-red-100', 'text-red-700', 'border-red-400'); // Ensure error classes are removed
+                    }
+                }
+            }
+
+            // Function to hide any message display area
+            function hideMessage(displayElement) {
+                displayElement.classList.remove('show', 'bg-red-100', 'text-red-700', 'border-red-400', 'bg-green-100', 'text-green-800', 'border-green-400');
+                displayElement.innerHTML = '';
+            }
+
+
             // Show the modal when "Manage Security Questions" button is clicked
             manageSecurityQuestionsBtn.addEventListener('click', () => {
                 securityQuestionsModal.classList.remove('hidden');
-                // Reset options when modal opens to ensure fresh state
-                question1Select.value = '';
+                hideMessage(securityQuestionsErrorMessageDisplay); // Clear errors on open
+                hideMessage(mainPageSuccessMessageDisplay); // Clear success on open
+                questionSelect.value = ''; // Changed from question1Select
+                answerInput.value = ''; // Changed from answer1Input
                 currentPasswordInput.value = ''; // Clear password field
                 // Ensure eye icon is reset
                 currentPasswordInput.setAttribute('type', 'password');
@@ -420,6 +519,88 @@
                 }
             });
 
+            // Event listeners to hide messages when user interacts with fields
+            questionSelect.addEventListener('change', () => { // Changed from question1Select
+                hideMessage(securityQuestionsErrorMessageDisplay);
+                hideMessage(mainPageSuccessMessageDisplay);
+            });
+            answerInput.addEventListener('input', () => { // Changed from answer1Input
+                hideMessage(securityQuestionsErrorMessageDisplay);
+                hideMessage(mainPageSuccessMessageDisplay);
+            });
+            currentPasswordInput.addEventListener('input', () => {
+                hideMessage(securityQuestionsErrorMessageDisplay);
+                hideMessage(mainPageSuccessMessageDisplay);
+            });
+
+
+            // --- Security Questions Form Submission Logic ---
+            securityQuestionsForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default HTML submission
+
+                let clientErrors = [];
+
+                const selectedOption = questionSelect.options[questionSelect.selectedIndex]; // Changed from question1Select
+                const questionText = selectedOption.textContent.trim(); // Get the actual text
+                const answer = answerInput.value.trim(); // Changed from answer1Input
+                const currentPassword = currentPasswordInput.value;
+
+                if (!questionText || questionSelect.value === "") { // Check if a question is selected
+                    clientErrors.push('Please select a security question.');
+                }
+                if (!answer) {
+                    clientErrors.push('Please provide an answer to your security question.');
+                }
+                if (!currentPassword) {
+                    clientErrors.push('Please confirm with your current password.');
+                }
+
+                if (clientErrors.length > 0) {
+                    displayMessage(securityQuestionsErrorMessageDisplay, clientErrors, 'error');
+                    return;
+                } else {
+                    hideMessage(securityQuestionsErrorMessageDisplay);
+                }
+
+                try {
+                    const response = await fetch('/profile/question', { // New backend endpoint
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            question: questionText, // Send the text
+                            answer: answer,
+                            currentPassword: currentPassword
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        console.log('Security questions updated successfully:', result.message);
+                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Security question updated successfully!'], 'success');
+                        hideMessage(securityQuestionsErrorMessageDisplay); // Ensure error is hidden
+                        // Clear fields on success
+                        questionSelect.value = ''; // Changed from question1Select
+                        answerInput.value = ''; // Changed from answer1Input
+                        currentPasswordInput.value = '';
+                        securityQuestionsModal.classList.add('hidden');
+                        hideMessage(mainPageSuccessMessageDisplay); // Clear success after modal closes
+
+                    } else {
+                        console.error('Security questions update failed:', result.message);
+                        displayMessage(securityQuestionsErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
+                        hideMessage(mainPageSuccessMessageDisplay); // Ensure success is hidden
+                    }
+                } catch (error) {
+                    console.error('Network or unexpected error during security questions update:', error);
+                    displayMessage(securityQuestionsErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+                    hideMessage(mainPageSuccessMessageDisplay);
+                }
+            });
+
+
             // --- Change Password Modal Logic ---
             const changePasswordBtn = document.getElementById('changePasswordBtn');
             const changePasswordModal = document.getElementById('changePasswordModal');
@@ -429,6 +610,7 @@
             const newPasswordInput = document.getElementById('newPassword');
             const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
             const changePasswordErrorMessageDisplay = document.getElementById('changePasswordErrorMessageDisplay');
+            const mainPageSuccessMessageDisplay = document.getElementById('mainPageSuccessMessageDisplay'); // New: Reference to main page success display
 
             // Password complexity elements for new password
             const newStrengthBarFill = document.getElementById('newStrengthBarFill');
@@ -449,6 +631,7 @@
             const confirmNewEyeSlashPath = document.getElementById('confirmNewEyeSlashPath');
             const toggleOldPassword = document.getElementById('toggleOldPassword'); // Added for old password
             const oldEyeSlashPath = document.getElementById('oldEyeSlashPath'); // Added for old password
+
 
             // Helper function to update check UI for password complexity
             function updateCheckUI(element, isMet) {
@@ -511,26 +694,11 @@
                 return checksMet === totalChecks;
             }
 
-            // Function to display errors in the unified message area
-            function showUnifiedErrors(displayElement, messages) {
-                if (messages && messages.length > 0) {
-                    displayElement.innerHTML = `<p>${messages[0]}</p>`;
-                    displayElement.classList.add('show');
-                } else {
-                    hideUnifiedErrors(displayElement);
-                }
-            }
-
-            // Function to hide the unified error message area
-            function hideUnifiedErrors(displayElement) {
-                displayElement.classList.remove('show');
-                displayElement.innerHTML = ''; // Clear content
-            }
-
             // Show Change Password Modal
             changePasswordBtn.addEventListener('click', () => {
                 changePasswordModal.classList.remove('hidden');
-                hideUnifiedErrors(changePasswordErrorMessageDisplay); // Clear errors on open
+                hideMessage(changePasswordErrorMessageDisplay); // Clear errors on open
+                hideMessage(mainPageSuccessMessageDisplay); // Clear success messages on open
                 oldPasswordInput.value = ''; // Clear password fields
                 newPasswordInput.value = '';
                 confirmNewPasswordInput.value = '';
@@ -588,17 +756,18 @@
             // Event listener for new password input
             newPasswordInput.addEventListener('input', function() {
                 checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
-                hideUnifiedErrors(changePasswordErrorMessageDisplay); // Hide errors as user types
+                hideMessage(changePasswordErrorMessageDisplay); // Hide errors as user types
             });
 
             // Event listener for confirm new password input
             confirmNewPasswordInput.addEventListener('input', function() {
-                hideUnifiedErrors(changePasswordErrorMessageDisplay); // Hide errors as user types
+                hideMessage(changePasswordErrorMessageDisplay); // Hide errors as user types
             });
 
             // Event listener for Change Password form submission
-            changePasswordForm.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent default HTML submission initially
+            changePasswordForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default HTML submission
+
                 let clientErrors = []; // Array to collect client-side validation errors
 
                 const isNewPasswordComplex = checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
@@ -614,16 +783,44 @@
 
                 // If there are client-side errors, display them and prevent form submission
                 if (clientErrors.length > 0) {
-                    showUnifiedErrors(changePasswordErrorMessageDisplay, clientErrors);
+                    displayMessage(changePasswordErrorMessageDisplay, clientErrors, 'error');
+                    return; // Stop here if client-side validation fails
                 } else {
-                    // If client-side validation passes, hide any existing errors and proceed
-                    hideUnifiedErrors(changePasswordErrorMessageDisplay);
-                    // In a real application, you would send the oldPassword, newPassword to your backend here
-                    // For this demo, we'll just log success and hide the modal
-                    console.log('Password change initiated successfully!');
-                    changePasswordModal.classList.add('hidden');
-                    // Optionally, show a success message to the user outside the modal
-                    // For example: showUnifiedErrors(mainPageErrorMessageDisplay, ['Password changed successfully!']);
+                    hideMessage(changePasswordErrorMessageDisplay); // Clear client-side errors if validation passes
+                }
+
+                // Proceed with fetch API call if client-side validation passes
+                try {
+                    const response = await fetch('/password/change', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            oldPassword: oldPasswordInput.value,
+                            newPassword: newPasswordInput.value,
+                        }),
+                    });
+
+                    const result = await response.json(); // Assuming backend always returns JSON
+
+                    if (response.ok) { // Status 200-299 indicates success
+                        console.log('Password change successful:', result.message);
+                        hideMessage(changePasswordErrorMessageDisplay); // Ensure modal error is hidden
+                        changePasswordModal.classList.add('hidden'); // Hide the modal
+                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Password changed successfully!'], 'success'); // Show success on main page
+                        // Clear form fields after successful submission
+                        oldPasswordInput.value = '';
+                        newPasswordInput.value = '';
+                        confirmNewPasswordInput.value = '';
+                    } else { // Status 4xx, 5xx indicates an error
+                        console.error('Password change failed:', result.message);
+                        displayMessage(changePasswordErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error'); // Show error in modal
+                        // Do not clear fields so user can correct
+                    }
+                } catch (error) {
+                    console.error('Network or unexpected error during password change:', error);
+                    displayMessage(changePasswordErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error'); // Show generic error
                 }
             });
 
@@ -679,25 +876,23 @@
             });
 
             // --- Edit Profile Form Logic ---
-            const usernameInput = document.getElementById('username');
-            const emailInput = document.getElementById('email');
+            // Removed usernameInput reference as it's no longer an input for editing
             const addressInput = document.getElementById('address');
             const editProfileActions = document.getElementById('editProfileActions');
             const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
             const editProfileForm = document.getElementById('editProfileForm');
+            const editProfileErrorMessageDisplay = document.getElementById('editProfileErrorMessageDisplay'); // New: Error display for edit profile
 
-            // Store original values
-            let originalUsername = usernameInput.value;
-            let originalEmail = emailInput.value;
+            // Store original values (originalUsername is still needed for display, but not for input comparison)
+            const originalUsernameDisplay = document.getElementById('usernameDisplay').textContent.trim();
             let originalAddress = addressInput.value;
 
             // Function to check if any field has been edited
             function checkIfEdited() {
-                const isUsernameEdited = usernameInput.value !== originalUsername;
-                const isEmailEdited = emailInput.value !== originalEmail;
+                // Only check address, as username is static text
                 const isAddressEdited = addressInput.value !== originalAddress;
 
-                if (isUsernameEdited || isEmailEdited || isAddressEdited) {
+                if (isAddressEdited) {
                     editProfileActions.classList.remove('hidden');
                 } else {
                     editProfileActions.classList.add('hidden');
@@ -705,28 +900,37 @@
             }
 
             // Add event listeners to input fields
-            usernameInput.addEventListener('input', checkIfEdited);
-            emailInput.addEventListener('input', checkIfEdited);
-            addressInput.addEventListener('input', checkIfEdited);
+            addressInput.addEventListener('input', () => {
+                checkIfEdited();
+                hideMessage(editProfileErrorMessageDisplay); // Hide errors as user types
+            });
 
             // Handle Cancel Changes button click
             cancelEditProfileBtn.addEventListener('click', () => {
-                usernameInput.value = originalUsername;
-                emailInput.value = originalEmail;
+                // No need to reset usernameInput.value as it's not an input
                 addressInput.value = originalAddress;
                 editProfileActions.classList.add('hidden'); // Hide buttons after canceling
+                hideMessage(editProfileErrorMessageDisplay); // Hide errors on cancel
             });
 
-            // Handle form submission (for demo purposes, just logs)
-            editProfileForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                console.log('Profile changes saved (demo)!');
-                // In a real app, send data to backend and then update original values
-                originalUsername = usernameInput.value;
-                originalEmail = emailInput.value;
-                originalAddress = addressInput.value;
-                editProfileActions.classList.add('hidden');
-            });
+
+            // --- Initial Load: Display server-side flash messages if any ---
+            // This relies on EJS to pass error_messages and success_messages from the server.
+            // Ensure these are passed from your backend controller when rendering this EJS file.
+            const serverErrorMessages = <%- JSON.stringify(error_messages || []) %>;
+            const serverSuccessMessages = <%- JSON.stringify(success_messages || []) %>;
+
+            if (serverErrorMessages.length > 0) {
+                displayMessage(editProfileErrorMessageDisplay, serverErrorMessages, 'error');
+            } else {
+                hideMessage(editProfileErrorMessageDisplay);
+            }
+
+            if (serverSuccessMessages.length > 0) {
+                displayMessage(mainPageSuccessMessageDisplay, serverSuccessMessages, 'success');
+            } else {
+                hideMessage(mainPageSuccessMessageDisplay);
+            }
         });
     </script>
 </body>
