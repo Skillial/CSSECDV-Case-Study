@@ -33,8 +33,8 @@ app.get('/', (req, res) => {
 const loginRoute = require('./server/router/loginRouter')
 app.use('/', loginRoute);
 
-const signUpRoute = require('./server/router/signUpRouter')
-app.use('/', signUpRoute);
+const registerRoute = require('./server/router/registerRouter')
+app.use('/', registerRoute);
 
 // Temporary routes for testing
 app.get('/home', (req, res) => {

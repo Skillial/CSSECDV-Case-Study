@@ -2,26 +2,14 @@
 
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
-const sqlite3 = require('sqlite3').verbose(); // Import sqlite3
-const path = require('path'); // Import path for database path
-
-// Establish database connection (assuming accounts.db is in the same directory)
-const dbPath = path.resolve(__dirname, 'accounts.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error connecting to database in passport-config:', err.message);
-  } else {
-    console.log('Passport-config connected to SQLite database.');
-  }
-});
-
+const OccasioDB = require('./db.js'); // Adjust the path as necessary
 module.exports = function (passport) {
 
     // Helper function to get account by username (returns a Promise)
     // This makes database operations asynchronous and easier to manage with async/await
     function getAccountByUsername(username) {
         return new Promise((resolve, reject) => {
-            db.get('SELECT * FROM accounts WHERE username = ?', [username], (err, row) => {
+            OccasioDB.get('SELECT * FROM accounts WHERE username = ?', [username], (err, row) => {
                 if (err) {
                     return reject(err);
                 }
@@ -33,7 +21,7 @@ module.exports = function (passport) {
     // Helper function to get account by ID (returns a Promise)
     function getAccountById(id) {
         return new Promise((resolve, reject) => {
-            db.get('SELECT * FROM accounts WHERE id = ?', [id], (err, row) => {
+            OccasioDB.get('SELECT * FROM accounts WHERE id = ?', [id], (err, row) => {
                 if (err) {
                     return reject(err);
                 }
@@ -52,7 +40,7 @@ module.exports = function (passport) {
                 // --- Vague Error Message & User Not Found Handling ---
                 if (!user) {
                     // Update last login attempt for non-existent user (optional, for logging/auditing)
-                    db.run('UPDATE accounts SET last_login_attempt = ? WHERE username = ?', [new Date().toISOString(), username]);
+                    OccasioDB.run('UPDATE accounts SET last_login_attempt = ? WHERE username = ?', [new Date().toISOString(), username]);
                     return done(null, false, { message: 'Invalid username and/or password' });
                 }
 
@@ -66,7 +54,7 @@ module.exports = function (passport) {
                         return done(null, false, { message: 'Invalid username and/or password' }); // Vague message
                     } else {
                         // Lockout period has expired, reset lockout status
-                        db.run('UPDATE accounts SET login_attempts = 0, lockout_until = NULL WHERE id = ?', [user.id], (err) => {
+                        OccasioDB.run('UPDATE accounts SET login_attempts = 0, lockout_until = NULL WHERE id = ?', [user.id], (err) => {
                             if (err) console.error("Error resetting lockout for expired account:", err.message);
                         });
                         // Continue to password comparison
@@ -79,7 +67,7 @@ module.exports = function (passport) {
                 if (isMatch) {
                     // Password is correct. Reset login attempts and update last successful login.
                     // Also, report last login attempt to the user (via session flash message)
-                    
+
                     let lastLoginReportMessage = '';
                     const lastAttemptTimestamp = user.last_login_attempt;
                     const lastSuccessfulTimestamp = user.last_successful_login;
@@ -97,16 +85,16 @@ module.exports = function (passport) {
                             lastLoginReportMessage = `Your last login attempt was unsuccessful at: ${lastAttemptDate.toLocaleString()}.`;
                         }
                     } else {
-                        lastLoginReportMessage = 'This is your first login.'; 
+                        lastLoginReportMessage = 'This is your first login.';
                     }
 
                     req.session.lastLoginReport = lastLoginReportMessage; // Store this detailed message in session
 
-                    db.run('UPDATE accounts SET login_attempts = 0, last_successful_login = ?, last_login_attempt = ? WHERE id = ?',
+                    OccasioDB.run('UPDATE accounts SET login_attempts = 0, last_successful_login = ?, last_login_attempt = ? WHERE id = ?',
                         [new Date().toISOString(), new Date().toISOString(), user.id], (updateErr) => {
                             if (updateErr) console.error("Error updating successful login:", updateErr.message);
                         });
-                    return done(null, user); // Authentication successfuls
+                    return done(null, user); // Authentication successful
                 } else {
                     // --- Incorrect Password & Lockout Increment ---
                     const newAttempts = user.login_attempts + 1;
@@ -115,7 +103,7 @@ module.exports = function (passport) {
 
                     if (newAttempts >= lockoutThreshold) {
                         const lockoutUntil = new Date(Date.now() + lockoutPeriodSeconds * 1000).toISOString();
-                        db.run(
+                        OccasioDB.run(
                             'UPDATE accounts SET login_attempts = ?, lockout_until = ?, last_login_attempt = ? WHERE id = ?',
                             [newAttempts, lockoutUntil, new Date().toISOString(), user.id], (updateErr) => {
                                 if (updateErr) console.error("Error locking account:", updateErr.message);
@@ -123,7 +111,7 @@ module.exports = function (passport) {
                         );
                         return done(null, false, { message: 'Invalid username and/or password' }); // Vague message
                     } else {
-                        db.run('UPDATE accounts SET login_attempts = ?, last_login_attempt = ? WHERE id = ?',
+                        OccasioDB.run('UPDATE accounts SET login_attempts = ?, last_login_attempt = ? WHERE id = ?',
                             [newAttempts, new Date().toISOString(), user.id], (updateErr) => {
                                 if (updateErr) console.error("Error updating failed login attempt:", updateErr.message);
                             });
