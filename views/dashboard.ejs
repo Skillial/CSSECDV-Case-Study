@@ -56,22 +56,25 @@
             right: 0;
             width: 100%;
             z-index: 999; /* Ensure it's above other content but below modals */
-            padding-top: 1rem; /* Tailwind px-4 py-3 gives padding, but need to ensure it's consistent with fixed position */
+            padding-top: 1rem;
             padding-bottom: 1rem;
-            box-sizing: border-box; /* Include padding in the width calculation */
+            box-sizing: border-box;
+        }
+        .sort-indicator {
+            font-size: 0.6rem;
+            vertical-align: middle;
         }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
     <%- include('component/navbar') %>
 
-    <div class="max-w-7xl mx-auto">
+    <div class="max-w-7xl mx-auto p-4">
         <!-- Message Box for User Feedback -->
-        <!-- This box will appear when an "Edit" button is clicked -->
         <div id="dashboard-message-box" class="hidden bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-xl relative mb-6" role="alert">
-            <strong class="font-bold">Employee Assignment:</strong>
+            <strong class="font-bold">System Message:</strong>
             <span class="block sm:inline" id="dashboard-message-content"></span>
-            <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('dashboard-message-box').classList.add('hidden')">
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="this.parentElement.classList.add('hidden')">
                 <svg class="fill-current h-6 w-6 text-blue-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 1 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z"/></svg>
             </span>
         </div>
@@ -90,602 +93,390 @@
                     <p class="text-gray-600 text-md">As of <span id="current-date"></span></p>
                 </div>
 
-                <!-- New Admin and Employee Sections (grouped) -->
+                <!-- New Admin and Employee Sections -->
                 <div class="flex flex-col gap-6">
-                    <!-- Add New Admin Card -->
                     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col justify-between items-center text-center h-full">
                         <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add New Admin</h2>
-                        <p class="text-gray-600 text-md mb-4">Register new administrators to manage the system.</p>
-                        <button id="add-admin-btn" class="mt-auto bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105" onclick="openModal('admin-modal')">
+                        <p class="text-gray-600 text-md mb-4">Register new administrators.</p>
+                        <button id="add-admin-btn" class="mt-auto bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 transform hover:scale-105" onclick="openModal('admin-modal')">
                             Add Admin
                         </button>
                     </div>
-
-                    <!-- New Employee Card -->
                     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col justify-between items-center text-center h-full">
                         <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add New Employee</h2>
-                        <p class="text-gray-600 text-md mb-4">Onboard new employees and assign roles.</p>
-                        <button id="add-employee-btn" class="mt-auto bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                        <p class="text-gray-600 text-md mb-4">Onboard new employees.</p>
+                        <button id="add-employee-btn" class="mt-auto bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 transform hover:scale-105">
                             Add Employee
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Customer Records Section -->
+            <!-- Customer Records Section -->
             <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Customer Records</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-gray-800">Customer Records</h2>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="customer-search" placeholder="Search customers..." class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <button id="clear-customer-sort" class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md whitespace-nowrap">Clear Sort</button>
+                    </div>
+                </div>
                 <div class="overflow-x-auto max-h-[30rem] custom-scrollbar">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-100 sticky top-0">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider rounded-tl-lg">
-                                    Customer ID
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                    Name
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider rounded-tr-lg">
-                                    Email
-                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap rounded-tl-lg cursor-pointer hover:bg-gray-200" data-table="customers" data-column="id">Customer ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="customers" data-column="name">Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="customers" data-column="address">Address</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap rounded-tr-lg cursor-pointer hover:bg-gray-200" data-table="customers" data-column="created_at">Member Since</th>
                             </tr>
                         </thead>
-                        <tbody id="customers-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- Customer rows will be inserted here by JavaScript -->
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST001</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Alice Smith</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">alice.s@example.com</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST002</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Bob Johnson</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">bob.j@example.com</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST003</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Charlie Brown</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">charlie.b@example.com</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST004</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Diana Prince</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">diana.p@example.com</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST005</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Eve Adams</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">eve.a@example.com</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">CUST006</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Frank White</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">frank.w@example.com</td>
-                            </tr>
-                        </tbody>
+                        <tbody id="customers-table-body" class="bg-white divide-y divide-gray-200"></tbody>
                     </table>
                 </div>
-                <p class="text-gray-500 text-sm mt-4">Scroll to see more customer details.</p>
+                <p class="text-gray-500 text-sm mt-4">Tip: Hold Shift and click headers to sort by multiple columns.</p>
             </div>
 
             <!-- Employee Transaction Records Section -->
             <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Employee Transaction Records</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-gray-800">Employee Transaction Records</h2>
+                     <div class="flex items-center gap-2">
+                        <input type="text" id="transaction-search" placeholder="Search transactions..." class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <button id="clear-transaction-sort" class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md whitespace-nowrap">Clear Sort</button>
+                    </div>
+                </div>
                 <div class="overflow-x-auto max-h-96 custom-scrollbar">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-100 sticky top-0">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider rounded-tl-lg">
-                                    Transaction ID
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                    Employee
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                    Customer
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                    Item
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                    Quantity
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                    Price
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                    Date
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider rounded-tr-lg">
-                                    Status
-                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap rounded-tl-lg cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="id">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="employeeName">Employee</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="customerName">Customer</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="itemName">Item</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="quantity">Qty</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="price">Price</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="date">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap rounded-tr-lg cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="status">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="transactions-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- Transaction rows will be inserted here by JavaScript -->
-                        </tbody>
+                        <tbody id="transactions-table-body" class="bg-white divide-y divide-gray-200"></tbody>
                     </table>
                 </div>
-                <p class="text-gray-500 text-sm mt-4">Scroll to see more transactions.</p>
+                 <p class="text-gray-500 text-sm mt-4">Tip: Hold Shift and click headers to sort by multiple columns.</p>
             </div>
 
-            <!-- New: Employee Item Assignments Section -->
+            <!-- Employee Item Assignments Section -->
             <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Employee Item Assignments</h2>
-                <div id="employee-assignments-list" class="space-y-4">
-                    <!-- Employee assignments will be inserted here by JavaScript -->
-                </div>
+                <div id="employee-assignments-list" class="space-y-4"></div>
             </div>
-
         </div>
     </div>
 
-    <!-- Edit Employee Assignment Modal -->
+    <!-- All Modals -->
     <div id="edit-assignment-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Assigned Items for <span id="modal-employee-name"></span></h3>
             <label for="modal-assigned-items" class="block text-sm font-medium text-gray-700 mb-2">Assigned Categories:</label>
-            <select id="modal-assigned-items" multiple class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-6 h-40">
-                <!-- Options will be populated by JavaScript -->
-            </select>
-
+            <select id="modal-assigned-items" multiple class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-6 h-40"></select>
             <div class="flex justify-end space-x-3">
-                <button id="cancel-edit-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-200">
-                    Cancel
-                </button>
-                <button id="save-edit-btn" class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition duration-200">
-                    Save Changes
-                </button>
+                <button id="cancel-edit-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+                <button id="save-edit-btn" class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">Save Changes</button>
             </div>
         </div>
     </div>
-
-    <!-- Add Admin Modal -->
     <div id="admin-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <button class="close-button absolute top-6 right-8 text-gray-500 hover:text-black text-xl font-bold" onclick="closeModal('admin-modal')">&times;</button>
+            <button class="close-button absolute top-4 right-4 text-gray-500 hover:text-black text-2xl">&times;</button>
             <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Add New Admin</h2>
             <form class="space-y-4">
                 <div>
                     <label for="admin-username" class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" id="admin-username" name="admin-username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter admin's username">
+                    <input type="text" id="admin-username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username">
                 </div>
                 <div class="relative">
                     <label for="admin-password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="admin-password" name="admin-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10" placeholder="Set password">
-                    <svg id="toggleAdminPassword" class="absolute right-3 transform translate-y-2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="top:40%">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path id="adminEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
-                    </svg>
+                    <input type="password" id="admin-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password">
+                    <svg id="toggleAdminPassword" class="absolute right-3 top-9 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="adminEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
                 </div>
-                <div class="relative">
-                    <label for="admin-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                    <input type="password" id="admin-confirm-password" name="admin-confirm-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10" placeholder="Confirm password">
-                    <svg id="toggleAdminConfirmPassword" class="absolute right-3 transform translate-y-2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="top:40%">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path id="adminConfirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
-                    </svg>
-                </div>
-                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
-                    Create Admin
-                </button>
+                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Create Admin</button>
             </form>
         </div>
     </div>
-
-    <!-- Add Employee Modal -->
     <div id="employee-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button class="close-button absolute top-6 right-8 text-gray-500 hover:text-black text-xl font-bold" onclick="closeModal('employee-modal')">&times;</button>
+         <div class="modal-content">
+            <button class="close-button absolute top-4 right-4 text-gray-500 hover:text-black text-2xl">&times;</button>
             <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Add New Employee</h2>
             <form class="space-y-4">
                 <div>
                     <label for="employee-username" class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" id="employee-username" name="employee-username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Enter employee's username">
+                    <input type="text" id="employee-username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username">
                 </div>
                 <div class="relative">
                     <label for="employee-password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="employee-password" name="employee-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm pr-10" placeholder="Set password">
-                    <svg id="toggleEmployeePassword" class="absolute right-3 transform translate-y-2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="top:40%">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path id="employeeEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
-                    </svg>
+                    <input type="password" id="employee-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password">
+                    <svg id="toggleEmployeePassword" class="absolute right-3 top-9 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="employeeEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
                 </div>
-                <div class="relative">
-                    <label for="employee-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                    <input type="password" id="employee-confirm-password" name="employee-confirm-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm pr-10" placeholder="Confirm password">
-                    <svg id="toggleEmployeeConfirmPassword" class="absolute right-3 transform translate-y-2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="top:40%">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path id="employeeConfirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
-                    </svg>
-                </div>
-                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
-                    Create Employee
-                </button>
+                <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Create Employee</button>
             </form>
         </div>
     </div>
 
     <script>
-        // Modal functionality
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.remove('hidden');  // <- this is needed
-            modal.classList.add('flex');
-        }
-
-
-        function closeModal(id) {
-            const modal = document.getElementById(id);
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');  // <- add this
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            // Event listeners for opening modals
-            document.getElementById('add-admin-btn').addEventListener('click', () => openModal('admin-modal'));
-            document.getElementById('add-employee-btn').addEventListener('click', () => openModal('employee-modal'));
-
-            // Event listeners for closing modals using the close button
-            document.querySelectorAll('.admin-close-btn').forEach(button => {
-                button.addEventListener('click', () => closeModal('admin-modal'));
-            });
-            document.querySelectorAll('.employee-close-btn').forEach(button => {
-                button.addEventListener('click', () => closeModal('employee-modal'));
-            });
-
-
-            // Close modal when clicking outside the content
-            document.getElementById('admin-modal').addEventListener('click', (e) => {
-                if (e.target.id === 'admin-modal') {
-                    closeModal('admin-modal');
-                }
-            });
-            document.getElementById('employee-modal').addEventListener('click', (e) => {
-                if (e.target.id === 'employee-modal') {
-                    closeModal('employee-modal');
-                }
-            });
-
-            // Password toggle functionality
-            function setupPasswordToggle(toggleId, inputId, eyeSlashPathId) {
-                const toggleButton = document.getElementById(toggleId);
-                const passwordInput = document.getElementById(inputId);
-                const eyeSlashPath = document.getElementById(eyeSlashPathId);
-
-                if (toggleButton && passwordInput && eyeSlashPath) {
-                    toggleButton.addEventListener('click', () => {
-                        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                        passwordInput.setAttribute('type', type);
-                        eyeSlashPath.classList.toggle('hidden');
-                    });
-                }
-            }
-
-            // Setup toggles for admin and employee modals
-            setupPasswordToggle('toggleAdminPassword', 'admin-password', 'adminEyeSlashPath');
-            setupPasswordToggle('toggleAdminConfirmPassword', 'admin-confirm-password', 'adminConfirmEyeSlashPath');
-            setupPasswordToggle('toggleEmployeePassword', 'employee-password', 'employeeEyeSlashPath');
-            setupPasswordToggle('toggleEmployeeConfirmPassword', 'employee-confirm-password', 'employeeConfirmEyeSlashPath');
-            
-            // --- Helper function to display messages ---
-            const showMessage = (message, type = 'info') => {
-                const messageBox = document.getElementById('dashboard-message-box');
-                const messageContent = document.getElementById('dashboard-message-content');
-                messageContent.textContent = message;
-
-                // Reset classes for the message box and its close icon
-                messageBox.classList.remove('bg-blue-100', 'border-blue-400', 'text-blue-700', 'bg-green-100', 'border-green-400', 'text-green-700', 'bg-red-100', 'border-red-400', 'text-red-700');
-                const closeIcon = messageBox.querySelector('svg');
-                if (closeIcon) {
-                    closeIcon.classList.remove('text-blue-500', 'text-green-500', 'text-red-500');
-                }
-
-                // Apply new classes based on message type
-                switch (type) {
-                    case 'success':
-                        messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
-                        if (closeIcon) closeIcon.classList.add('text-green-500');
-                        break;
-                    case 'error':
-                        messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
-                        if (closeIcon) closeIcon.classList.add('text-red-500');
-                        break;
-                    case 'info':
-                    default:
-                        messageBox.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-700');
-                        if (closeIcon) closeIcon.classList.add('text-blue-500');
-                        break;
-                }
-                // Explicitly set display to block to ensure visibility
-                messageBox.style.display = 'block';
-
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    messageBox.style.display = 'none';
-                }, 5000);
-            };
-
+            // --- State Management ---
+            let customerSearchTerm = '';
+            let transactionSearchTerm = '';
+            let customerSortCriteria = [];
+            let transactionSortCriteria = [];
 
             // --- Mock Data ---
             const mockEmployees = [
-                { id: 'E001', name: 'Alice Smith', email: 'alice.s@example.com', position: 'Sales Associate', assignedItems: ['Living Room', 'Office'] },
-                { id: 'E002', name: 'Bob Johnson', email: 'bob.j@example.com', position: 'Team Lead', assignedItems: ['Bedroom', 'Dining Room'] },
-                { id: 'E003', name: 'Charlie Brown', email: 'charlie.b@example.com', position: 'Manager', assignedItems: ['Storage'] },
-                { id: 'E004', name: 'Diana Prince', email: 'diana.p@example.com', position: 'Sales Associate', assignedItems: ['Outdoor', 'Children\'s'] },
-                { id: 'E005', name: 'Eve Adams', email: 'eve.a@example.com', position: 'Sales Associate', assignedItems: ['Accent'] }
+                { id: 'E001', name: 'Alice Smith', assignedItems: ['Living Room', 'Office'] },
+                { id: 'E002', name: 'Bob Johnson', assignedItems: ['Bedroom', 'Dining Room'] },
+                { id: 'E003', name: 'Charlie Brown', assignedItems: ['Storage'] },
+                { id: 'E004', name: 'Diana Prince', assignedItems: ['Outdoor', 'Children\'s'] },
+                { id: 'E005', name: 'Eve Adams', assignedItems: ['Accent'] }
             ];
-
             const mockCustomers = [
-                { id: 'C101', name: 'John Doe', email: 'john.doe@example.com' },
-                { id: 'C102', name: 'Jane Miller', email: 'jane.miller@example.com' },
-                { id: 'C103', name: 'Peter Jones', email: 'peter.jones@example.com' },
-                { id: 'C104', name: 'Sarah Davis', email: 'sarah.davis@example.com' },
-                { id: 'C105', name: 'Michael White', email: 'michael.white@example.com' },
-                { id: 'C106', name: 'Laura Green', email: 'laura.green@example.com' },
-                { id: 'C107', name: 'Chris Black', email: 'chris.black@example.com' },
-                { id: 'C108', name: 'Olivia Red', email: 'olivia.red@example.com' },
-                { id: 'C109', name: 'Daniel Blue', email: 'daniel.blue@example.com' },
-                { id: 'C110', name: 'Sophia Yellow', email: 'sophia.yellow@example.com' }
+                { id: 'C101', name: 'John Doe', address: '123 Main St, Anytown', created_at: '2023-01-15T10:00:00Z' },
+                { id: 'C102', name: 'Jane Miller', address: '456 Oak Ave, Somewhere', created_at: '2023-02-20T11:30:00Z' },
+                { id: 'C103', name: 'Peter Jones', address: '789 Pine Ln, Nowhere', created_at: '2023-03-01T14:15:00Z' },
+                { id: 'C104', name: 'Sarah Davis', address: '101 Elm Blvd, Anyplace', created_at: '2023-04-05T09:00:00Z' },
+                { id: 'C105', name: 'Michael White', address: '202 Birch Rd, Somecity', created_at: '2023-05-10T16:45:00Z' }
             ];
-
-            // Updated mockItems to be the fixed categories
             const mockItems = [
-                { id: 'CAT001', name: 'Living Room' },
-                { id: 'CAT002', name: 'Bedroom' },
-                { id: 'CAT003', name: 'Dining Room' },
-                { id: 'CAT004', name: 'Office' },
-                { id: 'CAT005', name: 'Outdoor' },
-                { id: 'CAT006', name: 'Storage' },
-                { id: 'CAT007', name: 'Children\'s' },
-                { id: 'CAT008', name: 'Entryway' },
-                { id: 'CAT009', name: 'Accent' },
-                { id: 'CAT010', name: 'Modular' }
+                'Living Room', 'Bedroom', 'Dining Room', 'Office', 'Outdoor', 'Storage', 'Children\'s', 'Entryway', 'Accent', 'Modular'
             ];
-
-            // Generate mock transactions for the current month
             const generateMockTransactions = () => {
                 const transactions = [];
                 const today = new Date();
-                const currentMonth = today.getMonth();
-                const currentYear = today.getFullYear();
-                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
                 const statuses = ['Completed', 'Pending', 'Failed', 'Refunded'];
-
-                for (let i = 0; i < 50; i++) { // Generate 50 transactions
-                    const randomEmployee = mockEmployees[Math.floor(Math.random() * mockEmployees.length)];
-                    const randomCustomer = mockCustomers[Math.floor(Math.random() * mockCustomers.length)];
-                    const randomItem = mockItems[Math.floor(Math.random() * mockItems.length)]; // Now picks from categories
-                    const quantity = Math.floor(Math.random() * 3) + 1; // 1 to 3 items
-                    const transactionDate = new Date(currentYear, currentMonth, Math.floor(Math.random() * daysInMonth) + 1);
-                    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-
+                for (let i = 0; i < 50; i++) {
                     transactions.push({
                         id: `TRX${1000 + i}`,
-                        employeeName: randomEmployee.name,
-                        customerName: randomCustomer.name,
-                        itemName: randomItem.name, // Will be a category name
-                        quantity: quantity,
-                        price: (Math.random() * 500 + 20).toFixed(2), // Random price for category items
-                        date: transactionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-                        status: randomStatus
+                        employeeName: mockEmployees[Math.floor(Math.random() * mockEmployees.length)].name,
+                        customerName: mockCustomers[Math.floor(Math.random() * mockCustomers.length)].name,
+                        itemName: mockItems[Math.floor(Math.random() * mockItems.length)],
+                        quantity: Math.floor(Math.random() * 3) + 1,
+                        price: (Math.random() * 500 + 20),
+                        date: new Date(today.getFullYear(), today.getMonth(), Math.floor(Math.random() * 28) + 1),
+                        status: statuses[Math.floor(Math.random() * statuses.length)]
                     });
                 }
                 return transactions;
             };
+            let mockTransactions = generateMockTransactions();
 
-            const mockTransactions = generateMockTransactions();
+            // --- Utility Functions ---
+            const openModal = (modalId) => document.getElementById(modalId).classList.remove('hidden');
+            const closeModal = (modalId) => document.getElementById(modalId).classList.add('hidden');
+            const showMessage = (message, type = 'info') => {
+                const box = document.getElementById('dashboard-message-box');
+                document.getElementById('dashboard-message-content').textContent = message;
+                box.classList.remove('hidden');
+                setTimeout(() => box.classList.add('hidden'), 5000);
+            };
+
+            // --- Search and Sort Logic ---
+            const filterData = (data, searchTerm, tableType) => {
+                if (!searchTerm) return data;
+                const lowercasedTerm = searchTerm.toLowerCase();
+                return data.filter(item => {
+                    const searchableItem = { ...item };
+                    if (tableType === 'transactions') {
+                        searchableItem.price = `$${item.price.toFixed(2)}`;
+                        searchableItem.date = item.date.toLocaleDateString();
+                    }
+                    if (tableType === 'customers') {
+                        searchableItem.created_at = new Date(item.created_at).toLocaleDateString();
+                    }
+                    return Object.values(searchableItem).some(val =>
+                        val.toString().toLowerCase().includes(lowercasedTerm)
+                    );
+                });
+            };
+
+            const getSortValue = (obj, column) => {
+                const value = obj[column];
+                if (value instanceof Date) return value.getTime();
+                if (typeof value === 'number') return value;
+                if (typeof value === 'string') return value.toLowerCase();
+                return value;
+            };
+
+            const sortData = (data, criteria) => {
+                if (!criteria.length) return data;
+                return [...data].sort((a, b) => {
+                    for (const { column, direction } of criteria) {
+                        const valA = getSortValue(a, column);
+                        const valB = getSortValue(b, column);
+                        if (valA < valB) return direction === 'asc' ? -1 : 1;
+                        if (valA > valB) return direction === 'asc' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            };
 
             // --- Render Functions ---
-
-            /**
-             * Renders the employee transaction records in a table.
-             */
-            const renderTransactions = () => {
-                const tableBody = document.getElementById('transactions-table-body');
-                tableBody.innerHTML = ''; // Clear existing rows
-
-                mockTransactions.forEach(transaction => {
-                    const row = document.createElement('tr');
-                    // Changed hover effect for light theme
-                    row.classList.add('hover:bg-gray-100');
-
-                    // Determine status badge color
-                    let statusColorClass = '';
-                    switch (transaction.status) {
-                        case 'Completed':
-                            statusColorClass = 'bg-green-100 text-green-800';
-                            break;
-                        case 'Pending':
-                            statusColorClass = 'bg-yellow-100 text-yellow-800';
-                            break;
-                        case 'Failed':
-                            statusColorClass = 'bg-red-100 text-red-800';
-                            break;
-                        case 'Refunded':
-                            statusColorClass = 'bg-blue-100 text-blue-800';
-                            break;
-                        default:
-                            statusColorClass = 'bg-gray-100 text-gray-800';
-                    }
-
-
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${transaction.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.employeeName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.customerName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.itemName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.quantity}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">$${transaction.price}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${transaction.date}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColorClass}">
-                                ${transaction.status}
-                            </span>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            };
-
-            /**
-             * Renders the customer records in a table.
-             */
             const renderCustomers = () => {
+                const filtered = filterData(mockCustomers, customerSearchTerm, 'customers');
+                const sorted = sortData(filtered, customerSortCriteria);
                 const tableBody = document.getElementById('customers-table-body');
-                tableBody.innerHTML = ''; // Clear existing rows
-
-                mockCustomers.forEach(customer => {
-                    const row = document.createElement('tr');
-                    // Changed hover effect for light theme
-                    row.classList.add('hover:bg-gray-100');
-                    row.innerHTML = `
+                tableBody.innerHTML = sorted.map(customer => `
+                    <tr class="hover:bg-gray-100">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${customer.id}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.email}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.address}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${new Date(customer.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
             };
 
-            /**
-             * Calculates and displays the total sales for the current month.
-             */
+            const renderTransactions = () => {
+                const filtered = filterData(mockTransactions, transactionSearchTerm, 'transactions');
+                const sorted = sortData(filtered, transactionSortCriteria);
+                const tableBody = document.getElementById('transactions-table-body');
+                const statusColors = { 'Completed': 'bg-green-100 text-green-800', 'Pending': 'bg-yellow-100 text-yellow-800', 'Failed': 'bg-red-100 text-red-800', 'Refunded': 'bg-blue-100 text-blue-800' };
+                tableBody.innerHTML = sorted.map(t => `
+                    <tr class="hover:bg-gray-100">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${t.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.employeeName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.customerName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.itemName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${t.quantity}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">$${t.price.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.date.toLocaleDateString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[t.status] || 'bg-gray-100'}">${t.status}</span></td>
+                    </tr>
+                `).join('');
+            };
+
             const renderMonthlySales = () => {
-                const totalSalesElement = document.getElementById('monthly-sales');
-                const currentDateElement = document.getElementById('current-date');
-
-                let totalSales = 0;
-                mockTransactions.forEach(transaction => {
-                    totalSales += parseFloat(transaction.price);
-                });
-
-                totalSalesElement.textContent = `$${totalSales.toFixed(2)}`;
-                currentDateElement.textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('monthly-sales').textContent = `$${mockTransactions.reduce((acc, t) => acc + t.price, 0).toFixed(2)}`;
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
             };
 
-            /**
-             * Renders the list of employees with their assigned items and an edit option.
-             */
             const renderEmployeeAssignments = () => {
                 const listContainer = document.getElementById('employee-assignments-list');
-                listContainer.innerHTML = ''; // Clear existing content
-
-                mockEmployees.forEach(employee => {
-                    const employeeDiv = document.createElement('div');
-                    employeeDiv.classList.add('flex', 'flex-col', 'md:flex-row', 'md:items-center', 'justify-between', 'p-4', 'bg-gray-50', 'rounded-lg', 'border', 'border-gray-200', 'hover:bg-gray-100', 'transition', 'duration-150');
-
-                    const assignedItemsText = employee.assignedItems.length > 0
-                        ? employee.assignedItems.map(item => `<span class="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">${item}</span>`).join(' ')
-                        : '<span class="text-gray-500 text-sm">No items assigned</span>';
-
-                    employeeDiv.innerHTML = `
-                        <div class="flex-1 mb-2 md:mb-0">
+                listContainer.innerHTML = mockEmployees.map(employee => `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100">
+                        <div>
                             <h3 class="text-lg font-medium text-gray-900">${employee.name}</h3>
-                            <p class="text-sm text-gray-600">${employee.position} <span class="text-gray-500">•</span> <a href="mailto:${employee.email}" class="text-blue-600 hover:underline">${employee.email}</a></p>
-                            <div class="mt-2 flex flex-wrap gap-2">
-                                ${assignedItemsText}
-                            </div>
+                            <div class="mt-2 flex flex-wrap gap-2">${employee.assignedItems.map(item => `<span class="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">${item}</span>`).join(' ') || '<span class="text-gray-500 text-sm">No items assigned</span>'}</div>
                         </div>
-                        <button class="edit-assigned-items-btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-200 text-sm" data-employee-id="${employee.id}">
-                            Edit Assigned Items
-                        </button>
-                    `;
-                    listContainer.appendChild(employeeDiv);
+                        <button class="edit-assigned-items-btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm" data-employee-id="${employee.id}">Edit</button>
+                    </div>
+                `).join('');
+                document.querySelectorAll('.edit-assigned-items-btn').forEach(btn => btn.addEventListener('click', (e) => openEditModal(e.target.dataset.employeeId)));
+            };
+            
+            const updateSortIndicators = (table, criteria) => {
+                table.querySelectorAll('th[data-column]').forEach(th => {
+                    const indicator = th.querySelector('.sort-indicator');
+                    if (indicator) indicator.remove();
                 });
-
-                // Add event listeners to edit buttons
-                document.querySelectorAll('.edit-assigned-items-btn').forEach(button => {
-                    button.addEventListener('click', (event) => {
-                        const employeeId = event.target.dataset.employeeId;
-                        openEditModal(employeeId);
-                    });
+                criteria.forEach(({ column, direction }, index) => {
+                    const header = table.querySelector(`th[data-column="${column}"]`);
+                    if (header) {
+                        const indicator = document.createElement('span');
+                        indicator.className = 'sort-indicator ml-1';
+                        indicator.innerHTML = `(${index + 1}) ${direction === 'asc' ? '▲' : '▼'}`;
+                        header.appendChild(indicator);
+                    }
                 });
             };
 
-            // --- Modal Functions ---
-            const editModal = document.getElementById('edit-assignment-modal');
-            const modalEmployeeName = document.getElementById('modal-employee-name');
-            const modalAssignedItems = document.getElementById('modal-assigned-items'); // This is now the select element
-            const saveEditBtn = document.getElementById('save-edit-btn');
-            const cancelEditBtn = document.getElementById('cancel-edit-btn');
-
-            let currentEditingEmployeeId = null; // To keep track of which employee is being edited
-
-            /**
-             * Populates the assigned items dropdown with available items.
-             */
-            const populateAssignedItemsDropdown = () => {
-                modalAssignedItems.innerHTML = ''; // Clear existing options
-                mockItems.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.name;
-                    option.textContent = item.name;
-                    modalAssignedItems.appendChild(option);
-                });
+            const fullRender = () => {
+                renderCustomers();
+                renderTransactions();
+                renderMonthlySales();
+                renderEmployeeAssignments();
+                updateSortIndicators(document.querySelector('#customers-table-body').closest('table'), customerSortCriteria);
+                updateSortIndicators(document.querySelector('#transactions-table-body').closest('table'), transactionSortCriteria);
             };
 
-            /**
-             * Opens the edit modal and populates it with employee data.
-             * @param {string} employeeId - The ID of the employee to edit.
-             */
+            // --- Event Listeners ---
+            document.getElementById('add-admin-btn').addEventListener('click', () => openModal('admin-modal'));
+            document.getElementById('add-employee-btn').addEventListener('click', () => openModal('employee-modal'));
+            document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id) }));
+            document.querySelectorAll('.close-button').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal-overlay').id)));
+            
+            document.getElementById('customer-search').addEventListener('input', e => {
+                customerSearchTerm = e.target.value;
+                renderCustomers();
+            });
+            document.getElementById('transaction-search').addEventListener('input', e => {
+                transactionSearchTerm = e.target.value;
+                renderTransactions();
+            });
+
+            document.getElementById('clear-customer-sort').addEventListener('click', () => {
+                customerSortCriteria = [];
+                fullRender();
+            });
+            document.getElementById('clear-transaction-sort').addEventListener('click', () => {
+                transactionSortCriteria = [];
+                fullRender();
+            });
+
+            document.querySelectorAll('th[data-column]').forEach(header => {
+                header.addEventListener('click', (e) => {
+                    const column = header.dataset.column;
+                    const tableId = header.dataset.table;
+                    let criteria = tableId === 'customers' ? customerSortCriteria : transactionSortCriteria;
+                    
+                    const existingIndex = criteria.findIndex(c => c.column === column);
+
+                    if (e.shiftKey) {
+                        if (existingIndex > -1) {
+                            criteria[existingIndex].direction = criteria[existingIndex].direction === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            criteria.push({ column, direction: 'asc' });
+                        }
+                    } else {
+                        if (existingIndex > -1) {
+                            const newDirection = criteria[existingIndex].direction === 'asc' ? 'desc' : 'asc';
+                            criteria = [{ column, direction: newDirection }];
+                        } else {
+                            criteria = [{ column, direction: 'asc' }];
+                        }
+                    }
+
+                    if (tableId === 'customers') {
+                        customerSortCriteria = criteria;
+                    } else {
+                        transactionSortCriteria = criteria;
+                    }
+                    fullRender();
+                });
+            });
+
+            // Edit Assignment Modal Logic
+            let currentEditingEmployeeId = null;
             const openEditModal = (employeeId) => {
                 const employee = mockEmployees.find(emp => emp.id === employeeId);
+                if (!employee) return;
+                currentEditingEmployeeId = employeeId;
+                document.getElementById('modal-employee-name').textContent = employee.name;
+                const select = document.getElementById('modal-assigned-items');
+                select.innerHTML = mockItems.map(item => `<option value="${item}" ${employee.assignedItems.includes(item) ? 'selected' : ''}>${item}</option>`).join('');
+                openModal('edit-assignment-modal');
+            };
+            document.getElementById('save-edit-btn').addEventListener('click', () => {
+                const employee = mockEmployees.find(emp => emp.id === currentEditingEmployeeId);
                 if (employee) {
-                    currentEditingEmployeeId = employeeId;
-                    modalEmployeeName.textContent = employee.name;
-
-                    // Populate and set selected options for the dropdown
-                    populateAssignedItemsDropdown(); // Ensure options are fresh
-                    Array.from(modalAssignedItems.options).forEach(option => {
-                        option.selected = employee.assignedItems.includes(option.value);
-                    });
-
-                    editModal.classList.remove('hidden');
+                    employee.assignedItems = Array.from(document.getElementById('modal-assigned-items').selectedOptions).map(opt => opt.value);
+                    showMessage(`Assignments for ${employee.name} updated.`, 'success');
+                    renderEmployeeAssignments();
                 }
-            };
-
-            /**
-             * Closes the edit modal.
-             */
-            const closeEditModal = () => {
-                editModal.classList.add('hidden');
-                currentEditingEmployeeId = null;
-                // No need to clear value for select, just unselect options if needed
-            };
-
-            // Event listener for Save button
-            saveEditBtn.addEventListener('click', () => {
-                if (currentEditingEmployeeId) {
-                    const employeeIndex = mockEmployees.findIndex(emp => emp.id === currentEditingEmployeeId);
-                    if (employeeIndex !== -1) {
-                        // Get selected options from the multi-select dropdown
-                        const newAssignedItems = Array.from(modalAssignedItems.selectedOptions).map(option => option.value);
-                        mockEmployees[employeeIndex].assignedItems = newAssignedItems;
-                        renderEmployeeAssignments(); // Re-render the list to show changes
-                        showMessage(`Assigned items for ${mockEmployees[employeeIndex].name} updated successfully!`, 'success');
-                        closeEditModal();
-                    } else {
-                        showMessage('Error: Employee not found.', 'error');
-                    }
-                }
+                closeModal('edit-assignment-modal');
             });
-
-            // Event listener for Cancel button
-            cancelEditBtn.addEventListener('click', () => {
-                showMessage('Edit cancelled.', 'info');
-                closeEditModal();
-            });
-
-            // --- Initial Render ---
-            renderTransactions();
-            renderCustomers();
-            renderMonthlySales();
-            renderEmployeeAssignments(); // Call the new rendering function
+            document.getElementById('cancel-edit-btn').addEventListener('click', () => closeModal('edit-assignment-modal'));
+            
+            // Initial Render
+            fullRender();
         });
     </script>
 </body>
