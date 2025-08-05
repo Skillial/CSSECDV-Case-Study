@@ -342,21 +342,34 @@ const controller = {
      */
     getOrders: async (req, res) => {
         try {
+            // Ensure req.user and req.user.id are available from authentication middleware
+            if (!req.user || !req.user.id) {
+                return res.status(401).json({ message: 'Unauthorized: Manager ID not found.' });
+            }
+
             const managerId = req.user.id; // Get manager ID from authenticated user
             const managerAssignedCategories = getManagerCategories(managerId);
 
+            // If the manager has no assigned categories, return an empty array of orders
+            if (!managerAssignedCategories || managerAssignedCategories.length === 0) {
+                return res.status(200).json([]);
+            }
+
+            // Fetch all orders
             const selectOrdersStmt = OccasioDB.prepare('SELECT * FROM orders');
             const allOrders = selectOrdersStmt.all();
 
+            // Filter orders based on whether any product in the order belongs to the manager's categories
             const filteredOrders = allOrders.filter(order => {
                 try {
                     const productsOrdered = JSON.parse(order.products_ordered);
+                    // Check if at least one product in the order has a category assigned to the manager
                     return productsOrdered.some(orderedProduct =>
-                        // Ensure orderedProduct.category exists and is in manager's assigned categories
                         orderedProduct.category && managerAssignedCategories.includes(orderedProduct.category)
                     );
                 } catch (e) {
-                    console.error("Error parsing products_ordered JSON for order:", order.id, e);
+                    console.error("Error parsing products_ordered JSON for order ID:", order.id, e);
+                    // If parsing fails, exclude this order to prevent errors
                     return false;
                 }
             });

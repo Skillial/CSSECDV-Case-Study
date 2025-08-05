@@ -415,7 +415,8 @@
                 const orderDetails = {
                     productId: product.id,
                     quantity: quantity,
-                    selectedOptions: selectedOptions // This will be an empty object if no type options
+                    selectedOptions: selectedOptions, // This will be an empty object if no type options
+                    category: product.category // Include the product category here
                 };
 
                 try {

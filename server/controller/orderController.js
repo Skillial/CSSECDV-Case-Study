@@ -4,7 +4,7 @@ const { OccasioDB } = require('./../config/db');
 const orderController = {
     /**
      * Handles adding a new order to the database.
-     * Expected req.body: { productId: string, quantity: number, selectedOptions: object }
+     * Expected req.body: { productId: string, quantity: number, selectedOptions: object, category: string }
      */
     addOrder: async (req, res) => {
         // Ensure user is authenticated
@@ -13,12 +13,17 @@ const orderController = {
             return res.status(401).json({ message: 'You must be logged in to place an order.' });
         }
 
-        const { productId, quantity, selectedOptions } = req.body;
+        // Destructure category from req.body as it's now being sent from the frontend
+        const { productId, quantity, selectedOptions, category } = req.body;
         const customerId = req.user.id; // Get customer ID from authenticated user
 
         // Basic server-side validation
         if (!productId || !quantity || quantity <= 0) {
             return res.status(400).json({ message: 'Invalid product or quantity provided.' });
+        }
+        // Add validation for category if it's mandatory
+        if (!category || typeof category !== 'string' || category.trim() === '') {
+            return res.status(400).json({ message: 'Product category is required.' });
         }
 
         try {
@@ -47,7 +52,8 @@ const orderController = {
                     name: product.product_full_name || product.product_name,
                     price_at_order: product.price,
                     quantity: quantity,
-                    selected_options: selectedOptions || {} // Store selected options, even if empty
+                    selected_options: selectedOptions || {}, // Store selected options, even if empty
+                    category: category // <--- Include the category here!
                 };
                 const productsOrderedJson = JSON.stringify([productOrderedDetails]);
 
