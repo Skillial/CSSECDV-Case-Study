@@ -128,7 +128,7 @@
                 <div class="w-full max-w-[250px] rounded-xl overflow-hidden shadow-sm bg-white border border-gray-100 hover:shadow-md transition-shadow duration-200 cursor-pointer"
                      data-product-id="<%= product.id %>"
                      onclick="window.location.href='/product/<%= product.id %>'">
-                    <img src="<%= product.imageUrl || 'https://placehold.co/250x150/E2E8F0/A0AEC0?text=No+Image' %>" alt="<%= product.product_name %>" class="w-full h-40 object-cover" />
+                    <img src="<%= product.imageUrl || 'https://placehold.co/250x150/E2E8F0/A0AEC0?text=No+Image' %>" alt="<%= product.name %>" class="w-full h-40 object-cover" />
                     <div class="p-4">
                         <h3 class="text-base font-semibold text-gray-900 truncate"><%= product.name %></h3>
                         <p class="text-sm text-gray-600"><%= product.category %></p>
@@ -156,7 +156,6 @@
     </div>
 
     <script>
-
         let currentPage = 1;
         const productsPerPage = 8; // Matches initialLimit in homeController.page
         let currentCategory = `<%- category %>` || 'All'; // Initialize with server-rendered category
@@ -327,6 +326,17 @@
             if (productsContainer.children.length === 0) {
                 noProductsMessage.classList.remove('hidden');
             }
+
+            // --- NEW: Display flash messages from server on page load ---
+            // Check for success messages passed from the server
+            <% if (success_messages && success_messages.length > 0) { %>
+                showToast(`<%= success_messages[0].replace(/`/g, '\\`') %>`, false); // Display first success message
+            <% } %>
+
+            // Check for error messages passed from the server
+            <% if (error_messages && error_messages.length > 0) { %>
+                showToast(`<%= error_messages[0].replace(/`/g, '\\`') %>`, true); // Display first error message
+            <% } %>
         });
     </script>
 </body>

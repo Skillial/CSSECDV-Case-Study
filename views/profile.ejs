@@ -260,10 +260,6 @@
             <div id="securityQuestionsErrorMessageDisplay" class="modal-error-display" role="alert">
                 <!-- Content will be set by JavaScript -->
             </div>
-            <!-- Success Message Display for Security Questions Modal -->
-            <div id="securityQuestionsSuccessMessageDisplay" class="modal-success-display" role="alert">
-                <!-- Content will be set by JavaScript -->
-            </div>
 
             <form id="securityQuestionsForm" class="space-y-5">
                 <!-- Question 1 -->
@@ -518,7 +514,6 @@
             const answerInput = document.getElementById('answer'); // Changed from answer1Input
             const currentPasswordInput = document.getElementById('currentPassword'); // Added for security questions modal password
             const securityQuestionsErrorMessageDisplay = document.getElementById('securityQuestionsErrorMessageDisplay'); // New: Error display for security questions
-            const securityQuestionsSuccessMessageDisplay = document.getElementById('securityQuestionsSuccessMessageDisplay'); // New: Success display for security questions
 
 
             // Toggle password visibility elements for current password in security questions modal
@@ -555,7 +550,7 @@
             manageSecurityQuestionsBtn.addEventListener('click', () => {
                 securityQuestionsModal.classList.remove('hidden');
                 hideMessage(securityQuestionsErrorMessageDisplay); // Clear errors on open
-                hideMessage(securityQuestionsSuccessMessageDisplay); // Clear success on open
+                hideMessage(mainPageSuccessMessageDisplay); // Clear success on open
                 questionSelect.value = ''; // Changed from question1Select
                 answerInput.value = ''; // Clear answer field
                 currentPasswordInput.value = ''; // Clear password field
@@ -586,15 +581,15 @@
             // Event listeners to hide messages when user interacts with fields
             questionSelect.addEventListener('change', () => { // Changed from question1Select
                 hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(securityQuestionsSuccessMessageDisplay);
+                hideMessage(mainPageSuccessMessageDisplay);
             });
             answerInput.addEventListener('input', () => { // Changed from answer1Input
                 hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(securityQuestionsSuccessMessageDisplay);
+                hideMessage(mainPageSuccessMessageDisplay);
             });
             currentPasswordInput.addEventListener('input', () => {
                 hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(securityQuestionsSuccessMessageDisplay);
+                hideMessage(mainPageSuccessMessageDisplay);
             });
 
 
@@ -642,24 +637,23 @@
                     const result = await response.json();
 
                     if (response.ok) {
-                        displayMessage(securityQuestionsSuccessMessageDisplay, [result.message || 'Security question updated successfully!'], 'success');
+                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Security question updated successfully!'], 'success');
                         hideMessage(securityQuestionsErrorMessageDisplay); // Ensure error is hidden
                         // Clear fields on success
                         questionSelect.value = ''; // Changed from question1Select
                         answerInput.value = ''; // Changed from answer1Input
                         currentPasswordInput.value = '';
                         securityQuestionsModal.classList.add('hidden');
-                        hideMessage(securityQuestionsSuccessMessageDisplay); // Clear success after modal closes
 
                     } else {
                         console.error('Security questions update failed:', result.message);
                         displayMessage(securityQuestionsErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
-                        hideMessage(securityQuestionsSuccessMessageDisplay); // Ensure success is hidden
+                        hideMessage(mainPageSuccessMessageDisplay); // Ensure success is hidden
                     }
                 } catch (error) {
                     console.error('Network or unexpected error during security questions update:', error);
                     displayMessage(securityQuestionsErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
-                    hideMessage(securityQuestionsSuccessMessageDisplay);
+                    hideMessage(mainPageSuccessMessageDisplay);
                 }
             });
 

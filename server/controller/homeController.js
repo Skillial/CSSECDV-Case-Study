@@ -5,17 +5,30 @@ const homeController = {
     // MODIFIED: This function now fetches the first page of products,
     // optionally filtering by search query and category.
     page: (req, res) => {
-        if (req.user) {
-            // Logic for admin and manager roles remains the same.
-            if (req.user.role === 'admin') {
-                try {
-                    // Fetch customer data for the dashboard
-                    const customerStmt = OccasioDB.prepare("SELECT id, username, address, created_at FROM accounts WHERE role = 'customer'");
-                    const customers = customerStmt.all();
+        const urlMessage = req.query.message;
+        const urlMessageType = req.query.type; // 'success' or 'error'
 
-                    // Fetch employee data (users with 'manager' role) and their assigned categories
-                    // This query joins accounts with employee_categories and groups by employee to get all categories
-                    const employeeCategoriesStmt = OccasioDB.prepare(`
+        if (urlMessage && urlMessageType) {
+            req.flash(urlMessageType, urlMessage);
+            // Clear the query parameters from the URL after flashing them
+            // This prevents the message from reappearing on refresh
+            // Note: This requires a redirect, which might cause a double-render.
+            // A more robust solution for single-page apps would be to handle messages purely client-side.
+            // For EJS, this is a common pattern.
+            const newUrl = req.originalUrl.split('?')[0]; // Get URL without query params
+            return res.redirect(newUrl); // Redirect to clean URL
+        }
+
+        // Logic for admin and manager roles remains the same.
+        if (req.user.role === 'admin') {
+            try {
+                // Fetch customer data for the dashboard
+                const customerStmt = OccasioDB.prepare("SELECT id, username, address, created_at FROM accounts WHERE role = 'customer'");
+                const customers = customerStmt.all();
+
+                // Fetch employee data (users with 'manager' role) and their assigned categories
+                // This query joins accounts with employee_categories and groups by employee to get all categories
+                const employeeCategoriesStmt = OccasioDB.prepare(`
                         SELECT
                             a.id,
                             a.username,
@@ -30,40 +43,40 @@ const homeController = {
                         GROUP BY
                             a.id, a.username, a.address
                     `);
-                    let employees = employeeCategoriesStmt.all();
+                let employees = employeeCategoriesStmt.all();
 
-                    // Process employees to convert assigned_categories_json string into an array
-                    employees = employees.map(employee => ({
-                        ...employee,
-                        // If assigned_categories_json is null/empty string, default to empty array
-                        assignedItems: employee.assigned_categories_json ? employee.assigned_categories_json.split(',') : []
-                    }));
+                // Process employees to convert assigned_categories_json string into an array
+                employees = employees.map(employee => ({
+                    ...employee,
+                    // If assigned_categories_json is null/empty string, default to empty array
+                    assignedItems: employee.assigned_categories_json ? employee.assigned_categories_json.split(',') : []
+                }));
 
-                    // Render the dashboard, passing the fetched data
-                    res.render('dashboard', {
-                        customers: customers,
-                        employees: employees
-                        // Note: mockItems and mockTransactions are currently client-side in dashboard.ejs.
-                        // If these also need to be dynamic, you'd fetch them here and pass them too.
-                    });
+                // Render the dashboard, passing the fetched data
+                res.render('dashboard', {
+                    customers: customers,
+                    employees: employees
+                    // Note: mockItems and mockTransactions are currently client-side in dashboard.ejs.
+                    // If these also need to be dynamic, you'd fetch them here and pass them too.
+                });
 
-                } catch (dbError) {
-                    console.error("Database query error on dashboard load:", dbError.message);
-                    req.flash('error', 'Failed to load dashboard data due to a database error.');
-                    res.redirect('/home'); // Redirect to a safe page
-                }
-            }  else if (req.user.role === 'manager') {
-                return res.render('ordersinventory');
-            } else if (req.user.role === 'customer') {
-                try {
-                    const initialLimit = 8;
-                    const { search, category } = req.query; // Get filters from query string
+            } catch (dbError) {
+                console.error("Database query error on dashboard load:", dbError.message);
+                req.flash('error', 'Failed to load dashboard data due to a database error.');
+                res.redirect('/home'); // Redirect to a safe page
+            }
+        } else if (req.user.role === 'manager') {
+            return res.render('ordersinventory');
+        } else if (req.user.role === 'customer') {
+            try {
+                const initialLimit = 8;
+                const { search, category } = req.query; // Get filters from query string
 
-                    let queryParams = [];
-                    let whereClauses = [];
+                let queryParams = [];
+                let whereClauses = [];
 
-                    // Base query to select products and their primary image
-                    let sql = `
+                // Base query to select products and their primary image
+                let sql = `
                         SELECT
                             p.id,
                             p.product_name as name,
@@ -75,52 +88,49 @@ const homeController = {
                         FROM products p
                     `;
 
-                    // Dynamically add WHERE clauses for filtering
-                    if (search) {
-                        whereClauses.push("p.product_name LIKE ?");
-                        queryParams.push(`%${search}%`);
-                    }
-                    if (category) {
-                        whereClauses.push("p.category = ?");
-                        queryParams.push(category);
-                    }
-
-                    if (whereClauses.length > 0) {
-                        sql += ` WHERE ${whereClauses.join(' AND ')}`;
-                    }
-
-                    sql += " ORDER BY p.created_at DESC LIMIT ?";
-                    queryParams.push(initialLimit);
-
-                    const stmt = OccasioDB.prepare(sql);
-                    const initialProducts = stmt.all(...queryParams);
-
-                    const productsWithImages = initialProducts.map(product => {
-                        let imageUrl = `https://placehold.co/250x150/eee/ccc?text=No+Image`;
-                        if (product.image_data && product.image_mime_type) {
-                            const base64Image = Buffer.from(product.image_data).toString('base64');
-                            imageUrl = `data:${product.image_mime_type};base64,${base64Image}`;
-                        }
-                        return { ...product, imageUrl };
-                    });
-
-                    // Pass products and current filters to the template
-                    res.render('home', {
-                        products: productsWithImages,
-                        search: search || '',
-                        category: category || ''
-                    });
-
-                } catch (dbError) {
-                    console.error("Database error on home page load:", dbError.message);
-                    req.flash('error', 'Could not load products at this time.');
-                    res.render('home', { products: [], search: '', category: '' });
+                // Dynamically add WHERE clauses for filtering
+                if (search) {
+                    whereClauses.push("p.product_name LIKE ?");
+                    queryParams.push(`%${search}%`);
                 }
+                if (category) {
+                    whereClauses.push("p.category = ?");
+                    queryParams.push(category);
+                }
+
+                if (whereClauses.length > 0) {
+                    sql += ` WHERE ${whereClauses.join(' AND ')}`;
+                }
+
+                sql += " ORDER BY p.created_at DESC LIMIT ?";
+                queryParams.push(initialLimit);
+
+                const stmt = OccasioDB.prepare(sql);
+                const initialProducts = stmt.all(...queryParams);
+
+                const productsWithImages = initialProducts.map(product => {
+                    let imageUrl = `https://placehold.co/250x150/eee/ccc?text=No+Image`;
+                    if (product.image_data && product.image_mime_type) {
+                        const base64Image = Buffer.from(product.image_data).toString('base64');
+                        imageUrl = `data:${product.image_mime_type};base64,${base64Image}`;
+                    }
+                    return { ...product, imageUrl };
+                });
+
+                // Pass products and current filters to the template
+                res.render('home', {
+                    products: productsWithImages,
+                    search: search || '',
+                    category: category || ''
+                });
+
+            } catch (dbError) {
+                console.error("Database error on home page load:", dbError.message);
+                req.flash('error', 'Could not load products at this time.');
+                res.render('home', { products: [], search: '', category: '' });
             }
-        } else {
-            req.flash('error', 'Please log in to access this page.');
-            res.redirect('/login');
         }
+
     },
 
     // MODIFIED: This API endpoint now accepts search and category parameters.

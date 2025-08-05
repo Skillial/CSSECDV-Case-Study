@@ -80,6 +80,29 @@
         .thumbnail-container::-webkit-scrollbar-thumb:hover {
             background-color: #718096;
         }
+
+        /* Custom Toast Notification */
+        #toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #22c55e; /* green-500 */
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transform: translateX(calc(100% + 20px));
+            transition: transform 0.5s ease-in-out;
+            z-index: 100;
+        }
+
+        #toast-notification.show {
+            transform: translateX(0);
+        }
+
+        #toast-notification.error {
+            background-color: #ef4444; /* red-500 */
+        }
     </style>
 </head>
 
@@ -157,7 +180,7 @@
 
                 <!-- Action Buttons - Only Buy It Now -->
                 <div class="flex flex-col sm:flex-row gap-4 mb-8">
-                    <button
+                    <button id="buyItNowBtn"
                         class="flex-1 bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-md <%= product.stock === 0 ? 'opacity-50 cursor-not-allowed' : '' %>"
                         <%= product.stock === 0 ? 'disabled' : '' %>>
                         BUY IT NOW
@@ -203,6 +226,11 @@
             </div>
         </section>
 
+        <!-- Toast Notification -->
+        <div id="toast-notification">
+            <p id="toast-message"></p>
+        </div>
+
         <script>
             // Product data passed from the server
             const product = <%- JSON.stringify(product) %>;
@@ -217,6 +245,19 @@
             const increaseButton = document.getElementById('increaseQuantity');
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanes = document.querySelectorAll('.tab-pane'); // Currently only description
+            const buyItNowBtn = document.getElementById('buyItNowBtn'); // New: Buy It Now button
+            const toast = document.getElementById('toast-notification');
+            const toastMessage = document.getElementById('toast-message');
+
+            // --- Utility Functions ---
+            function showToast(message, isError = false) {
+                toastMessage.textContent = message;
+                toast.classList.toggle('error', isError);
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
 
             // --- Functions ---
 
@@ -349,6 +390,59 @@
                 }
             }
 
+            /**
+             * Handles the "Buy It Now" action, sending order details to the backend.
+             */
+            async function buyItNow() {
+                const quantity = parseInt(quantityInput.value);
+
+                if (isNaN(quantity) || quantity <= 0) {
+                    showToast('Please enter a valid quantity.', true);
+                    return;
+                }
+
+                if (quantity > product.stock) {
+                    showToast(`Only ${product.stock} items are available in stock.`, true);
+                    return;
+                }
+
+                let selectedOptions = {};
+                const selectedTypeOptionButton = typeOptionsContainer ? typeOptionsContainer.querySelector('.type-option-button.border-gray-900') : null;
+                if (product.type && selectedTypeOptionButton) {
+                    selectedOptions[product.type.toLowerCase()] = selectedTypeOptionButton.dataset.option;
+                }
+
+                const orderDetails = {
+                    productId: product.id,
+                    quantity: quantity,
+                    selectedOptions: selectedOptions // This will be an empty object if no type options
+                };
+
+                try {
+                    const response = await fetch('/order/add', { // New backend endpoint for adding orders
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(orderDetails)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Order successful, redirect to home page with a success flash message
+                        window.location.href = `/home?message=${encodeURIComponent(result.message || 'Order placed successfully!')}&type=success`;
+                    } else {
+                        // Order failed, show error toast
+                        showToast(result.message || 'Failed to place order. Please try again.', true);
+                    }
+                } catch (error) {
+                    console.error('Error placing order:', error);
+                    showToast('Network error or server unreachable. Please try again.', true);
+                }
+            }
+
+
             // --- Event Listeners and Initialization ---
 
             // Quantity Selector
@@ -392,6 +486,10 @@
                     showTab(button.dataset.tab);
                 });
             });
+
+            // Attach event listener to the "Buy It Now" button
+            buyItNowBtn.addEventListener('click', buyItNow);
+
 
             document.addEventListener('DOMContentLoaded', () => {
                 // Initialize type option selection if options exist

@@ -180,7 +180,7 @@ const controller = {
                     throw new new Error('Failed to update password in accounts table.');
                 }
 
-                const insertHistoryStmt = OccasioDB.prepare('INSERT INTO password_history (user_id, password_hash, changed_at) VALUES (?, ?, ?)');
+                const insertHistoryStmt = OccasioDB.prepare('INSERT INTO password_history (account_id, password_hash, created_at) VALUES (?, ?, ?)');
                 insertHistoryStmt.run(userId, hashedNewPassword, currentTime);
             });
 

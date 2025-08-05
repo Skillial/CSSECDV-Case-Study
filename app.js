@@ -61,6 +61,8 @@ app.use('/', profileRoute);
 const manageRoute = require('./server/router/manageRouter');
 app.use('/', manageRoute);
 
+const orderRoute = require('./server/router/orderRouter');
+app.use('/', orderRoute);
 
 app.get('/', (req, res) => {
     res.redirect('/login');
