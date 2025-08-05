@@ -15,6 +15,18 @@ CREATE TABLE accounts (
     profile_image_mime_type TEXT, -- e.g., 'image/png', 'image/jpeg'
 );
 
+-- employee_categories table
+CREATE TABLE employee_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    employee_id INTEGER NOT NULL,
+    category_name TEXT NOT NULL, -- The name of the category assigned to the employee
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    -- Ensure an employee can only be assigned to a specific category once
+    UNIQUE(employee_id, category_name),
+    -- Foreign key constraint to link to the accounts table (for employees)
+    FOREIGN KEY (employee_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
 -- password_history table
 CREATE TABLE password_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

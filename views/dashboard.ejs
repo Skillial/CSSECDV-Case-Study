@@ -64,6 +64,85 @@
             font-size: 0.6rem;
             vertical-align: middle;
         }
+
+        /* Style for sortable headers */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none; /* Prevent text selection on double click */
+            display: flex; /* Make it a flex container */
+            align-items: center; /* Vertically align items in the center */
+            justify-content: flex-start; /* Align content to the start */
+            padding-right: 0.5rem; /* Adjusted padding */
+            padding-left: 0.5rem; /* Adjusted padding */
+        }
+
+        /* The span containing the text within the header */
+        .sortable-header > span:first-child {
+            flex-grow: 1; /* Allow text to take available space */
+            white-space: nowrap; /* Crucial: prevent text wrapping */
+            overflow: hidden; /* Hide overflowing text */
+            text-overflow: ellipsis; /* Show ellipsis for overflowing text */
+            min-width: 0; /* Allow the flex item to shrink below its content size */
+        }
+
+        .sort-icon {
+            margin-left: 0.25rem; /* Reduced margin to keep it closer */
+            font-size: 0.75rem; /* Smaller icon */
+            line-height: 1; /* Align vertically */
+            flex-shrink: 0; /* Prevent icon from shrinking */
+        }
+
+        /* Password strength bar styles */
+        .password-strength-bar {
+            height: 8px;
+            background-color: #e0e0e0; /* Default gray for empty bar */
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+            border-radius: 4px;
+        }
+
+        /* Password complexity modal */
+        .complexity-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001; /* Higher than other modals if needed */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .complexity-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .complexity-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .complexity-modal-overlay.show .complexity-modal-content {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
@@ -98,7 +177,7 @@
                     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col justify-between items-center text-center h-full">
                         <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add New Admin</h2>
                         <p class="text-gray-600 text-md mb-4">Register new administrators.</p>
-                        <button id="add-admin-btn" class="mt-auto bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 transform hover:scale-105" onclick="openModal('admin-modal')">
+                        <button id="add-admin-btn" class="mt-auto bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 transform hover:scale-105">
                             Add Admin
                         </button>
                     </div>
@@ -126,7 +205,7 @@
                         <thead class="bg-gray-100 sticky top-0">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap rounded-tl-lg cursor-pointer hover:bg-gray-200" data-table="customers" data-column="id">Customer ID</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="customers" data-column="name">Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="customers" data-column="username">Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="customers" data-column="address">Address</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap rounded-tr-lg cursor-pointer hover:bg-gray-200" data-table="customers" data-column="created_at">Member Since</th>
                             </tr>
@@ -174,7 +253,7 @@
         </div>
     </div>
 
-    <!-- All Modals -->
+    <!-- Edit Assignment Modal -->
     <div id="edit-assignment-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Assigned Items for <span id="modal-employee-name"></span></h3>
@@ -186,297 +265,692 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Admin Modal -->
     <div id="admin-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <button class="close-button absolute top-4 right-4 text-gray-500 hover:text-black text-2xl">&times;</button>
+            <button class="close-button absolute top-4 right-4 text-gray-500 hover:text-black text-2xl" id="closeAdminModalBtn">&times;</button>
             <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Add New Admin</h2>
-            <form class="space-y-4">
+            <div id="admin-error-message-display" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative text-sm text-center mb-4 hidden" role="alert"></div>
+            <form id="adminForm" class="space-y-4"> <!-- Removed action and method -->
                 <div>
                     <label for="admin-username" class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" id="admin-username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username">
+                    <input type="text" id="admin-username" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username" required>
                 </div>
-                <div class="relative">
+                <div>
                     <label for="admin-password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="admin-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password">
-                    <svg id="toggleAdminPassword" class="absolute right-3 top-9 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="adminEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
+                    <div class="relative mt-1">
+                        <input type="password" id="admin-password" name="password" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password" required>
+                        <svg id="toggleAdminPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="adminEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
+                    </div>
+                </div>
+                <!-- Password Strength and Requirements Section for Admin -->
+                <div class="mt-2">
+                    <div class="password-strength-bar">
+                        <div id="adminStrengthBarFill" class="password-strength-bar-fill"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-1.5">
+                        <p id="adminStrengthText" class="text-sm text-gray-600">Password Strength: Very Weak</p>
+                        <button type="button" id="openAdminComplexityModal" class="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded-md px-1">
+                            Requirements
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label for="admin-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <div class="relative mt-1">
+                        <input type="password" id="admin-confirm-password" name="confirmPassword" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Confirm password" required>
+                        <svg id="toggleAdminConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="adminConfirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
+                    </div>
                 </div>
                 <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Create Admin</button>
             </form>
         </div>
     </div>
+
+    <!-- Admin Password Complexity Modal -->
+    <div id="adminComplexityModal" class="complexity-modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Password Requirements</h3>
+                <button id="closeAdminComplexityModal" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="adminPasswordComplexityList" class="text-sm text-gray-700">
+                <p class="font-semibold mb-1">Your password must contain:</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li id="adminModalLengthCheck" class="text-gray-700">At least 8 characters</li>
+                    <li id="adminModalUppercaseCheck" class="text-gray-700">An uppercase letter</li>
+                    <li id="adminModalLowercaseCheck" class="text-gray-700">A lowercase letter</li>
+                    <li id="adminModalNumberCheck" class="text-gray-700">A number</li>
+                    <li id="adminModalSpecialCharCheck" class="text-gray-700">A special character (!@#$%^&*)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
     <div id="employee-modal" class="modal-overlay hidden">
          <div class="modal-content">
-            <button class="close-button absolute top-4 right-4 text-gray-500 hover:text-black text-2xl">&times;</button>
+            <button class="close-button absolute top-4 right-4 text-gray-500 hover:text-black text-2xl" id="closeEmployeeModalBtn">&times;</button>
             <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Add New Employee</h2>
-            <form class="space-y-4">
+            <div id="employee-error-message-display" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative text-sm text-center mb-4 hidden" role="alert"></div>
+            <form id="employeeForm" class="space-y-4"> <!-- Removed action and method -->
                 <div>
                     <label for="employee-username" class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" id="employee-username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username">
+                    <input type="text" id="employee-username" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username" required>
                 </div>
-                <div class="relative">
+                <div>
                     <label for="employee-password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="employee-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password">
-                    <svg id="toggleEmployeePassword" class="absolute right-3 top-9 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="employeeEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
+                    <div class="relative mt-1">
+                        <input type="password" id="employee-password" name="password" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password" required>
+                        <svg id="toggleEmployeePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="employeeEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
+                    </div>
+                </div>
+                <!-- Password Strength and Requirements Section for Employee -->
+                <div class="mt-2">
+                    <div class="password-strength-bar">
+                        <div id="employeeStrengthBarFill" class="password-strength-bar-fill"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-1.5">
+                        <p id="employeeStrengthText" class="text-sm text-gray-600">Password Strength: Very Weak</p>
+                        <button type="button" id="openEmployeeComplexityModal" class="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded-md px-1">
+                            Requirements
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label for="employee-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <div class="relative mt-1">
+                        <input type="password" id="employee-confirm-password" name="confirmPassword" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Confirm password" required>
+                        <svg id="toggleEmployeeConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="employeeConfirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
+                    </div>
                 </div>
                 <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Create Employee</button>
             </form>
         </div>
     </div>
 
+    <!-- Employee Password Complexity Modal -->
+    <div id="employeeComplexityModal" class="complexity-modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Password Requirements</h3>
+                <button id="closeEmployeeComplexityModal" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="employeePasswordComplexityList" class="text-sm text-gray-700">
+                <p class="font-semibold mb-1">Your password must contain:</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li id="employeeModalLengthCheck" class="text-gray-700">At least 8 characters</li>
+                    <li id="employeeModalUppercaseCheck" class="text-gray-700">An uppercase letter</li>
+                    <li id="employeeModalLowercaseCheck" class="text-gray-700">A lowercase letter</li>
+                    <li id="employeeModalNumberCheck" class="text-gray-700">A number</li>
+                    <li id="employeeModalSpecialCharCheck" class="text-gray-700">A special character (!@#$%^&*)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- State Management ---
-            let customerSearchTerm = '';
-            let transactionSearchTerm = '';
-            let customerSortCriteria = [];
-            let transactionSortCriteria = [];
+        // --- Data from Backend (EJS variables) ---
+        // These variables are populated by the server when the page is rendered.
+        // If the backend doesn't provide them, they will be empty arrays.
+        let customers = <%- JSON.stringify(customers || []) %>;
+        // Use the 'employees' data passed from the backend
+        let employees = <%- JSON.stringify(employees || []) %>;
 
-            // --- Mock Data ---
-            const mockEmployees = [
-                { id: 'E001', name: 'Alice Smith', assignedItems: ['Living Room', 'Office'] },
-                { id: 'E002', name: 'Bob Johnson', assignedItems: ['Bedroom', 'Dining Room'] },
-                { id: 'E003', name: 'Charlie Brown', assignedItems: ['Storage'] },
-                { id: 'E004', name: 'Diana Prince', assignedItems: ['Outdoor', 'Children\'s'] },
-                { id: 'E005', name: 'Eve Adams', assignedItems: ['Accent'] }
-            ];
-            const mockCustomers = [
-                { id: 'C101', name: 'John Doe', address: '123 Main St, Anytown', created_at: '2023-01-15T10:00:00Z' },
-                { id: 'C102', name: 'Jane Miller', address: '456 Oak Ave, Somewhere', created_at: '2023-02-20T11:30:00Z' },
-                { id: 'C103', name: 'Peter Jones', address: '789 Pine Ln, Nowhere', created_at: '2023-03-01T14:15:00Z' },
-                { id: 'C104', name: 'Sarah Davis', address: '101 Elm Blvd, Anyplace', created_at: '2023-04-05T09:00:00Z' },
-                { id: 'C105', name: 'Michael White', address: '202 Birch Rd, Somecity', created_at: '2023-05-10T16:45:00Z' }
-            ];
-            const mockItems = [
-                'Living Room', 'Bedroom', 'Dining Room', 'Office', 'Outdoor', 'Storage', 'Children\'s', 'Entryway', 'Accent', 'Modular'
-            ];
-            const generateMockTransactions = () => {
-                const transactions = [];
-                const today = new Date();
-                const statuses = ['Completed', 'Pending', 'Failed', 'Refunded'];
-                for (let i = 0; i < 50; i++) {
-                    transactions.push({
-                        id: `TRX${1000 + i}`,
-                        employeeName: mockEmployees[Math.floor(Math.random() * mockEmployees.length)].name,
-                        customerName: mockCustomers[Math.floor(Math.random() * mockCustomers.length)].name,
-                        itemName: mockItems[Math.floor(Math.random() * mockItems.length)],
-                        quantity: Math.floor(Math.random() * 3) + 1,
-                        price: (Math.random() * 500 + 20),
-                        date: new Date(today.getFullYear(), today.getMonth(), Math.floor(Math.random() * 28) + 1),
-                        status: statuses[Math.floor(Math.random() * statuses.length)]
-                    });
+        // --- Mock Data (for transactions and items, if not provided by backend) ---
+        // You might want to fetch these dynamically if they are also database-driven.
+        const mockItems = [
+            'Living Room', 'Bedroom', 'Dining Room', 'Office', 'Outdoor', 'Storage', 'Children\'s', 'Entryway', 'Accent', 'Modular'
+        ];
+        const generateMockTransactions = () => {
+            const transactions = [];
+            const today = new Date();
+            const statuses = ['Completed', 'Pending', 'Failed', 'Refunded'];
+            for (let i = 0; i < 50; i++) {
+                transactions.push({
+                    id: `TRX${1000 + i}`,
+                    // Use actual employee names if available, otherwise fallback to mock
+                    employeeName: employees[Math.floor(Math.random() * employees.length)]?.username || `Employee ${i+1}`,
+                    // Use actual customer names if available, otherwise fallback to mock
+                    customerName: customers[Math.floor(Math.random() * customers.length)]?.username || `Customer ${i+1}`,
+                    itemName: mockItems[Math.floor(Math.random() * mockItems.length)],
+                    quantity: Math.floor(Math.random() * 3) + 1,
+                    price: (Math.random() * 500 + 20),
+                    date: new Date(today.getFullYear(), today.getMonth(), Math.floor(Math.random() * 28) + 1),
+                    status: statuses[Math.floor(Math.random() * statuses.length)]
+                });
+            }
+            return transactions;
+        };
+        let mockTransactions = generateMockTransactions();
+
+
+        // --- State Management ---
+        let customerSearchTerm = '';
+        let transactionSearchTerm = '';
+        let customerSortCriteria = [];
+        let transactionSortCriteria = [];
+
+        // --- Utility Functions ---
+        const openModal = (modalId) => document.getElementById(modalId).classList.remove('hidden');
+        const closeModal = (modalId) => document.getElementById(modalId).classList.add('hidden');
+        const showMessage = (message, type = 'info') => {
+            const box = document.getElementById('dashboard-message-box');
+            document.getElementById('dashboard-message-content').textContent = message;
+            box.classList.remove('hidden');
+            // Remove previous type classes and add new one
+            box.classList.remove('bg-blue-100', 'border-blue-400', 'text-blue-700', 'bg-green-100', 'border-green-400', 'text-green-700', 'bg-red-100', 'border-red-400', 'text-red-700');
+            if (type === 'success') {
+                box.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            } else if (type === 'error') {
+                box.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            } else { // default info
+                box.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-700');
+            }
+            setTimeout(() => box.classList.add('hidden'), 5000);
+        };
+
+        const filterData = (data, searchTerm, tableType) => {
+            if (!searchTerm) return data;
+            const lowercasedTerm = searchTerm.toLowerCase();
+            return data.filter(item => {
+                const searchableItem = { ...item };
+                if (tableType === 'transactions') {
+                    searchableItem.price = `$${item.price.toFixed(2)}`;
+                    searchableItem.date = item.date.toLocaleDateString();
                 }
-                return transactions;
-            };
-            let mockTransactions = generateMockTransactions();
+                if (tableType === 'customers') {
+                    // Assuming customer objects have 'username', 'address', 'created_at'
+                    searchableItem.created_at = new Date(item.created_at).toLocaleDateString();
+                }
+                return Object.values(searchableItem).some(val =>
+                    val && val.toString().toLowerCase().includes(lowercasedTerm)
+                );
+            });
+        };
 
-            // --- Utility Functions ---
-            const openModal = (modalId) => document.getElementById(modalId).classList.remove('hidden');
-            const closeModal = (modalId) => document.getElementById(modalId).classList.add('hidden');
-            const showMessage = (message, type = 'info') => {
-                const box = document.getElementById('dashboard-message-box');
-                document.getElementById('dashboard-message-content').textContent = message;
-                box.classList.remove('hidden');
-                setTimeout(() => box.classList.add('hidden'), 5000);
-            };
+        const getSortValue = (obj, column) => {
+            const value = obj[column];
+            if (value instanceof Date) return value.getTime();
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') return value.toLowerCase();
+            return value;
+        };
 
-            // --- Search and Sort Logic ---
-            const filterData = (data, searchTerm, tableType) => {
-                if (!searchTerm) return data;
-                const lowercasedTerm = searchTerm.toLowerCase();
-                return data.filter(item => {
-                    const searchableItem = { ...item };
-                    if (tableType === 'transactions') {
-                        searchableItem.price = `$${item.price.toFixed(2)}`;
-                        searchableItem.date = item.date.toLocaleDateString();
-                    }
-                    if (tableType === 'customers') {
-                        searchableItem.created_at = new Date(item.created_at).toLocaleDateString();
-                    }
-                    return Object.values(searchableItem).some(val =>
-                        val.toString().toLowerCase().includes(lowercasedTerm)
-                    );
-                });
-            };
+        const sortData = (data, criteria) => {
+            if (!criteria.length) return data;
+            return [...data].sort((a, b) => {
+                for (const { column, direction } of criteria) {
+                    const valA = getSortValue(a, column);
+                    const valB = getSortValue(b, column);
+                    if (valA < valB) return direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return direction === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        };
 
-            const getSortValue = (obj, column) => {
-                const value = obj[column];
-                if (value instanceof Date) return value.getTime();
-                if (typeof value === 'number') return value;
-                if (typeof value === 'string') return value.toLowerCase();
-                return value;
-            };
+        // --- Render Functions ---
+        const renderCustomers = () => {
+            const filtered = filterData(customers, customerSearchTerm, 'customers'); // Use 'customers' from EJS
+            const sorted = sortData(filtered, customerSortCriteria);
+            const tableBody = document.getElementById('customers-table-body');
+            tableBody.innerHTML = sorted.map(customer => `
+                <tr class="hover:bg-gray-100">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${customer.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.username}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.address || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${new Date(customer.created_at).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+        };
 
-            const sortData = (data, criteria) => {
-                if (!criteria.length) return data;
-                return [...data].sort((a, b) => {
-                    for (const { column, direction } of criteria) {
-                        const valA = getSortValue(a, column);
-                        const valB = getSortValue(b, column);
-                        if (valA < valB) return direction === 'asc' ? -1 : 1;
-                        if (valA > valB) return direction === 'asc' ? 1 : -1;
-                    }
-                    return 0;
-                });
-            };
+        const renderTransactions = () => {
+            const filtered = filterData(mockTransactions, transactionSearchTerm, 'transactions');
+            const sorted = sortData(filtered, transactionSortCriteria);
+            const tableBody = document.getElementById('transactions-table-body');
+            const statusColors = { 'Completed': 'bg-green-100 text-green-800', 'Pending': 'bg-yellow-100 text-yellow-800', 'Failed': 'bg-red-100 text-red-800', 'Refunded': 'bg-blue-100 text-blue-800' };
+            tableBody.innerHTML = sorted.map(t => `
+                <tr class="hover:bg-gray-100">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${t.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.employeeName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.customerName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.itemName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${t.quantity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">$${t.price.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${new Date(t.date).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[t.status] || 'bg-gray-100'}">${t.status}</span></td>
+                </tr>
+            `).join('');
+        };
 
-            // --- Render Functions ---
-            const renderCustomers = () => {
-                const filtered = filterData(mockCustomers, customerSearchTerm, 'customers');
-                const sorted = sortData(filtered, customerSortCriteria);
-                const tableBody = document.getElementById('customers-table-body');
-                tableBody.innerHTML = sorted.map(customer => `
-                    <tr class="hover:bg-gray-100">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${customer.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${customer.address}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${new Date(customer.created_at).toLocaleDateString()}</td>
-                    </tr>
-                `).join('');
-            };
+        const renderMonthlySales = () => {
+            document.getElementById('monthly-sales').textContent = `$${mockTransactions.reduce((acc, t) => acc + t.price, 0).toFixed(2)}`;
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        };
 
-            const renderTransactions = () => {
-                const filtered = filterData(mockTransactions, transactionSearchTerm, 'transactions');
-                const sorted = sortData(filtered, transactionSortCriteria);
-                const tableBody = document.getElementById('transactions-table-body');
-                const statusColors = { 'Completed': 'bg-green-100 text-green-800', 'Pending': 'bg-yellow-100 text-yellow-800', 'Failed': 'bg-red-100 text-red-800', 'Refunded': 'bg-blue-100 text-blue-800' };
-                tableBody.innerHTML = sorted.map(t => `
-                    <tr class="hover:bg-gray-100">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${t.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.employeeName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.customerName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.itemName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${t.quantity}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">$${t.price.toFixed(2)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.date.toLocaleDateString()}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[t.status] || 'bg-gray-100'}">${t.status}</span></td>
-                    </tr>
-                `).join('');
-            };
-
-            const renderMonthlySales = () => {
-                document.getElementById('monthly-sales').textContent = `$${mockTransactions.reduce((acc, t) => acc + t.price, 0).toFixed(2)}`;
-                document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-            };
-
-            const renderEmployeeAssignments = () => {
-                const listContainer = document.getElementById('employee-assignments-list');
-                listContainer.innerHTML = mockEmployees.map(employee => `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100">
-                        <div>
-                            <h3 class="text-lg font-medium text-gray-900">${employee.name}</h3>
-                            <div class="mt-2 flex flex-wrap gap-2">${employee.assignedItems.map(item => `<span class="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">${item}</span>`).join(' ') || '<span class="text-gray-500 text-sm">No items assigned</span>'}</div>
-                        </div>
-                        <button class="edit-assigned-items-btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm" data-employee-id="${employee.id}">Edit</button>
+        const renderEmployeeAssignments = () => {
+            const listContainer = document.getElementById('employee-assignments-list');
+            // Use 'employees' from EJS
+            listContainer.innerHTML = employees.map(employee => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">${employee.username}</h3>
+                        <div class="mt-2 flex flex-wrap gap-2">${employee.assignedItems && employee.assignedItems.length > 0 ? employee.assignedItems.map(item => `<span class="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full">${item}</span>`).join(' ') : '<span class="text-gray-500 text-sm">No items assigned</span>'}</div>
                     </div>
-                `).join('');
-                document.querySelectorAll('.edit-assigned-items-btn').forEach(btn => btn.addEventListener('click', (e) => openEditModal(e.target.dataset.employeeId)));
-            };
-            
-            const updateSortIndicators = (table, criteria) => {
-                table.querySelectorAll('th[data-column]').forEach(th => {
-                    const indicator = th.querySelector('.sort-indicator');
-                    if (indicator) indicator.remove();
-                });
-                criteria.forEach(({ column, direction }, index) => {
-                    const header = table.querySelector(`th[data-column="${column}"]`);
-                    if (header) {
-                        const indicator = document.createElement('span');
-                        indicator.className = 'sort-indicator ml-1';
-                        indicator.innerHTML = `(${index + 1}) ${direction === 'asc' ? '▲' : '▼'}`;
-                        header.appendChild(indicator);
-                    }
-                });
-            };
-
-            const fullRender = () => {
-                renderCustomers();
-                renderTransactions();
-                renderMonthlySales();
-                renderEmployeeAssignments();
-                updateSortIndicators(document.querySelector('#customers-table-body').closest('table'), customerSortCriteria);
-                updateSortIndicators(document.querySelector('#transactions-table-body').closest('table'), transactionSortCriteria);
-            };
-
-            // --- Event Listeners ---
-            document.getElementById('add-admin-btn').addEventListener('click', () => openModal('admin-modal'));
-            document.getElementById('add-employee-btn').addEventListener('click', () => openModal('employee-modal'));
-            document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id) }));
-            document.querySelectorAll('.close-button').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal-overlay').id)));
-            
-            document.getElementById('customer-search').addEventListener('input', e => {
-                customerSearchTerm = e.target.value;
-                renderCustomers();
+                    <button class="edit-assigned-items-btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm" data-employee-id="${employee.id}">Edit</button>
+                </div>
+            `).join('');
+            document.querySelectorAll('.edit-assigned-items-btn').forEach(btn => btn.addEventListener('click', (e) => openEditModal(e.target.dataset.employeeId)));
+        };
+        
+        const updateSortIndicators = (table, criteria) => {
+            table.querySelectorAll('th[data-column]').forEach(th => {
+                const indicator = th.querySelector('.sort-indicator');
+                if (indicator) indicator.remove();
             });
-            document.getElementById('transaction-search').addEventListener('input', e => {
-                transactionSearchTerm = e.target.value;
-                renderTransactions();
-            });
-
-            document.getElementById('clear-customer-sort').addEventListener('click', () => {
-                customerSortCriteria = [];
-                fullRender();
-            });
-            document.getElementById('clear-transaction-sort').addEventListener('click', () => {
-                transactionSortCriteria = [];
-                fullRender();
-            });
-
-            document.querySelectorAll('th[data-column]').forEach(header => {
-                header.addEventListener('click', (e) => {
-                    const column = header.dataset.column;
-                    const tableId = header.dataset.table;
-                    let criteria = tableId === 'customers' ? customerSortCriteria : transactionSortCriteria;
-                    
-                    const existingIndex = criteria.findIndex(c => c.column === column);
-
-                    if (e.shiftKey) {
-                        if (existingIndex > -1) {
-                            criteria[existingIndex].direction = criteria[existingIndex].direction === 'asc' ? 'desc' : 'asc';
-                        } else {
-                            criteria.push({ column, direction: 'asc' });
-                        }
-                    } else {
-                        if (existingIndex > -1) {
-                            const newDirection = criteria[existingIndex].direction === 'asc' ? 'desc' : 'asc';
-                            criteria = [{ column, direction: newDirection }];
-                        } else {
-                            criteria = [{ column, direction: 'asc' }];
-                        }
-                    }
-
-                    if (tableId === 'customers') {
-                        customerSortCriteria = criteria;
-                    } else {
-                        transactionSortCriteria = criteria;
-                    }
-                    fullRender();
-                });
-            });
-
-            // Edit Assignment Modal Logic
-            let currentEditingEmployeeId = null;
-            const openEditModal = (employeeId) => {
-                const employee = mockEmployees.find(emp => emp.id === employeeId);
-                if (!employee) return;
-                currentEditingEmployeeId = employeeId;
-                document.getElementById('modal-employee-name').textContent = employee.name;
-                const select = document.getElementById('modal-assigned-items');
-                select.innerHTML = mockItems.map(item => `<option value="${item}" ${employee.assignedItems.includes(item) ? 'selected' : ''}>${item}</option>`).join('');
-                openModal('edit-assignment-modal');
-            };
-            document.getElementById('save-edit-btn').addEventListener('click', () => {
-                const employee = mockEmployees.find(emp => emp.id === currentEditingEmployeeId);
-                if (employee) {
-                    employee.assignedItems = Array.from(document.getElementById('modal-assigned-items').selectedOptions).map(opt => opt.value);
-                    showMessage(`Assignments for ${employee.name} updated.`, 'success');
-                    renderEmployeeAssignments();
+            criteria.forEach(({ column, direction }, index) => {
+                const header = table.querySelector(`th[data-column="${column}"]`);
+                if (header) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'sort-indicator ml-1';
+                    indicator.innerHTML = `(${index + 1}) ${direction === 'asc' ? '▲' : '▼'}`;
+                    header.appendChild(indicator);
                 }
-                closeModal('edit-assignment-modal');
             });
-            document.getElementById('cancel-edit-btn').addEventListener('click', () => closeModal('edit-assignment-modal'));
-            
-            // Initial Render
+        };
+
+        const fullRender = () => {
+            renderCustomers();
+            renderTransactions();
+            renderMonthlySales();
+            renderEmployeeAssignments();
+            updateSortIndicators(document.querySelector('#customers-table-body').closest('table'), customerSortCriteria);
+            updateSortIndicators(document.querySelector('#transactions-table-body').closest('table'), transactionSortCriteria);
+        };
+
+        // --- Event Listeners ---
+        document.getElementById('add-admin-btn').addEventListener('click', () => openModal('admin-modal'));
+        document.getElementById('add-employee-btn').addEventListener('click', () => openModal('employee-modal'));
+        
+        // Close modals when clicking outside or on close button
+        document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', (e) => {
+            if (e.target === m) closeModal(m.id);
+        }));
+        document.getElementById('closeAdminModalBtn').addEventListener('click', () => closeModal('admin-modal'));
+        document.getElementById('closeEmployeeModalBtn').addEventListener('click', () => closeModal('employee-modal'));
+
+
+        document.getElementById('customer-search').addEventListener('input', e => {
+            customerSearchTerm = e.target.value;
+            renderCustomers();
+        });
+        document.getElementById('transaction-search').addEventListener('input', e => {
+            transactionSearchTerm = e.target.value;
+            renderTransactions();
+        });
+
+        document.getElementById('clear-customer-sort').addEventListener('click', () => {
+            customerSortCriteria = [];
             fullRender();
+        });
+        document.getElementById('clear-transaction-sort').addEventListener('click', () => {
+            transactionSortCriteria = [];
+            fullRender();
+        });
+
+        document.querySelectorAll('th[data-column]').forEach(header => {
+            header.addEventListener('click', (e) => {
+                const column = header.dataset.column;
+                const tableId = header.dataset.table;
+                let criteria = tableId === 'customers' ? customerSortCriteria : transactionSortCriteria;
+                
+                const existingIndex = criteria.findIndex(c => c.column === column);
+
+                if (e.shiftKey) {
+                    if (existingIndex > -1) {
+                        criteria[existingIndex].direction = criteria[existingIndex].direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        criteria.push({ column, direction: 'asc' });
+                    }
+                } else {
+                    if (existingIndex > -1) {
+                        const newDirection = criteria[existingIndex].direction === 'asc' ? 'desc' : 'asc';
+                        criteria = [{ column, direction: newDirection }];
+                    } else {
+                        criteria = [{ column, direction: 'asc' }];
+                    }
+                }
+
+                if (tableId === 'customers') {
+                    customerSortCriteria = criteria;
+                } else {
+                    transactionSortCriteria = criteria;
+                }
+                fullRender();
+            });
+        });
+
+        // Edit Assignment Modal Logic
+        let currentEditingEmployeeId = null;
+        const openEditModal = (employeeId) => {
+            // Use 'employees' from EJS
+            // FIX: Convert employeeId to a number for strict comparison with employee.id
+            const employee = employees.find(emp => emp.id === parseInt(employeeId));
+            if (!employee) {
+                console.error('Employee not found for ID:', employeeId);
+                return;
+            }
+            currentEditingEmployeeId = employeeId;
+            document.getElementById('modal-employee-name').textContent = employee.username; // Use username for display
+            const select = document.getElementById('modal-assigned-items');
+
+            // Ensure assignedItems is an array before using .includes()
+            select.innerHTML = mockItems.map(item => `<option value="${item}" ${employee.assignedItems && employee.assignedItems.includes(item) ? 'selected' : ''}>${item}</option>`).join('');
+            openModal('edit-assignment-modal');
+        };
+        document.getElementById('save-edit-btn').addEventListener('click', async () => { // Made async
+            const employee = employees.find(emp => emp.id === parseInt(currentEditingEmployeeId)); // Ensure ID is parsed
+            if (employee) {
+                const newAssignedItems = Array.from(document.getElementById('modal-assigned-items').selectedOptions).map(opt => opt.value);
+                
+                try {
+                    const response = await fetch('/employee/assign', { // Updated endpoint to /api/employee/assign
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            employeeId: employee.id,
+                            assignedCategories: newAssignedItems // Changed key to match backend
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Update the local 'employees' array with the new assignments
+                        employee.assignedItems = newAssignedItems;
+                        showMessage(result.message, 'success');
+                        renderEmployeeAssignments(); // Re-render to show updated assignments
+                        closeModal('edit-assignment-modal');
+                    } else {
+                        showMessage(result.message || 'Failed to update assignments.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Network error during assignment update:', error);
+                    showMessage('Network error: Could not connect to server.', 'error');
+                }
+            }
+        });
+        document.getElementById('cancel-edit-btn').addEventListener('click', () => closeModal('edit-assignment-modal'));
+        
+        // --- Password Complexity Logic (Reused from signup) ---
+        function updateCheckUI(element, isMet) {
+            element.classList.remove('text-red-600', 'text-green-600', 'text-gray-700');
+            if (isMet) {
+                element.classList.add('text-green-600');
+            } else {
+                element.classList.add('text-red-600');
+            }
+        }
+
+        function checkPasswordComplexity(passwordInputId, strengthBarFillId, strengthTextId, modalLengthCheckId, modalUppercaseCheckId, modalLowercaseCheckId, modalNumberCheckId, modalSpecialCharCheckId) {
+            const password = document.getElementById(passwordInputId).value;
+            let checksMet = 0;
+
+            const checks = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[!@#$%^&*]/.test(password),
+            };
+
+            updateCheckUI(document.getElementById(modalLengthCheckId), checks.length);
+            updateCheckUI(document.getElementById(modalUppercaseCheckId), checks.uppercase);
+            updateCheckUI(document.getElementById(modalLowercaseCheckId), checks.lowercase);
+            updateCheckUI(document.getElementById(modalNumberCheckId), checks.number);
+            updateCheckUI(document.getElementById(modalSpecialCharCheckId), checks.special);
+
+            checksMet = Object.values(checks).filter(Boolean).length;
+
+            const totalChecks = 5;
+            const strengthPercentage = (checksMet / totalChecks) * 100;
+            const strengthBarFill = document.getElementById(strengthBarFillId);
+            const strengthText = document.getElementById(strengthTextId);
+
+            strengthBarFill.style.width = `${strengthPercentage}%`;
+
+            let strengthColor = '#e0e0e0'; // Default gray
+            let strengthMessage = 'Very Weak';
+
+            if (checksMet === 1) {
+                strengthColor = '#f87171'; // Red
+                strengthMessage = 'Weak';
+            } else if (checksMet === 2) {
+                strengthColor = '#fbbf24'; // Amber
+                strengthMessage = 'Fair';
+            } else if (checksMet === 3) {
+                strengthColor = '#fcd34d'; // Yellow
+                strengthMessage = 'Good';
+            } else if (checksMet === 4) {
+                strengthColor = '#84cc16'; // Lime Green
+                strengthMessage = 'Strong';
+            } else if (checksMet === 5) {
+                strengthColor = '#22c55e'; // Green
+                strengthMessage = 'Very Strong';
+            }
+
+            strengthBarFill.style.backgroundColor = strengthColor;
+            strengthText.textContent = `Password Strength: ${strengthMessage}`;
+
+            return checksMet === totalChecks;
+        }
+
+        // Function to display errors in the unified message area for modals
+        function showModalErrors(displayElementId, messages) {
+            const displayElement = document.getElementById(displayElementId);
+            if (messages && messages.length > 0) {
+                displayElement.innerHTML = `<p>${messages[0]}</p>`;
+                displayElement.classList.remove('hidden');
+            } else {
+                hideModalErrors(displayElementId);
+            }
+        }
+
+        // Function to hide the unified error message area for modals
+        function hideModalErrors(displayElementId) {
+            const displayElement = document.getElementById(displayElementId);
+            displayElement.classList.add('hidden');
+            displayElement.innerHTML = ''; // Clear content
+        }
+
+        // Admin Form Password Logic
+        const adminPasswordInput = document.getElementById('admin-password');
+        const adminConfirmPasswordInput = document.getElementById('admin-confirm-password');
+        const adminForm = document.getElementById('adminForm');
+        const adminErrorMessageDisplay = document.getElementById('admin-error-message-display');
+
+        adminPasswordInput.addEventListener('input', () => {
+            checkPasswordComplexity('admin-password', 'adminStrengthBarFill', 'adminStrengthText', 'adminModalLengthCheck', 'adminModalUppercaseCheck', 'adminModalLowercaseCheck', 'adminModalNumberCheck', 'adminModalSpecialCharCheck');
+            hideModalErrors('admin-error-message-display');
+        });
+        adminConfirmPasswordInput.addEventListener('input', () => {
+            hideModalErrors('admin-error-message-display');
+        });
+
+        adminForm.addEventListener('submit', async function(event) { // Added async
+            event.preventDefault();
+            let clientErrors = [];
+            const isPasswordComplex = checkPasswordComplexity('admin-password', 'adminStrengthBarFill', 'adminStrengthText', 'adminModalLengthCheck', 'adminModalUppercaseCheck', 'adminModalLowercaseCheck', 'adminModalNumberCheck', 'adminModalSpecialCharCheck');
+
+            if (adminPasswordInput.value !== adminConfirmPasswordInput.value) {
+                clientErrors.push('Passwords do not match.');
+            }
+            if (!isPasswordComplex) {
+                clientErrors.push('Password does not meet complexity requirements.');
+            }
+
+            if (clientErrors.length > 0) {
+                showModalErrors('admin-error-message-display', clientErrors);
+            } else {
+                hideModalErrors('admin-error-message-display');
+                // Perform AJAX submission
+                try {
+                    const response = await fetch('/register/admin', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: document.getElementById('admin-username').value,
+                            password: adminPasswordInput.value
+                        })
+                    });
+
+                    if (response.ok) {
+                        showMessage('Admin created successfully!', 'success');
+                        closeModal('admin-modal');
+                        adminForm.reset(); // Clear form fields
+                        // Optionally re-render employee assignments or other relevant sections if new admin affects them
+                    } else {
+                        const errorData = await response.json();
+                        showModalErrors('admin-error-message-display', [errorData.message || 'An unknown error occurred.']);
+                    }
+                } catch (error) {
+                    console.error('Error creating admin:', error);
+                    showModalErrors('admin-error-message-display', ['Network error or server unreachable.']);
+                }
+            }
+        });
+
+        document.getElementById('openAdminComplexityModal').addEventListener('click', () => {
+            document.getElementById('adminComplexityModal').classList.add('show');
+            checkPasswordComplexity('admin-password', 'adminStrengthBarFill', 'adminStrengthText', 'adminModalLengthCheck', 'adminModalUppercaseCheck', 'adminModalLowercaseCheck', 'adminModalNumberCheck', 'adminModalSpecialCharCheck');
+        });
+        document.getElementById('closeAdminComplexityModal').addEventListener('click', () => {
+            document.getElementById('adminComplexityModal').classList.remove('show');
+        });
+        document.getElementById('adminComplexityModal').addEventListener('click', (event) => {
+            if (event.target === document.getElementById('adminComplexityModal')) {
+                document.getElementById('adminComplexityModal').classList.remove('show');
+            }
+        });
+
+
+        // Employee Form Password Logic (similar to Admin)
+        const employeePasswordInput = document.getElementById('employee-password');
+        const employeeConfirmPasswordInput = document.getElementById('employee-confirm-password');
+        const employeeForm = document.getElementById('employeeForm');
+        const employeeErrorMessageDisplay = document.getElementById('employee-error-message-display');
+
+        employeePasswordInput.addEventListener('input', () => {
+            checkPasswordComplexity('employee-password', 'employeeStrengthBarFill', 'employeeStrengthText', 'employeeModalLengthCheck', 'employeeModalUppercaseCheck', 'employeeModalLowercaseCheck', 'employeeModalNumberCheck', 'employeeModalSpecialCharCheck');
+            hideModalErrors('employee-error-message-display');
+        });
+        employeeConfirmPasswordInput.addEventListener('input', () => {
+            hideModalErrors('employee-error-message-display');
+        });
+
+        employeeForm.addEventListener('submit', async function(event) { // Added async
+            event.preventDefault();
+            let clientErrors = [];
+            const isPasswordComplex = checkPasswordComplexity('employee-password', 'employeeStrengthBarFill', 'employeeStrengthText', 'employeeModalLengthCheck', 'employeeModalUppercaseCheck', 'employeeModalLowercaseCheck', 'employeeModalNumberCheck', 'employeeModalSpecialCharCheck');
+
+            if (employeePasswordInput.value !== employeeConfirmPasswordInput.value) {
+                clientErrors.push('Passwords do not match.');
+            }
+            if (!isPasswordComplex) {
+                clientErrors.push('Password does not meet complexity requirements.');
+            }
+
+            if (clientErrors.length > 0) {
+                showModalErrors('employee-error-message-display', clientErrors);
+            } else {
+                hideModalErrors('employee-error-message-display');
+                // Perform AJAX submission
+                try {
+                    const response = await fetch('/register/manager', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: document.getElementById('employee-username').value,
+                            password: employeePasswordInput.value
+                        })
+                    });
+
+                    if (response.ok) {
+                        showMessage('Employee created successfully!', 'success');
+                        closeModal('employee-modal');
+                        employeeForm.reset(); // Clear form fields
+                        // Optionally re-render employee assignments or other relevant sections if new employee affects them
+                    } else {
+                        const errorData = await response.json();
+                        showModalErrors('employee-error-message-display', [errorData.message || 'An unknown error occurred.']);
+                    }
+                } catch (error) {
+                    console.error('Error creating employee:', error);
+                    showModalErrors('employee-error-message-display', ['Network error or server unreachable.']);
+                }
+            }
+        });
+
+        document.getElementById('openEmployeeComplexityModal').addEventListener('click', () => {
+            document.getElementById('employeeComplexityModal').classList.add('show');
+            checkPasswordComplexity('employee-password', 'employeeStrengthBarFill', 'employeeStrengthText', 'employeeModalLengthCheck', 'employeeModalUppercaseCheck', 'employeeModalLowercaseCheck', 'employeeModalNumberCheck', 'employeeModalSpecialCharCheck');
+        });
+        document.getElementById('closeEmployeeComplexityModal').addEventListener('click', () => {
+            document.getElementById('employeeComplexityModal').classList.remove('show');
+        });
+        document.getElementById('employeeComplexityModal').addEventListener('click', (event) => {
+            if (event.target === document.getElementById('employeeComplexityModal')) {
+                document.getElementById('employeeComplexityModal').classList.remove('show');
+            }
+        });
+
+        // Prevent copy/paste/cut on password fields for admin and employee forms
+        function setupPasswordToggle(toggleId, inputId, eyeSlashPathId) {
+            const toggleButton = document.getElementById(toggleId);
+            const passwordInput = document.getElementById(inputId);
+            const eyeSlashPath = document.getElementById(eyeSlashPathId);
+
+            if (toggleButton && passwordInput && eyeSlashPath) {
+                toggleButton.addEventListener('click', () => {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    eyeSlashPath.classList.toggle('hidden');
+                });
+            }
+        }
+
+        // Setup toggles for admin and employee modals
+        setupPasswordToggle('toggleAdminPassword', 'admin-password', 'adminEyeSlashPath');
+        setupPasswordToggle('toggleAdminConfirmPassword', 'admin-confirm-password', 'adminConfirmEyeSlashPath');
+        setupPasswordToggle('toggleEmployeePassword', 'employee-password', 'employeeEyeSlashPath');
+        setupPasswordToggle('toggleEmployeeConfirmPassword', 'employee-confirm-password', 'employeeConfirmEyeSlashPath');
+
+        const passwordFields = [
+            adminPasswordInput, adminConfirmPasswordInput,
+            employeePasswordInput, employeeConfirmPasswordInput
+        ];
+        passwordFields.forEach(field => {
+            field.addEventListener('copy', (e) => e.preventDefault());
+            field.addEventListener('paste', (e) => e.preventDefault());
+            field.addEventListener('cut', (e) => e.preventDefault());
+        });
+
+        // Initial Render
+        document.addEventListener('DOMContentLoaded', () => {
+            // Call fullRender to display all dashboard sections
+            fullRender();
+
+            // Initialize password strength for both modals if they are open on load (though usually hidden)
+            checkPasswordComplexity('admin-password', 'adminStrengthBarFill', 'adminStrengthText', 'adminModalLengthCheck', 'adminModalUppercaseCheck', 'adminModalLowercaseCheck', 'adminModalNumberCheck', 'adminModalSpecialCharCheck');
+            checkPasswordComplexity('employee-password', 'employeeStrengthBarFill', 'employeeStrengthText', 'employeeModalLengthCheck', 'employeeModalUppercaseCheck', 'employeeModalLowercaseCheck', 'employeeModalNumberCheck', 'employeeModalSpecialCharCheck');
         });
     </script>
 </body>
