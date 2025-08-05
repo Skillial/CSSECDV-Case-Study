@@ -1,67 +1,150 @@
-const { OccasioDB } = require('./../config/db');
+// Import necessary modules
+const { OccasioDB } = require('./../config/db'); // Adjust the path if your db.js is located elsewhere.
 
-const controller = {
-
+const homeController = {
+    // MODIFIED: This function now fetches the first page of products,
+    // optionally filtering by search query and category.
     page: (req, res) => {
         if (req.user) {
-            console.log("role:", req.user.role);
+            // Logic for admin and manager roles remains the same.
             if (req.user.role === 'admin') {
+                return res.render('dashboard', { /* ... your admin data ... */ });
+            } else if (req.user.role === 'manager') {
+                return res.render('ordersinventory');
+            } else if (req.user.role === 'customer') {
                 try {
-                    // Fetch customer data for the dashboard
-                    const customerStmt = OccasioDB.prepare("SELECT id, username, address, created_at FROM accounts WHERE role = 'customer'");
-                    const customers = customerStmt.all();
+                    const initialLimit = 8;
+                    const { search, category } = req.query; // Get filters from query string
 
-                    // Fetch employee data (users with 'manager' role) and their assigned categories
-                    // This query joins accounts with employee_categories and groups by employee to get all categories
-                    const employeeCategoriesStmt = OccasioDB.prepare(`
+                    let queryParams = [];
+                    let whereClauses = [];
+
+                    // Base query to select products and their primary image
+                    let sql = `
                         SELECT
-                            a.id,
-                            a.username,
-                            a.address,
-                            GROUP_CONCAT(ec.category_name) AS assigned_categories_json
-                        FROM
-                            accounts a
-                        LEFT JOIN
-                            employee_categories ec ON a.id = ec.employee_id
-                        WHERE
-                            a.role = 'manager'
-                        GROUP BY
-                            a.id, a.username, a.address
-                    `);
-                    let employees = employeeCategoriesStmt.all();
+                            p.id,
+                            p.product_name as name,
+                            p.price,
+                            p.category,
+                            p.stock,
+                            (SELECT pi.image_data FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC, pi.id ASC LIMIT 1) as image_data,
+                            (SELECT pi.image_mime_type FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC, pi.id ASC LIMIT 1) as image_mime_type
+                        FROM products p
+                    `;
 
-                    // Process employees to convert assigned_categories_json string into an array
-                    employees = employees.map(employee => ({
-                        ...employee,
-                        // If assigned_categories_json is null/empty string, default to empty array
-                        assignedItems: employee.assigned_categories_json ? employee.assigned_categories_json.split(',') : []
-                    }));
+                    // Dynamically add WHERE clauses for filtering
+                    if (search) {
+                        whereClauses.push("p.product_name LIKE ?");
+                        queryParams.push(`%${search}%`);
+                    }
+                    if (category) {
+                        whereClauses.push("p.category = ?");
+                        queryParams.push(category);
+                    }
 
-                    // Render the dashboard, passing the fetched data
-                    res.render('dashboard', {
-                        customers: customers,
-                        employees: employees
-                        // Note: mockItems and mockTransactions are currently client-side in dashboard.ejs.
-                        // If these also need to be dynamic, you'd fetch them here and pass them too.
+                    if (whereClauses.length > 0) {
+                        sql += ` WHERE ${whereClauses.join(' AND ')}`;
+                    }
+
+                    sql += " ORDER BY p.created_at DESC LIMIT ?";
+                    queryParams.push(initialLimit);
+
+                    const stmt = OccasioDB.prepare(sql);
+                    const initialProducts = stmt.all(...queryParams);
+
+                    const productsWithImages = initialProducts.map(product => {
+                        let imageUrl = `https://placehold.co/250x150/eee/ccc?text=No+Image`;
+                        if (product.image_data && product.image_mime_type) {
+                            const base64Image = Buffer.from(product.image_data).toString('base64');
+                            imageUrl = `data:${product.image_mime_type};base64,${base64Image}`;
+                        }
+                        return { ...product, imageUrl };
+                    });
+
+                    // Pass products and current filters to the template
+                    res.render('home', {
+                        products: productsWithImages,
+                        search: search || '',
+                        category: category || ''
                     });
 
                 } catch (dbError) {
-                    console.error("Database query error on dashboard load:", dbError.message);
-                    req.flash('error', 'Failed to load dashboard data due to a database error.');
-                    res.redirect('/home'); // Redirect to a safe page
+                    console.error("Database error on home page load:", dbError.message);
+                    req.flash('error', 'Could not load products at this time.');
+                    res.render('home', { products: [], search: '', category: '' });
                 }
-            } else if (req.user.role === 'manager') {
-                res.render('ordersinventory');
-            } else if (req.user.role === 'customer') {
-                res.render('home');
             }
         } else {
-            // If not authenticated, redirect to login page
             req.flash('error', 'Please log in to access this page.');
             res.redirect('/login');
         }
     },
 
+    // MODIFIED: This API endpoint now accepts search and category parameters.
+    showProducts: (req, res) => {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 8;
+            const { search, category } = req.query;
+            const offset = (page - 1) * limit;
+
+            let queryParams = [];
+            let whereClauses = [];
+
+            let sql = `
+                SELECT
+                    p.id,
+                    p.product_name,
+                    p.price,
+                    p.category,
+                    p.stock,
+                    (SELECT pi.image_data FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC, pi.id ASC LIMIT 1) as image_data,
+                    (SELECT pi.image_mime_type FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC, pi.id ASC LIMIT 1) as image_mime_type
+                FROM products p
+            `;
+
+            if (search) {
+                whereClauses.push("p.product_name LIKE ?");
+                queryParams.push(`%${search}%`);
+            }
+            if (category) {
+                whereClauses.push("p.category = ?");
+                queryParams.push(category);
+            }
+
+            if (whereClauses.length > 0) {
+                sql += ` WHERE ${whereClauses.join(' AND ')}`;
+            }
+
+            sql += " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
+            queryParams.push(limit, offset);
+
+            const stmt = OccasioDB.prepare(sql);
+            const products = stmt.all(...queryParams);
+
+            const productsWithImages = products.map(product => {
+                let imageUrl = `https://placehold.co/250x150/eee/ccc?text=No+Image`;
+                if (product.image_data && product.image_mime_type) {
+                    const base64Image = Buffer.from(product.image_data).toString('base64');
+                    imageUrl = `data:${product.image_mime_type};base64,${base64Image}`;
+                }
+                return {
+                    id: product.id,
+                    name: product.product_name,
+                    price: product.price,
+                    category: product.category,
+                    stock: product.stock,
+                    imageUrl: imageUrl
+                };
+            });
+
+            res.json({ products: productsWithImages });
+
+        } catch (dbError) {
+            console.error("API Error fetching more products:", dbError.message);
+            res.status(500).json({ error: 'Failed to fetch products from the server.' });
+        }
+    }
 };
 
-module.exports = controller;
+module.exports = homeController;

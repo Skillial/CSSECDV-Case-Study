@@ -4,5 +4,6 @@ const controller = require('./../controller/homeController');
 const { ensureAuthenticated } = require('./../middleware/auth');
 
 router.get('/home', ensureAuthenticated, controller.page);
+router.get('/customer/products', ensureAuthenticated, controller.showProducts);
 
 module.exports = router;

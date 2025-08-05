@@ -1,9 +1,6 @@
 // Import necessary modules
 const { OccasioDB } = require('./../config/db'); // Adjust the path if your db.js is located elsewhere.
 const multer = require('multer'); // For handling multipart/form-data (file uploads)
-const path = require('path');     // For working with file and directory paths
-const fs = require('fs');         // For file system operations
-
 // Configure multer to store files in memory (for BLOB storage in SQLite)
 const upload = multer({ storage: multer.memoryStorage() });
 

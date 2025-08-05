@@ -65,6 +65,7 @@ app.use('/', profileRoute); // This will now handle /profile and the new image r
 const manageRoute = require('./server/router/manageRouter');
 app.use('/', manageRoute); // This will handle /manage and related routes
 
+
 // Default route (redirect to login)
 app.get('/', (req, res) => {
     res.redirect('/login');
