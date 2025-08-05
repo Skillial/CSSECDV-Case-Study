@@ -42,14 +42,10 @@ app.use(passport.session());    // Enables Passport session support (uses expres
 app.use((req, res, next) => {
     res.locals.success_messages = req.flash('success');
     res.locals.error_messages = req.flash('error');
-    res.locals.user = req.user || null; // Make authenticated user available
+    res.locals.user = req.user || null; 
     next();
 });
 
-
-// --- Routes ---
-
-// Import your route modules
 const loginRoute = require('./server/router/loginRouter');
 app.use('/', loginRoute);
 
@@ -60,22 +56,16 @@ const homeRoute = require('./server/router/homeRouter');
 app.use('/', homeRoute);
 
 const profileRoute = require('./server/router/profileRouter');
-app.use('/', profileRoute); // This will now handle /profile and the new image routes
+app.use('/', profileRoute);
 
 const manageRoute = require('./server/router/manageRouter');
-app.use('/', manageRoute); // This will handle /manage and related routes
+app.use('/', manageRoute);
 
 
-// Default route (redirect to login)
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
-// Removed: app.get('/profile', ...) as it's handled by profileRoute
-// Removed: app.get('/ordersinventory', ...) as requested
-// Removed: app.get('/dashboard', ...) as requested
-
-// Keep other specific routes if they are not part of a dedicated router
 app.get('/product', (req, res) => {
     res.render('product');
 });
@@ -89,8 +79,12 @@ app.get('/ordersinventory', (req, res) => {
 });
 
 
-// --- Start Server ---
-const PORT = process.env.PORT || 3000; // Use environment variable or default to 3000
+app.use((req, res, next) => {
+    res.status(404).render('error', { message: 'Page Not Found', statusCode: 404 });
+});
+
+
+const PORT = process.env.PORT || 3000; 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
     console.log(`Server running on http://localhost:${PORT}`);

@@ -8,8 +8,51 @@ const homeController = {
         if (req.user) {
             // Logic for admin and manager roles remains the same.
             if (req.user.role === 'admin') {
-                return res.render('dashboard', { /* ... your admin data ... */ });
-            } else if (req.user.role === 'manager') {
+                try {
+                    // Fetch customer data for the dashboard
+                    const customerStmt = OccasioDB.prepare("SELECT id, username, address, created_at FROM accounts WHERE role = 'customer'");
+                    const customers = customerStmt.all();
+
+                    // Fetch employee data (users with 'manager' role) and their assigned categories
+                    // This query joins accounts with employee_categories and groups by employee to get all categories
+                    const employeeCategoriesStmt = OccasioDB.prepare(`
+                        SELECT
+                            a.id,
+                            a.username,
+                            a.address,
+                            GROUP_CONCAT(ec.category_name) AS assigned_categories_json
+                        FROM
+                            accounts a
+                        LEFT JOIN
+                            employee_categories ec ON a.id = ec.employee_id
+                        WHERE
+                            a.role = 'manager'
+                        GROUP BY
+                            a.id, a.username, a.address
+                    `);
+                    let employees = employeeCategoriesStmt.all();
+
+                    // Process employees to convert assigned_categories_json string into an array
+                    employees = employees.map(employee => ({
+                        ...employee,
+                        // If assigned_categories_json is null/empty string, default to empty array
+                        assignedItems: employee.assigned_categories_json ? employee.assigned_categories_json.split(',') : []
+                    }));
+
+                    // Render the dashboard, passing the fetched data
+                    res.render('dashboard', {
+                        customers: customers,
+                        employees: employees
+                        // Note: mockItems and mockTransactions are currently client-side in dashboard.ejs.
+                        // If these also need to be dynamic, you'd fetch them here and pass them too.
+                    });
+
+                } catch (dbError) {
+                    console.error("Database query error on dashboard load:", dbError.message);
+                    req.flash('error', 'Failed to load dashboard data due to a database error.');
+                    res.redirect('/home'); // Redirect to a safe page
+                }
+            }  else if (req.user.role === 'manager') {
                 return res.render('ordersinventory');
             } else if (req.user.role === 'customer') {
                 try {
@@ -143,6 +186,63 @@ const homeController = {
         } catch (dbError) {
             console.error("API Error fetching more products:", dbError.message);
             res.status(500).json({ error: 'Failed to fetch products from the server.' });
+        }
+    },
+
+    getProductDetails: (req, res) => {
+        if (!req.isAuthenticated()) {
+            req.flash('error', 'You must be logged in to view product details.');
+            return res.redirect('/login');
+        }
+        try {
+            const productId = req.params.id;
+
+            // 1. Fetch product details
+            const productStmt = OccasioDB.prepare(`
+                SELECT
+                    id, product_name, product_full_name, description, category, brand, sku, price, stock, type, type_options, features
+                FROM products
+                WHERE id = ?
+            `);
+            const product = productStmt.get(productId);
+
+            if (!product) {
+                req.flash('error', 'Product not found.');
+                return res.redirect('/home'); // Redirect if product not found
+            }
+
+            // 2. Fetch all images for the product
+            const imagesStmt = OccasioDB.prepare(`
+                SELECT id, image_data, image_mime_type, display_order
+                FROM product_images
+                WHERE product_id = ?
+                ORDER BY display_order ASC, id ASC
+            `);
+            const images = imagesStmt.all(productId);
+
+            const productImages = images.map(img => {
+                const base64Image = Buffer.from(img.image_data).toString('base64');
+                return {
+                    id: img.id,
+                    src: `data:${img.image_mime_type};base64,${base64Image}`,
+                    alt: product.product_name + ' image' // Generic alt text
+                };
+            });
+
+            // Parse JSON strings back to arrays/values for frontend
+            const parsedProduct = {
+                ...product,
+                type_options: product.type_options ? JSON.parse(product.type_options) : [],
+                features: product.features ? JSON.parse(product.features) : [],
+                images: productImages // Add the formatted images array
+            };
+
+            res.render('product', { product: parsedProduct });
+
+        } catch (dbError) {
+            console.error("Database error fetching product details:", dbError.message);
+            req.flash('error', 'Could not load product details at this time.');
+            res.redirect('/home');
         }
     }
 };

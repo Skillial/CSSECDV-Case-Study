@@ -2,7 +2,7 @@ function ensureAdmin(req, res, next) {
     if (req.isAuthenticated() && req.user.role === 'admin') {
         return next();
     } else {
-        res.redirect('/login');
+        res.redirect('/error');
     }
 }
 
@@ -10,7 +10,7 @@ function ensureManager(req, res, next) {
     if (req.isAuthenticated() && req.user.role === 'manager') {
         return next();
     } else {
-        res.redirect('/login');
+        res.redirect('/error');
     }
 }
 
@@ -18,7 +18,7 @@ function ensureCustomer(req, res, next) {
     if (req.isAuthenticated() && req.user.role === 'customer') {
         return next();
     } else {
-        res.redirect('/login');
+        res.redirect('/error');
     }
 }
 
@@ -27,7 +27,7 @@ function ensureAuthenticated(req, res, next) {
         return next();
     } else {
         req.flash('error', 'Please log in to view this resource.');
-        res.redirect('/login');
+        res.redirect('/error');
     }
 }
 

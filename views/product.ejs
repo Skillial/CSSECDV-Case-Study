@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details</title>
+    <title><%= product.product_name %> Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -27,113 +27,58 @@
         /* Custom styles for image zoom */
         .image-zoom-container {
             overflow: hidden;
-            /* Ensures the zoomed part stays within bounds */
             cursor: zoom-in;
-            /* Indicate that the image is zoomable */
         }
 
         .image-zoom-container img {
             transition: transform 0.3s ease-out;
-            /* Smooth transition for zoom */
             transform-origin: center center;
-            /* Default origin */
         }
 
         .image-zoom-container:hover img {
             transform: scale(1.5);
-            /* Zoom in by 50% on hover */
         }
 
         /* Active tab styling */
         .tab-button.active {
             border-bottom: 2px solid #333;
-            /* Darker border for active tab */
             color: #333;
-            /* Darker text for active tab */
             font-weight: 600;
-            /* Semi-bold for active tab */
         }
 
-        /* Styles for the horizontally scrollable thumbnail container */
-        .thumbnail-scroll-container {
+        /* Styles for the thumbnail container */
+        .thumbnail-container {
             display: flex;
-            overflow-x: auto;
-            /* Enable horizontal scrolling */
+            justify-content: center; /* Default to center alignment */
             gap: 1rem;
-            /* Space between thumbnails */
-            padding-bottom: 0.5rem;
-            /* Add padding for scrollbar visibility (if visible) */
-            -ms-overflow-style: none;
-            /* Hide scrollbar for IE and Edge */
-            scrollbar-width: none;
-            /* Hide scrollbar for Firefox */
-            scroll-behavior: smooth;
-            /* Smooth scrolling for buttons */
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            padding-bottom: 1rem;
+            -webkit-overflow-scrolling: touch;
+
+            /* Basic scrollbar styling for Firefox */
+            scrollbar-width: thin;
+            scrollbar-color: #a0aec0 #edf2f7;
         }
 
-        /* Hide scrollbar for Chrome, Safari, and Opera */
-        .thumbnail-scroll-container::-webkit-scrollbar {
-            display: none;
+        /* Custom scrollbar styles for Webkit browsers (Chrome, Safari) */
+        .thumbnail-container::-webkit-scrollbar {
+            height: 8px;
         }
 
-        /* Styling for navigation buttons */
-        .nav-button {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(0, 0, 0, 0.6);
-            /* Slightly darker background */
-            color: white;
-            border: none;
-            width: 2.5rem;
-            /* Fixed width for a circular button */
-            height: 2.5rem;
-            /* Fixed height for a circular button */
-            border-radius: 9999px;
-            /* Fully rounded */
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-            /* Smooth transitions */
-            z-index: 10;
-            /* Ensure buttons are above images */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            /* Stronger shadow for depth */
+        .thumbnail-container::-webkit-scrollbar-track {
+            background: #edf2f7;
+            border-radius: 10px;
         }
 
-        .nav-button:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-            /* Darker on hover */
-            transform: translateY(-50%) scale(1.05);
-            /* Slight scale effect on hover */
+        .thumbnail-container::-webkit-scrollbar-thumb {
+            background-color: #a0aec0;
+            border-radius: 10px;
+            border: 2px solid #edf2f7;
         }
 
-        .nav-button.left {
-            left: -1.25rem;
-            /* Adjust position to be slightly outside, considering button width */
-        }
-
-        .nav-button.right {
-            right: -1.25rem;
-            /* Adjust position */
-        }
-
-        /* Container for thumbnails and navigation buttons */
-        .thumbnail-nav-wrapper {
-            position: relative;
-            /* Needed for absolute positioning of buttons */
-            width: 100%;
-            max-width: 32rem;
-            /* Matches max-w-md (512px) for consistency */
-            margin-bottom: 1.5rem;
-            /* Space below the thumbnails */
-        }
-
-        /* Class to center thumbnails when not scrollable */
-        .thumbnail-scroll-container.centered {
-            justify-content: center;
+        .thumbnail-container::-webkit-scrollbar-thumb:hover {
+            background-color: #718096;
         }
     </style>
 </head>
@@ -143,11 +88,11 @@
         <!-- Header/Breadcrumbs -->
         <header class="bg-white py-4 px-6 shadow-sm">
             <nav class="container mx-auto flex items-center text-sm text-gray-600">
-                <a href="#" class="hover:underline">Home</a>
+                <a href="/home" class="hover:underline">Home</a>
                 <span class="mx-2">/</span>
-                <a href="#" class="hover:underline">Living Room</a>
+                <a href="/home?category=<%= encodeURIComponent(product.category) %>" class="hover:underline"><%= product.category %></a>
                 <span class="mx-2">/</span>
-                <span class="font-semibold text-gray-800">Cloud Sofa</span>
+                <span class="font-semibold text-gray-800"><%= product.product_name %></span>
             </nav>
         </header>
 
@@ -159,62 +104,43 @@
                 <div id="mainImageContainer" class="relative w-full max-w-md mb-6 image-zoom-container">
                     <img id="mainProductImage" src="https://placehold.co/600x600/F8F8F8/333333?text=Loading+Image"
                         onerror="this.onerror=null;this.src='https://placehold.co/600x600/F8F8F8/333333?text=Image+Not+Found';"
-                        alt="Main image of Quantum Sound Headset"
+                        alt="<%= product.product_name %> main image"
                         class="w-full h-auto rounded-lg border border-gray-200">
                 </div>
 
-                <!-- Wrapper for thumbnails and navigation buttons -->
-                <div class="thumbnail-nav-wrapper">
-                    <!-- Left Navigation Button -->
-                    <button id="navLeft" class="nav-button left hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                            stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
-                    </button>
-                    <!-- This div will now hold the dynamically generated thumbnails -->
-                    <div id="thumbnail-scroll-container" class="thumbnail-scroll-container w-full">
-                        <!-- Thumbnails will be injected here by JavaScript -->
-                    </div>
-                    <!-- Right Navigation Button -->
-                    <button id="navRight" class="nav-button right hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                            stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                        </svg>
-                    </button>
+                <div id="thumbnail-container" class="thumbnail-container w-full">
+                    <!-- Thumbnails will be injected here by JavaScript -->
                 </div>
             </div>
 
             <!-- Product Details (Right Column) -->
             <div class="lg:w-1/2 mt-8 lg:mt-0 lg:pl-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Quantum Sound Headset</h1>
-                <p class="text-2xl font-semibold text-gray-800 mb-4">P799.99</p>
-                <p class="text-green-600 text-sm font-medium mb-6 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                        fill="currentColor">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= product.product_full_name %></h1>
+                <p class="text-2xl font-semibold text-gray-800 mb-4">₱<%= product.price.toFixed(2) %></p>
+                <p class="text-<%= product.stock > 0 ? 'green' : 'red' %>-600 text-sm font-medium mb-6 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
                             d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                             clip-rule="evenodd" />
                     </svg>
-                    In stock
+                    <%= product.stock > 0 ? 'In stock (' + product.stock + ' available)' : 'Out of stock' %>
                 </p>
 
-                <!-- Color Options -->
+                <% if (product.type && product.type_options && product.type_options.length > 0) { %>
+                <!-- Dynamic Type Options -->
                 <div class="mb-6">
-                    <p class="text-gray-700 font-medium mb-2">Color</p>
-                    <div id="colorOptions" class="flex space-x-3">
-                        <button
-                            class="color-option-button px-4 py-2 border rounded-lg text-gray-800 hover:bg-gray-100 transition duration-200 font-medium"
-                            data-color="Black">Black</button>
-                        <button
-                            class="color-option-button px-4 py-2 border rounded-lg text-gray-800 hover:bg-gray-100 transition duration-200 font-medium"
-                            data-color="White">White</button>
-                        <button
-                            class="color-option-button px-4 py-2 border rounded-lg text-gray-800 hover:bg-gray-100 transition duration-200 font-medium"
-                            data-color="Gray">Gray</button>
+                    <p class="text-gray-700 font-medium mb-2"><%= product.type %></p>
+                    <div id="typeOptions" class="flex flex-wrap gap-3">
+                        <% product.type_options.forEach(option => { %>
+                            <button
+                                class="type-option-button px-4 py-2 border rounded-lg text-gray-800 hover:bg-gray-100 transition duration-200 font-medium"
+                                data-option="<%= option %>">
+                                <%= option %>
+                            </button>
+                        <% }); %>
                     </div>
                 </div>
+                <% } %>
 
                 <!-- Quantity Selector -->
                 <div class="mb-8">
@@ -222,7 +148,7 @@
                     <div class="flex items-center border border-gray-300 rounded-lg w-32">
                         <button id="decreaseQuantity"
                             class="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-l-lg transition">-</button>
-                        <input id="quantityInput" type="number" min="1" max="9999" value="1"
+                        <input id="quantityInput" type="number" min="1" max="<%= product.stock %>" value="1"
                             class="w-full text-center border-l border-r border-gray-300 py-2 focus:outline-none bg-white text-gray-800">
                         <button id="increaseQuantity"
                             class="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-r-lg transition">+</button>
@@ -232,15 +158,16 @@
                 <!-- Action Buttons - Only Buy It Now -->
                 <div class="flex flex-col sm:flex-row gap-4 mb-8">
                     <button
-                        class="flex-1 bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+                        class="flex-1 bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 shadow-md <%= product.stock === 0 ? 'opacity-50 cursor-not-allowed' : '' %>"
+                        <%= product.stock === 0 ? 'disabled' : '' %>>
                         BUY IT NOW
                     </button>
                 </div>
 
                 <!-- Brands & SKU -->
                 <div class="text-sm text-gray-700 mb-6">
-                    <p class="mb-1"><span class="font-semibold">BRAND:</span> SonicTech</p>
-                    <p><span class="font-semibold">SKU:</span> QSH-7890</p>
+                    <p class="mb-1"><span class="font-semibold">BRAND:</span> <%= product.brand %></p>
+                    <p><span class="font-semibold">SKU:</span> <%= product.sku %></p>
                 </div>
             </div>
         </main>
@@ -254,78 +181,53 @@
                         data-tab="description">
                         DESCRIPTION
                     </button>
-                    <!-- Removed other tab buttons -->
                 </nav>
             </div>
 
             <div id="tab-content" class="mt-6">
                 <div id="description" class="tab-pane">
-                    <h3 class="font-semibold text-gray-800 text-lg mb-2">Quantum Sound Headset - Immersive Audio
-                        Experience
-                    </h3>
+                    <h3 class="font-semibold text-gray-800 text-lg mb-2"><%= product.product_full_name %></h3>
                     <p class="leading-relaxed text-gray-700 mb-4">
-                        Experience unparalleled audio clarity with the Quantum Sound Headset. Designed for immersive
-                        gaming,
-                        crystal-clear calls, and rich music playback, this headset features advanced noise-cancellation
-                        technology and comfortable over-ear cups. Its lightweight design ensures long-lasting comfort,
-                        while
-                        the built-in microphone provides crisp voice communication. Compatible with a wide range of
-                        devices,
-                        the Quantum Sound Headset is your perfect companion for all audio needs.
+                        <%= product.description || 'No description available for this product.' %>
                     </p>
+                    <% if (product.features && product.features.length > 0) { %>
                     <ul class="list-disc list-inside mt-4 space-y-1 text-gray-700">
-                        <li>High-fidelity audio drivers for superior sound.</li>
-                        <li>Integrated noise-cancelling microphone.</li>
-                        <li>Adjustable headband and plush ear cushions for comfort.</li>
-                        <li>Durable construction for long-term use.</li>
-                        <li>Universal compatibility with 3.5mm jack.</li>
+                        <% product.features.forEach(feature => { %>
+                            <li><%= feature %></li>
+                        <% }); %>
                     </ul>
+                    <% } else { %>
+                        <p class="text-gray-600">No specific features listed for this product.</p>
+                    <% } %>
                 </div>
-                <!-- Removed other tab panes -->
             </div>
         </section>
 
         <script>
-            // --- Product Images Data ---
-            // Generating 50 sample images for demonstration of lazy loading
-            const productImages = [];
-            for (let i = 1; i <= 50; i++) {
-                productImages.push({
-                    src: `https://placehold.co/600x600/F8F8F8/333333?text=Image+${i}`,
-                    alt: `Product image ${i}`
-                });
-            }
+            // Product data passed from the server
+            const product = <%- JSON.stringify(product) %>;
 
             // --- DOM Elements ---
             const mainProductImage = document.getElementById('mainProductImage');
             const mainImageContainer = document.getElementById('mainImageContainer');
-            const thumbnailScrollContainer = document.getElementById('thumbnail-scroll-container');
-            const navLeftButton = document.getElementById('navLeft');
-            const navRightButton = document.getElementById('navRight');
-            const colorOptionButtons = document.querySelectorAll('.color-option-button');
+            const thumbnailContainer = document.getElementById('thumbnail-container');
+            const typeOptionsContainer = document.getElementById('typeOptions'); // Reference the container for type options
             const quantityInput = document.getElementById('quantityInput');
             const decreaseButton = document.getElementById('decreaseQuantity');
             const increaseButton = document.getElementById('increaseQuantity');
             const tabButtons = document.querySelectorAll('.tab-button');
-            const tabPanes = document.querySelectorAll('.tab-pane');
-
-            // --- Configuration ---
-            const defaultSelectedColor = 'Black'; // Set your default selected color here
-            const scrollAmount = 128; // Amount to scroll (thumbnail width + gap, e.g., 96px + 16px = 112px, adjusted for visual flow)
-
-            // Global state for pagination
-            let loadedThumbnailCount = 0;
-            const thumbnailsPerBatch = 8; // Number of thumbnails to load at once
-            let isLoadingMore = false; // Flag to prevent multiple loads
+            const tabPanes = document.querySelectorAll('.tab-pane'); // Currently only description
 
             // --- Functions ---
 
             /**
-             * Selects a color option button, applying active styles and removing them from others.
+             * Selects a type option button, applying active styles and removing them from others.
              * @param {HTMLElement} selectedButton - The button element to mark as selected.
              */
-            function selectColor(selectedButton) {
-                colorOptionButtons.forEach(button => {
+            function selectTypeOption(selectedButton) {
+                // Get all type option buttons dynamically
+                const currentTypeOptionButtons = typeOptionsContainer ? typeOptionsContainer.querySelectorAll('.type-option-button') : [];
+                currentTypeOptionButtons.forEach(button => {
                     button.classList.remove('border-gray-900', 'bg-gray-200'); // Remove selected styles
                     button.classList.add('border-gray-400', 'bg-white'); // Add default styles
                 });
@@ -355,19 +257,28 @@
             }
 
             /**
-             * Appends a batch of thumbnail images to the scroll container.
-             * Each image uses native lazy loading.
-             * @param {number} startIndex - The starting index in the productImages array.
-             * @param {number} count - The number of thumbnails to append.
+             * Renders all product thumbnails into the container based on `product.images`.
              */
-            function appendThumbnails(startIndex, count) {
-                const endIndex = Math.min(startIndex + count, productImages.length);
-                for (let i = startIndex; i < endIndex; i++) {
-                    const image = productImages[i];
+            function renderThumbnails() {
+                thumbnailContainer.innerHTML = ''; // Clear any existing content
+                if (!product.images || product.images.length === 0) {
+                    // Display a placeholder if no images are available
+                    const placeholderImg = document.createElement('img');
+                    placeholderImg.src = 'https://placehold.co/100x100/F8F8F8/333333?text=No+Images';
+                    placeholderImg.alt = 'No images available';
+                    placeholderImg.classList.add(
+                        'w-24', 'h-24', 'rounded-lg', 'border-2', 'border-gray-200', 'flex-shrink-0'
+                    );
+                    thumbnailContainer.appendChild(placeholderImg);
+                    mainProductImage.src = 'https://placehold.co/600x600/F8F8F8/333333?text=No+Images';
+                    mainProductImage.alt = 'No images available';
+                    return;
+                }
+
+                product.images.forEach(image => {
                     const img = document.createElement('img');
-                    img.src = image.src; // Set src directly for native lazy loading
+                    img.src = image.src;
                     img.alt = image.alt;
-                    img.loading = "lazy"; // Native lazy loading
                     img.classList.add(
                         'thumbnail-image',
                         'w-24',
@@ -378,127 +289,63 @@
                         'cursor-pointer',
                         'hover:border-gray-600',
                         'transition',
-                        'flex-shrink-0'
+                        'flex-shrink-0',
+                        'object-cover' // Ensure image covers the area
                     );
                     img.dataset.mainSrc = image.src; // Store main image source for click
                     img.dataset.mainAlt = image.alt;
 
-                    // Add onerror fallback for dynamic images
                     img.onerror = function () {
                         this.onerror = null;
-                        this.src = 'https://placehold.co/100x100/F8F8F8/333333?text=Image+Not+Found';
+                        this.src = 'https://placehold.co/100x100/F8F8F8/333333?text=Error';
                     };
 
-                    // Add click event listener to each thumbnail
                     img.addEventListener('click', () => {
-                        // Preload the main image to prevent flash of placeholder
-                        const highResImageSrc = img.dataset.mainSrc;
-                        if (highResImageSrc) {
-                            const tempImg = new Image();
-                            tempImg.src = highResImageSrc;
-                            tempImg.onload = () => {
-                                selectThumbnail(img);
-                            };
-                        } else {
-                            selectThumbnail(img);
-                        }
+                        selectThumbnail(img);
                     });
-                    thumbnailScrollContainer.appendChild(img);
-                }
-                loadedThumbnailCount = endIndex; // Update the count of loaded thumbnails
-            }
+                    thumbnailContainer.appendChild(img);
+                });
 
-            /**
-             * Renders the initial batch of thumbnails and selects the first one.
-             */
-            function renderInitialThumbnails() {
-                thumbnailScrollContainer.innerHTML = ''; // Clear any existing placeholders
-                appendThumbnails(0, thumbnailsPerBatch);
+                // Dynamically adjust justification based on content width.
+                setTimeout(() => {
+                    const isOverflowing = thumbnailContainer.scrollWidth > thumbnailContainer.clientWidth;
 
-                // Select the first thumbnail after initial render
+                    if (isOverflowing) {
+                        thumbnailContainer.classList.remove('justify-center');
+                        thumbnailContainer.classList.add('justify-start');
+                    } else {
+                        thumbnailContainer.classList.remove('justify-start');
+                        thumbnailContainer.classList.add('justify-center');
+                    }
+                }, 0);
+
+                // Select the first thumbnail after rendering
                 const renderedThumbnails = document.querySelectorAll('.thumbnail-image');
                 if (renderedThumbnails.length > 0) {
                     selectThumbnail(renderedThumbnails[0]);
-                }
-                updateNavigationButtons();
-            }
-
-            /**
-             * Checks if more thumbnails should be loaded based on scroll position
-             * and appends them if needed.
-             */
-            function loadMoreOnScroll() {
-                // Only load more if not already loading and there are more images to load
-                if (isLoadingMore || loadedThumbnailCount >= productImages.length) {
-                    return;
-                }
-
-                // Check if scrolled near the end (e.g., within 100px of the end)
-                const scrollThreshold = 100; // Pixels from the end to trigger loading
-                const scrollLeft = thumbnailScrollContainer.scrollLeft;
-                const scrollWidth = thumbnailScrollContainer.scrollWidth;
-                const clientWidth = thumbnailScrollContainer.clientWidth;
-
-                if (scrollLeft + clientWidth >= scrollWidth - scrollThreshold) {
-                    isLoadingMore = true;
-                    // Simulate a slight delay for loading (e.g., from an API call)
-                    setTimeout(() => {
-                        appendThumbnails(loadedThumbnailCount, thumbnailsPerBatch);
-                        updateNavigationButtons(); // Update buttons after new content is added
-                        isLoadingMore = false;
-                    }, 100); // Small delay to prevent rapid firing
                 }
             }
 
             /**
              * Shows the content for a specific tab.
-             * In this simplified version, only the 'description' tab is handled.
              * @param {string} tabId - The ID of the tab to show.
              */
             function showTab(tabId) {
-                // Ensure the description tab is always active and visible in this simplified setup
-                const descriptionTabButton = document.querySelector('.tab-button[data-tab="description"]');
-                const descriptionTabPane = document.getElementById('description');
+                // Remove active styles from all tab buttons and hide all tab panes
+                tabButtons.forEach(button => {
+                    button.classList.remove('active', 'border-gray-900', 'text-gray-900');
+                    button.classList.add('border-transparent', 'text-gray-500');
+                });
+                tabPanes.forEach(pane => pane.classList.add('hidden'));
 
-                if (descriptionTabButton && descriptionTabPane) {
-                    descriptionTabButton.classList.add('active', 'border-gray-900', 'text-gray-900');
-                    descriptionTabButton.classList.remove('border-transparent', 'text-gray-500');
-                    descriptionTabPane.classList.remove('hidden');
-                }
-            }
+                // Add active styles to the selected tab button and show its pane
+                const selectedTabButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+                const selectedTabPane = document.getElementById(tabId);
 
-            /**
-             * Updates the visibility of the left and right navigation buttons
-             * based on the scroll position of the thumbnail container.
-             * Also centers thumbnails if not scrollable.
-             */
-            function updateNavigationButtons() {
-                // Check if the container is actually scrollable
-                const isScrollable = thumbnailScrollContainer.scrollWidth > thumbnailScrollContainer.clientWidth;
-
-                if (!isScrollable) {
-                    navLeftButton.classList.add('hidden');
-                    navRightButton.classList.add('hidden');
-                    thumbnailScrollContainer.classList.add('centered'); // Add class to center
-                    return;
-                } else {
-                    thumbnailScrollContainer.classList.remove('centered'); // Remove class if scrollable
-                }
-
-                // Hide left button if at the beginning
-                if (thumbnailScrollContainer.scrollLeft === 0) {
-                    navLeftButton.classList.add('hidden');
-                } else {
-                    navLeftButton.classList.remove('hidden');
-                }
-
-                // Hide right button if at the end
-                // Allow for a small tolerance due to potential sub-pixel rendering differences
-                const scrollEnd = thumbnailScrollContainer.scrollWidth - thumbnailScrollContainer.clientWidth;
-                if (thumbnailScrollContainer.scrollLeft >= scrollEnd - 1) { // -1 for tolerance
-                    navRightButton.classList.add('hidden');
-                } else {
-                    navRightButton.classList.remove('hidden');
+                if (selectedTabButton && selectedTabPane) {
+                    selectedTabButton.classList.add('active', 'border-gray-900', 'text-gray-900');
+                    selectedTabButton.classList.remove('border-transparent', 'text-gray-500');
+                    selectedTabPane.classList.remove('hidden');
                 }
             }
 
@@ -507,10 +354,11 @@
             // Quantity Selector
             quantityInput.addEventListener('input', () => {
                 let val = parseInt(quantityInput.value);
+                const maxStock = parseInt(quantityInput.max);
                 if (isNaN(val) || val < 1) {
                     quantityInput.value = 1;
-                } else if (val > 9999) {
-                    quantityInput.value = 9999;
+                } else if (val > maxStock) { // Limit to available stock
+                    quantityInput.value = maxStock;
                 }
             });
 
@@ -521,7 +369,8 @@
 
             increaseButton.addEventListener('click', () => {
                 let currentQuantity = parseInt(quantityInput.value) || 1;
-                quantityInput.value = Math.min(9999, currentQuantity + 1);
+                const maxStock = parseInt(quantityInput.max);
+                quantityInput.value = Math.min(maxStock, currentQuantity + 1);
             });
 
             // Image Zoom on Hovered Area
@@ -532,64 +381,35 @@
                 mainProductImage.style.transformOrigin = `${x}% ${y}%`;
             });
 
-            // Reset transform-origin when mouse leaves to avoid sticky zoom origin
+            // Reset transform-origin when mouse leaves
             mainImageContainer.addEventListener('mouseleave', () => {
                 mainProductImage.style.transformOrigin = 'center center';
             });
 
-            // Tabbed Content Functionality (Simplified for Description Only)
+            // Tabbed Content Functionality
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     showTab(button.dataset.tab);
                 });
             });
 
-            // Navigation button click listeners
-            navLeftButton.addEventListener('click', () => {
-                thumbnailScrollContainer.scrollLeft -= scrollAmount;
-            });
-
-            navRightButton.addEventListener('click', () => {
-                thumbnailScrollContainer.scrollLeft += scrollAmount;
-            });
-
-            // Update navigation buttons and load more on scroll
-            thumbnailScrollContainer.addEventListener('scroll', () => {
-                updateNavigationButtons();
-                loadMoreOnScroll(); // Check and load more on scroll
-            });
-
-            // Update navigation buttons on window resize for responsiveness
-            window.addEventListener('resize', updateNavigationButtons);
-
-
-            // Initialize on page load
             document.addEventListener('DOMContentLoaded', () => {
-                // Render initial batch of thumbnails
-                renderInitialThumbnails();
-
-                // Initialize color selection
-                let initialColorButton = null;
-                colorOptionButtons.forEach(button => {
-                    if (button.dataset.color === defaultSelectedColor) {
-                        initialColorButton = button;
-                    }
-                });
-                if (initialColorButton) {
-                    selectColor(initialColorButton);
-                } else if (colorOptionButtons.length > 0) {
-                    selectColor(colorOptionButtons[0]); // Select the first color if default not found
+                // Initialize type option selection if options exist
+                const typeOptionButtons = document.querySelectorAll('.type-option-button');
+                if (typeOptionButtons.length > 0) {
+                    selectTypeOption(typeOptionButtons[0]); // Select the first option by default
+                    typeOptionButtons.forEach(button => {
+                        button.addEventListener('click', () => {
+                            selectTypeOption(button);
+                        });
+                    });
                 }
+
+                // Render all thumbnails
+                renderThumbnails();
 
                 // Show the default tab (Description) on page load
                 showTab('description');
-            });
-
-            // Add click event listeners to color option buttons (already present, just ensuring)
-            colorOptionButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    selectColor(button);
-                });
             });
         </script>
 
