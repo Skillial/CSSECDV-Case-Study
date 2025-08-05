@@ -476,10 +476,6 @@
                     const result = await response.json();
 
                     if (response.ok) {
-                        console.log('Profile picture uploaded successfully:', result.message);
-                        // After successful upload, update the image src to point to the BLOB retrieval endpoint
-                        // This ensures the image is fetched from the database on subsequent loads
-                        // Reset temporary state
                         tempProfileImageSrc = null;
                         profilePictureUpload.value = ''; // Clear the file input
                         profilePicActions.classList.add('hidden');
@@ -646,7 +642,6 @@
                     const result = await response.json();
 
                     if (response.ok) {
-                        console.log('Security questions updated successfully:', result.message);
                         displayMessage(securityQuestionsSuccessMessageDisplay, [result.message || 'Security question updated successfully!'], 'success');
                         hideMessage(securityQuestionsErrorMessageDisplay); // Ensure error is hidden
                         // Clear fields on success
@@ -873,8 +868,7 @@
 
                     const result = await response.json(); // Assuming backend always returns JSON
 
-                    if (response.ok) { // Status 200-299 indicates success
-                        console.log('Password change successful:', result.message);
+                    if (response.ok) { 
                         hideMessage(changePasswordErrorMessageDisplay); // Ensure modal error is hidden
                         changePasswordModal.classList.add('hidden'); // Hide the modal
                         displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Password changed successfully!'], 'success'); // Show success on main page

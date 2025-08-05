@@ -23,7 +23,6 @@ function ensureCustomer(req, res, next) {
 }
 
 function ensureAuthenticated(req, res, next) {
-    console.log("Authentication check for user:", req.user);
     if (req.isAuthenticated()) {
         return next();
     } else {

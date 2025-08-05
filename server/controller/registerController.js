@@ -80,7 +80,6 @@ const controller = {
 
         // --- Proceed with Registration if no errors found so far ---
         try {
-            console.log("Registering user:", username);
             // Hash the password before starting the transaction, as hashing is asynchronous
             const hashedPassword = await hashString(password);
             const currentTime = new Date().toISOString(); // Get current time in ISO format
@@ -180,7 +179,6 @@ const controller = {
 
         // --- Proceed with Registration if no errors found so far ---
         try {
-            console.log("Registering new admin:", username);
             const hashedPassword = await hashString(password);
             const currentTime = new Date().toISOString();
 
@@ -266,7 +264,6 @@ const controller = {
 
         // --- Proceed with Registration if no errors found so far ---
         try {
-            console.log("Registering new manager:", username);
             const hashedPassword = await hashString(password);
             const currentTime = new Date().toISOString();
 

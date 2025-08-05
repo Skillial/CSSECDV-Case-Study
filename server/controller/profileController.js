@@ -84,8 +84,7 @@ const controller = {
                 );
 
                 // Execute the update
-                const info = updateStmt.run(address, userId);
-                console.log(info)
+                updateStmt.run(address, userId);
             });
 
             // Execute the transaction
@@ -324,7 +323,6 @@ const controller = {
                 // --- Update Database ---
                 // Execute the prepared statement to update the user's profile_image_blob and mimetype.
                 updateProfileImageBlobStmt.run(imageBuffer, imageMimeType, userId);
-                console.log(`Profile image (BLOB) updated for user ID: ${userId}`);
 
                 // --- Send Success Response ---
                 // Respond to the frontend. We don't send back the BLOB directly in the JSON,
