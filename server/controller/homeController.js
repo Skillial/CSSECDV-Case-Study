@@ -4,6 +4,7 @@ const controller = {
 
     page: (req, res) => {
         if (req.user) {
+            console.log("role:", req.user.role);
             if (req.user.role === 'admin') {
                 try {
                     // Fetch customer data for the dashboard

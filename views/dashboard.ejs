@@ -797,7 +797,7 @@
                 showModalErrors('admin-error-message-display', clientErrors);
             } else {
                 hideModalErrors('admin-error-message-display');
-                // Perform AJAX submission
+        
                 try {
                     const response = await fetch('/register/admin', {
                         method: 'POST',
@@ -806,7 +806,8 @@
                         },
                         body: JSON.stringify({
                             username: document.getElementById('admin-username').value,
-                            password: adminPasswordInput.value
+                            password: adminPasswordInput.value,
+                            confirmPassword: adminConfirmPasswordInput.value
                         })
                     });
 
@@ -879,7 +880,8 @@
                         },
                         body: JSON.stringify({
                             username: document.getElementById('employee-username').value,
-                            password: employeePasswordInput.value
+                            password: employeePasswordInput.value,
+                            confirmPassword: employeeConfirmPasswordInput.value
                         })
                     });
 

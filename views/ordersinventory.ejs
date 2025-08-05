@@ -1,50 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manager Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
+        /* Custom styles for a better UI */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+        }
+
+        .tag-remove-btn {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .tag-remove-btn:hover {
+            color: #111827;
+        }
+
         /* Drag and Drop Area Styles */
-        #drop-area {
-            border: 2px dashed #cbd5e1; /* gray-300 */
-            border-radius: 0.75rem; /* rounded-xl */
+        #drop-area,
+        #edit-drop-area {
+            border: 2px dashed #cbd5e1;
+            /* gray-300 */
+            border-radius: 0.75rem;
+            /* rounded-xl */
             padding: 2rem;
             text-align: center;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-            margin-bottom: 1.5rem; /* mb-6 */
+            margin-bottom: 1rem;
+            /* mb-4 */
         }
 
-        #drop-area.highlight {
-            background-color: #f0f4f8; /* light blue/gray */
-            border-color: #3b82f6; /* blue-500 */
+        #drop-area.highlight,
+        #edit-drop-area.highlight {
+            background-color: #eff6ff;
+            /* blue-50 */
+            border-color: #3b82f6;
+            /* blue-500 */
+        }
+
+        /* Image Preview Styles */
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
         }
 
         .image-preview-item {
-        width: 100px;
-        height: 100px;
-        overflow: hidden;
-        border-radius: 8px; /* optional: makes corners rounded */
-        border: 1px solid #ccc; /* optional: gives a frame */
-        display: inline-block; /* keeps them in a row if needed */
-        margin: 4px;
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            /* gray-200 */
         }
 
         .image-preview-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover; /* crops and centers the image */
-        display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .image-preview-item .remove-btn {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: rgba(239, 68, 68, 0.8); /* red-500 with opacity */
+            top: 0.25rem;
+            right: 0.25rem;
+            background-color: rgba(239, 68, 68, 0.8);
+            /* red-500 with opacity */
             color: white;
             border-radius: 50%;
             width: 24px;
@@ -52,705 +94,871 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem; /* text-xs */
+            font-size: 0.75rem;
+            /* text-xs */
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+            opacity: 0;
+        }
+
+        .image-preview-item:hover .remove-btn {
+            opacity: 1;
         }
 
         .image-preview-item .remove-btn:hover {
-            background-color: #ef4444; /* red-500 */
+            background-color: #ef4444;
+            /* red-500 */
+        }
+
+        /* Tag Input Styles */
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            min-height: 42px; /* Added min-height to prevent collapse */
+        }
+
+        .tag-input-container:focus-within {
+            border-color: #000;
+            box-shadow: 0 0 0 1px #000;
+        }
+
+        .tag-input {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            padding: 0.25rem 0.25rem; /* Adjusted padding for vertical space */
+            background-color: transparent;
+        }
+
+
+        /* Custom Toast Notification */
+        #toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #22c55e;
+            /* green-500 */
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transform: translateX(calc(100% + 20px));
+            transition: transform 0.5s ease-in-out;
+            z-index: 100;
+        }
+
+        #toast-notification.show {
+            transform: translateX(0);
+        }
+
+        #toast-notification.error {
+            background-color: #ef4444;
+            /* red-500 */
         }
     </style>
 </head>
-<body class="min-h-screen bg-white text-black flex flex-col antialiased font-sans">
+
+<body class="min-h-screen bg-gray-50 text-gray-800 flex flex-col antialiased">
+    <!-- This assumes you have a navbar component. If not, you can place HTML here. -->
     <%- include('component/navbar') %>
 
-    <div class="flex flex-row justify-center gap-4 mt-5">
-        <button id="productsTabBtn" class="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors">
-            Products
-        </button>
-        <button id="ordersTabBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
-            Orders
-        </button>
-    </div>
-
-    <!-- Main Content Area -->
-    <main class="flex-1 p-8 w-full">
-        <!-- Product Management Section -->
-        <section id="productsSection" class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold">Product Management</h1>
-                <button id="addProductBtn"
-                    class="px-5 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center shadow-sm">
-                    Add Product
-                </button>
-            </div>
-
-            <div id="productsTableContainer" class="overflow-x-auto">
-                <!-- Product table will be rendered here by JS -->
-            </div>
-            <p id="noProductsMessage" class="text-gray-600 text-center py-10 hidden">No products found. Add a new product to get started!</p>
-        </section>
-
-        <!-- Order Status Management Section -->
-        <section id="ordersSection" class="bg-white p-6 rounded-lg shadow-md border border-gray-200 hidden">
-            <h1 class="text-3xl font-bold mb-6">Order Status Management</h1>
-            <div id="ordersTableContainer" class="overflow-x-auto">
-                <!-- Order table will be rendered here by JS -->
-            </div>
-            <p id="noOrdersMessage" class="text-gray-600 text-center py-10 hidden">No orders found.</p>
-        </section>
-    </main>
-
-    <!-- Modals -->
-    <!-- Add Product Modal -->
-    <div id="addProductModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl border border-gray-200">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold">Add New Product</h2>
-                <button id="closeAddProductModalBtn" class="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
-                        <path d="M18 6 6 18" />
-                        <path d="m6 6 12 12" />
-                    </svg>
-                </button>
-            </div>
-            <form id="addProductForm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Left Column: Product Details Form -->
-                <div class="space-y-4">
-                    <div>
-                        <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                        <input type="text" id="productName" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black" required>
-                    </div>
-                    <div>
-                        <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
-                        <input type="number" id="productPrice" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black" step="0.01" required>
-                    </div>
-                    <div>
-                        <label for="productStock" class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-                        <input type="number" id="productStock" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black" required>
-                    </div>
-                    <div>
-                        <label for="productDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea id="productDescription" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black resize-y" rows="5"></textarea>
-                    </div>
-                </div>
-
-                <!-- Right Column: Product Image Upload Section -->
-                <div class="flex flex-col h-full">
-                    <label for="productImage" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-
-                    <div id="drop-area" class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-blue-500 hover:bg-gray-50 transition-colors cursor-pointer flex-grow">
-                        <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-400"></i>
-                        <p class="text-lg font-medium text-center">Drag & drop images here, or click to select files</p>
-                        <input type="file" id="product-image-upload" multiple accept="image/*" class="hidden">
-                    </div>
-
-                    <div id="image-previews" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        <!-- Image previews will be dynamically added here -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" id="cancelAddProductBtn" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md border border-gray-300 hover:bg-gray-200 transition-colors">
-                    Cancel
-                </button>
-                <button type="submit" class="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center">
-                    Add Product
-                </button>
-            </div>
-        </form>
+        <div class="flex flex-row justify-center gap-4 mt-8">
+            <button id="productsTabBtn" class="px-6 py-2 font-semibold rounded-lg transition-all">
+                Products
+            </button>
+            <button id="ordersTabBtn" class="px-6 py-2 font-semibold rounded-lg transition-all">
+                Orders
+            </button>
         </div>
-    </div>
 
-    <!-- Edit Product Modal -->
-    <div id="editProductModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl border border-gray-200">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold">Edit Product</h2>
-                <button id="closeEditProductModalBtn" class="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
-                        <path d="M18 6 6 18" />
-                        <path d="m6 6 12 12" />
-                    </svg>
-                </button>
-            </div>
-            <form id="editProductForm" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Left Column: Product Details Form -->
-                    <div class="space-y-4">
-                        <input type="hidden" id="editProductId">
-                        <div>
-                            <label for="editProductName" class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                            <input type="text" id="editProductName" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black" required>
-                        </div>
-                        <div>
-                            <label for="editProductPrice" class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
-                            <input type="number" id="editProductPrice" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black" step="0.01" required>
-                        </div>
-                        <div>
-                            <label for="editProductStock" class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-                            <input type="number" id="editProductStock" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black" required>
-                        </div>
-                        <div>
-                            <label for="editProductDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea id="editProductDescription" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black resize-y" rows="3"></textarea>
-                        </div>
-                    </div>
-                    <!-- Right Column: Product Image Upload Section -->
-                    <div class="flex flex-col h-full">
-                        <label for="productImage" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-
-                        <div id="drop-area" class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-blue-500 hover:bg-gray-50 transition-colors cursor-pointer flex-grow">
-                            <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-400"></i>
-                            <p class="text-lg font-medium text-center">Drag & drop images here, or click to select files</p>
-                            <input type="file" id="product-image-upload" multiple accept="image/*" class="hidden">
-                        </div>
-
-                        <div id="image-previews" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            <!-- Image previews will be dynamically added here -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" id="cancelEditProductBtn" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md border border-gray-300 hover:bg-gray-200 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center">
-                        Save Changes
+        <!-- Main Content Area -->
+        <main class="flex-1 p-4 sm:p-6 md:p-8 w-full max-w-7xl mx-auto">
+            <!-- Product Management Section -->
+            <section id="productsSection" class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h1 class="text-3xl font-bold text-gray-900">Product Management</h1>
+                    <button id="addProductBtn"
+                        class="px-5 py-2.5 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
+                        <i class="fas fa-plus mr-2"></i> Add Product
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- Custom Confirmation Modal -->
-    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm border border-gray-200">
-            <h3 class="text-lg font-semibold mb-4" id="confirmationMessage"></h3>
-            <div class="flex justify-end space-x-3">
-                <button id="cancelConfirmationBtn" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md border border-gray-300 hover:bg-gray-200 transition-colors">Cancel</button>
-                <button id="confirmActionBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">Delete</button>
+                <div id="productsTableContainer" class="overflow-x-auto">
+                    <!-- Product table will be rendered here by JS -->
+                </div>
+                <p id="noProductsMessage" class="text-gray-600 text-center py-10 hidden">No products found. Add a new
+                    product to get started!</p>
+            </section>
+
+            <!-- Order Status Management Section -->
+            <section id="ordersSection" class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hidden">
+                <h1 class="text-3xl font-bold text-gray-900 mb-6">Order Status Management</h1>
+                <div id="ordersTableContainer" class="overflow-x-auto">
+                    <!-- Order table will be rendered here by JS -->
+                </div>
+                <p id="noOrdersMessage" class="text-gray-600 text-center py-10 hidden">No orders found.</p>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <!-- Add Product Modal -->
+        <div id="addProductModal"
+            class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+            <div
+                class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Add New Product</h2>
+                    <button id="closeAddProductModalBtn"
+                        class="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="addProductForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left Column: Product Details -->
+                        <div class="space-y-4">
+                            <div>
+                                <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Product
+                                    Name</label>
+                                <input type="text" id="productName"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="productFullName"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Product
+                                    Full Name</label>
+                                <input type="text" id="productFullName"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="productCategory"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <select id="productCategory"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="productBrand"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                                <input type="text" id="productBrand"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="productSKU" class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                                <input type="text" id="productSKU"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-1">Price
+                                    (₱)</label>
+                                <input type="number" id="productPrice"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    step="0.01" required>
+                            </div>
+                            <div>
+                                <label for="productStock" class="block text-sm font-medium text-gray-700 mb-1">Stock
+                                    Quantity</label>
+                                <input type="number" id="productStock"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="productDescription"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea id="productDescription"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-y"
+                                    rows="4"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Image Upload & Features -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Product Image(s)</label>
+                                <div id="drop-area" class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-400"></i>
+                                    <p class="text-lg font-medium text-center">Drag & drop or click to upload</p>
+                                    <input type="file" id="product-image-upload" multiple accept="image/*"
+                                        class="hidden">
+                                </div>
+                                <p class="text-xs text-gray-500 text-center mt-1">Maximum 5 images.</p>
+                                <div id="image-previews" class="image-preview-container"></div>
+                            </div>
+                            <div>
+                                <label for="productType" class="block text-sm font-medium text-gray-700 mb-1">Type
+                                    (e.g.,
+                                    Color)</label>
+                                <input type="text" id="productType"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black">
+                            </div>
+                            <div>
+                                <label for="productTypeOptions"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Type
+                                    Options</label>
+                                <div id="productTypeOptionsContainer" class="tag-input-container">
+                                    <input type="text" class="tag-input" placeholder="Add option and press Enter...">
+                                </div>
+                                <input type="hidden" id="productTypeOptions" name="productTypeOptions">
+                            </div>
+                            <div>
+                                <label for="productFeatures"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Features</label>
+                                <div id="productFeaturesContainer" class="tag-input-container">
+                                    <input type="text" class="tag-input" placeholder="Add feature and press Enter...">
+                                </div>
+                                <input type="hidden" id="productFeatures" name="productFeatures">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" id="cancelAddProductBtn"
+                            class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md border border-gray-300 hover:bg-gray-200 transition-colors">Cancel</button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center">Add
+                            Product</button>
+                    </div>
+                </form>
             </div>
         </div>
-    </div>
 
-    <script>
-        // Initial Data (will eventually come from backend)
-        let products = [
-            { id: 'p1', name: 'Wireless Headphones', price: 99.99, stock: 150, description: 'High-fidelity audio with noise cancellation.' },
-            { id: 'p2', name: 'Ergonomic Keyboard', price: 75.00, stock: 80, description: 'Comfortable typing experience for long hours.' },
-            { id: 'p3', name: 'Smartwatch', price: 199.99, stock: 120, description: 'Track your fitness and receive notifications.' },
-            { id: 'p4', name: 'Portable SSD 1TB', price: 120.00, stock: 200, description: 'Fast and reliable external storage.' },
-        ];
+        <!-- Edit Product Modal -->
+        <div id="editProductModal"
+            class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+            <div
+                class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Edit Product</h2>
+                    <button id="closeEditProductModalBtn"
+                        class="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="editProductForm">
+                    <input type="hidden" id="editProductId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left Column: Product Details -->
+                        <div class="space-y-4">
+                            <div>
+                                <label for="editProductName"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Product
+                                    Name</label>
+                                <input type="text" id="editProductName"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="editProductFullName"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Product Full Name</label>
+                                <input type="text" id="editProductFullName"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="editProductCategory"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <select id="editProductCategory"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="editProductBrand"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                                <input type="text" id="editProductBrand"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="editProductSKU"
+                                    class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                                <input type="text" id="editProductSKU"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="editProductPrice" class="block text-sm font-medium text-gray-700 mb-1">Price
+                                    (₱)</label>
+                                <input type="number" id="editProductPrice"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    step="0.01" required>
+                            </div>
+                            <div>
+                                <label for="editProductStock" class="block text-sm font-medium text-gray-700 mb-1">Stock
+                                    Quantity</label>
+                                <input type="number" id="editProductStock"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="editProductDescription"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea id="editProductDescription"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-y"
+                                    rows="3"></textarea>
+                            </div>
+                        </div>
+                        <!-- Right Column: Image Upload & Features -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Product Image(s)</label>
+                                <div id="edit-drop-area" class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-400"></i>
+                                    <p class="text-lg font-medium text-center">Drag & drop or click to upload</p>
+                                    <input type="file" id="edit-product-image-upload" multiple accept="image/*"
+                                        class="hidden">
+                                </div>
+                                <p class="text-xs text-gray-500 text-center mt-1">Maximum 5 images.</p>
+                                <div id="edit-image-previews" class="image-preview-container"></div>
+                            </div>
+                            <div>
+                                <label for="editProductType" class="block text-sm font-medium text-gray-700 mb-1">Type
+                                    (e.g., Color)</label>
+                                <input type="text" id="editProductType"
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black">
+                            </div>
+                            <div>
+                                <label for="editProductTypeOptions"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Type Options</label>
+                                <div id="editProductTypeOptionsContainer" class="tag-input-container">
+                                    <input type="text" class="tag-input" placeholder="Add option and press Enter...">
+                                </div>
+                                <input type="hidden" id="editProductTypeOptions" name="editProductTypeOptions">
+                            </div>
+                            <div>
+                                <label for="editProductFeatures"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Features</label>
+                                <div id="editProductFeaturesContainer" class="tag-input-container">
+                                    <input type="text" class="tag-input" placeholder="Add feature and press Enter...">
+                                </div>
+                                <input type="hidden" id="editProductFeatures" name="editProductFeatures">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" id="cancelEditProductBtn"
+                            class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md border border-gray-300 hover:bg-gray-200 transition-colors">Cancel</button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center">Save
+                            Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-        let orders = [
-            { id: 'o1', productName: 'Wireless Headphones', quantity: 1, customerName: 'Alice Smith', status: 'Pending' },
-            { id: 'o2', productName: 'Smartwatch', quantity: 1, customerName: 'Bob Johnson', status: 'Processing' },
-            { id: 'o3', productName: 'Ergonomic Keyboard', quantity: 2, customerName: 'Charlie Brown', status: 'Shipped' },
-            { id: 'o4', productName: 'Portable SSD 1TB', quantity: 1, customerName: 'Diana Prince', status: 'Delivered' },
-        ];
+        <!-- Custom Confirmation Modal -->
+        <div id="confirmationModal"
+            class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm border border-gray-200">
+                <h3 class="text-lg font-semibold mb-2" id="confirmationTitle">Confirm Action</h3>
+                <p class="text-gray-600 mb-4" id="confirmationMessage"></p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelConfirmationBtn"
+                        class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md border border-gray-300 hover:bg-gray-200 transition-colors">Cancel</button>
+                    <button id="confirmActionBtn"
+                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">Delete</button>
+                </div>
+            </div>
+        </div>
 
-        // DOM Elements
-        const productsTabBtn = document.getElementById('productsTabBtn');
-        const ordersTabBtn = document.getElementById('ordersTabBtn');
-        const productsSection = document.getElementById('productsSection');
-        const ordersSection = document.getElementById('ordersSection');
-        const productsTableContainer = document.getElementById('productsTableContainer');
-        const ordersTableContainer = document.getElementById('ordersTableContainer');
-        const noProductsMessage = document.getElementById('noProductsMessage');
-        const noOrdersMessage = document.getElementById('noOrdersMessage');
+        <!-- Toast Notification -->
+        <div id="toast-notification">
+            <p id="toast-message"></p>
+        </div>
 
-        // Add Product Modal Elements
-        const addProductBtn = document.getElementById('addProductBtn');
-        const addProductModal = document.getElementById('addProductModal');
-        const closeAddProductModalBtn = document.getElementById('closeAddProductModalBtn');
-        const cancelAddProductBtn = document.getElementById('cancelAddProductBtn');
-        const addProductForm = document.getElementById('addProductForm');
-        const productNameInput = document.getElementById('productName');
-        const productPriceInput = document.getElementById('productPrice');
-        const productStockInput = document.getElementById('productStock');
-        const productDescriptionInput = document.getElementById('productDescription');
+        <script>
+            // --- CONFIG & GLOBAL STATE ---
+            const MAX_IMAGES = 5;
 
-        // Edit Product Modal Elements
-        const editProductModal = document.getElementById('editProductModal');
-        const closeEditProductModalBtn = document.getElementById('closeEditProductModalBtn');
-        const cancelEditProductBtn = document.getElementById('cancelEditProductBtn');
-        const editProductForm = document.getElementById('editProductForm');
-        const editProductIdInput = document.getElementById('editProductId');
-        const editProductNameInput = document.getElementById('editProductName');
-        const editProductPriceInput = document.getElementById('editProductPrice');
-        const editProductStockInput = document.getElementById('editProductStock');
-        const editProductDescriptionInput = document.getElementById('editProductDescription');
+            // Global state to hold data from the backend
+            let products = [];
+            let orders = [];
+            let managerAssignedCategories = []; // New: To store categories for the dropdown
 
-        // Confirmation Modal Elements
-        const confirmationModal = document.getElementById('confirmationModal');
-        const confirmationMessage = document.getElementById('confirmationMessage');
-        const cancelConfirmationBtn = document.getElementById('cancelConfirmationBtn');
-        const confirmActionBtn = document.getElementById('confirmActionBtn');
-        let currentDeleteProductId = null; // To store the ID of the product to be deleted
+            // State for image uploads
+            let newProductImages = []; // Files for new product
+            let editNewProductImages = []; // New files for product being edited
+            let editImagesToDelete = []; // IDs of existing images marked for deletion
 
-        // --- Utility Functions ---
+            // --- DOM Elements ---
+            const productsTabBtn = document.getElementById('productsTabBtn');
+            const ordersTabBtn = document.getElementById('ordersTabBtn');
+            const productsSection = document.getElementById('productsSection');
+            const ordersSection = document.getElementById('ordersSection');
+            const productsTableContainer = document.getElementById('productsTableContainer');
+            const ordersTableContainer = document.getElementById('ordersTableContainer');
+            const noProductsMessage = document.getElementById('noProductsMessage');
+            const noOrdersMessage = document.getElementById('noOrdersMessage');
 
-        /**
-         * Shows a modal.
-         * @param {HTMLElement} modalElement - The modal DOM element.
-         */
-        function showModal(modalElement) {
-            modalElement.classList.remove('hidden');
-        }
+            const addProductModal = document.getElementById('addProductModal');
+            const editProductModal = document.getElementById('editProductModal');
+            const addProductForm = document.getElementById('addProductForm');
+            const editProductForm = document.getElementById('editProductForm');
 
-        /**
-         * Hides a modal.
-         * @param {HTMLElement} modalElement - The modal DOM element.
-         */
-        function hideModal(modalElement) {
-            modalElement.classList.add('hidden');
-        }
+            const confirmationModal = document.getElementById('confirmationModal');
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            const confirmationTitle = document.getElementById('confirmationTitle');
+            const cancelConfirmationBtn = document.getElementById('cancelConfirmationBtn');
+            const confirmActionBtn = document.getElementById('confirmActionBtn');
+            const toast = document.getElementById('toast-notification');
+            const toastMessage = document.getElementById('toast-message');
 
-        /**
-         * Displays a custom confirmation dialog.
-         * @param {string} message - The message to display.
-         * @returns {Promise<boolean>} - Resolves true if confirmed, false if cancelled.
-         */
-        function showConfirmation(message) {
-            return new Promise((resolve) => {
-                confirmationMessage.textContent = message;
-                showModal(confirmationModal);
-
-                const onConfirm = () => {
-                    hideModal(confirmationModal);
-                    confirmActionBtn.removeEventListener('click', onConfirm);
-                    cancelConfirmationBtn.removeEventListener('click', onCancel);
-                    resolve(true);
-                };
-
-                const onCancel = () => {
-                    hideModal(confirmationModal);
-                    confirmActionBtn.removeEventListener('click', onConfirm);
-                    cancelConfirmationBtn.removeEventListener('click', onCancel);
-                    resolve(false);
-                };
-
-                confirmActionBtn.addEventListener('click', onConfirm);
-                cancelConfirmationBtn.addEventListener('click', onCancel);
-            });
-        }
+            // New: Category dropdown elements
+            const productCategorySelect = document.getElementById('productCategory');
+            const editProductCategorySelect = document.getElementById('editProductCategory');
 
 
-        // --- Render Functions ---
+            // --- UI & Utility Functions ---
+            function showModal(modalElement) { modalElement.classList.remove('hidden'); }
+            function hideModal(modalElement) { modalElement.classList.add('hidden'); }
 
-        /**
-         * Renders the products table.
-         */
-        function renderProducts() {
-            if (products.length === 0) {
-                productsTableContainer.innerHTML = '';
-                noProductsMessage.classList.remove('hidden');
-                return;
-            } else {
-                noProductsMessage.classList.add('hidden');
+            function showToast(message, isError = false) {
+                toastMessage.textContent = message;
+                toast.classList.toggle('error', isError);
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
             }
 
-            let tableHTML = `
-                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+            function showConfirmation({ title, message, confirmText = 'Confirm' }) {
+                return new Promise((resolve) => {
+                    confirmationTitle.textContent = title;
+                    confirmationMessage.textContent = message;
+                    confirmActionBtn.textContent = confirmText;
+                    showModal(confirmationModal);
+
+                    const onConfirm = () => { hideModal(confirmationModal); resolve(true); };
+                    const onCancel = () => { hideModal(confirmationModal); resolve(false); };
+                    confirmActionBtn.addEventListener('click', onConfirm, { once: true });
+                    cancelConfirmationBtn.addEventListener('click', onCancel, { once: true });
+                });
+            }
+
+            // --- DATA FETCHING & RENDERING ---
+
+            /**
+             * Populates a select dropdown with category options.
+             * @param {HTMLElement} selectElement - The select DOM element.
+             * @param {string[]} categories - An array of category names.
+             * @param {string|null} selectedValue - The value to pre-select.
+             */
+            function populateCategoryDropdown(selectElement, categories, selectedValue = null) {
+                selectElement.innerHTML = ''; // Clear existing options
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Select Category';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                selectElement.appendChild(defaultOption);
+
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    if (category === selectedValue) {
+                        option.selected = true;
+                    }
+                    selectElement.appendChild(option);
+                });
+            }
+
+            /**
+             * Fetches all products, orders, and manager's assigned categories from the backend and triggers a re-render.
+             */
+            async function fetchAndRenderAllData() {
+                try {
+                    const [productsRes, ordersRes, categoriesRes] = await Promise.all([
+                        fetch(`/get/products`),
+                        fetch(`/get/orders`),
+                        fetch(`/get/categories`) // Fetch manager's categories
+                    ]);
+
+                    if (!productsRes.ok) throw new Error(`Failed to fetch products: ${productsRes.statusText}`);
+                    if (!ordersRes.ok) throw new Error(`Failed to fetch orders: ${ordersRes.statusText}`);
+                    if (!categoriesRes.ok) throw new Error(`Failed to fetch categories: ${categoriesRes.statusText}`);
+
+                    products = await productsRes.json();
+                    orders = await ordersRes.json();
+                    managerAssignedCategories = await categoriesRes.json(); // Store fetched categories
+
+                    renderProducts();
+                    renderOrders();
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                    showToast(error.message, true);
+                }
+            }
+
+            function renderProducts() {
+                noProductsMessage.classList.toggle('hidden', products.length > 0);
+
+                productsTableContainer.innerHTML = products.length === 0 ? '' : `
+                <table class="min-w-full bg-white">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            <th class="py-3 px-4 rounded-tl-lg">Product Name</th>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th class="py-3 px-4 rounded-tl-lg">Product</th>
+                            <th class="py-3 px-4">Category</th>
                             <th class="py-3 px-4">Price</th>
                             <th class="py-3 px-4">Stock</th>
-                            <th class="py-3 px-4">Description</th>
                             <th class="py-3 px-4 rounded-tr-lg text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-            `;
-            products.forEach((product, index) => {
-                const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-                tableHTML += `
-                        <tr class="border-b border-gray-100 ${rowClass}">
-                            <td class="py-3 px-4">${product.name}</td>
-                            <td class="py-3 px-4">$${product.price.toFixed(2)}</td>
-                            <td class="py-3 px-4">${product.stock}</td>
-                            <td class="py-3 px-4 text-gray-600 text-sm max-w-xs truncate">${product.description}</td>
-                            <td class="py-3 px-4 text-right">
-                                <div class="flex justify-end space-x-2">
-                                    <button onclick="openEditProductModal('${product.id}')"
-                                        class="p-2 rounded-md text-gray-600 hover:bg-gray-200 transition-colors"
-                                        title="Edit Product">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                        </svg>
-                                    </button>
-                                    <button onclick="confirmDeleteProduct('${product.id}')"
-                                        class="p-2 rounded-md text-red-600 hover:bg-red-100 transition-colors"
-                                        title="Delete Product">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                                            <path d="M3 6h18" />
-                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                            <line x1="10" x2="10" y1="11" y2="17" />
-                                            <line x1="14" x2="14" y1="11" y2="17" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                `;
-            });
-            tableHTML += `
+                    <tbody class="divide-y divide-gray-200">
+                        ${products.map(product => `
+                            <tr>
+                                <td class="py-3 px-4">
+                                    <div class="flex items-center space-x-3">
+                                        <img src="${product.image_url || 'https://placehold.co/40x40/E2E8F0/A0AEC0?text=N/A'}" alt="${product.product_name}" class="w-10 h-10 rounded-md object-cover">
+                                        <div>
+                                            <div class="font-medium text-gray-800">${product.product_name}</div>
+                                            <div class="text-sm text-gray-500">${product.sku}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 text-sm text-gray-600">${product.category}</td>
+                                <td class="py-3 px-4 text-sm text-gray-600">₱${product.price.toFixed(2)}</td>
+                                <td class="py-3 px-4 text-sm text-gray-600">${product.stock}</td>
+                                <td class="py-3 px-4 text-right">
+                                    <div class="flex justify-end space-x-2">
+                                        <button onclick="openEditProductModal(${product.id})" class="p-2 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-pencil-alt w-4 h-4"></i></button>
+                                        <button onclick="handleDeleteProduct(${product.id})" class="p-2 rounded-md text-red-500 hover:bg-red-100 transition-colors" title="Delete"><i class="fas fa-trash-alt w-4 h-4"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
                     </tbody>
-                </table>
-            `;
-            productsTableContainer.innerHTML = tableHTML;
-        }
-
-        /**
-         * Renders the orders table.
-         */
-        function renderOrders() {
-            if (orders.length === 0) {
-                ordersTableContainer.innerHTML = '';
-                noOrdersMessage.classList.remove('hidden');
-                return;
-            } else {
-                noOrdersMessage.classList.add('hidden');
+                </table>`;
             }
 
-            let tableHTML = `
-                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+            function renderOrders() {
+                noOrdersMessage.classList.toggle('hidden', orders.length > 0);
+                if (orders.length === 0) { ordersTableContainer.innerHTML = ''; return; }
+
+                const statusOptions = {
+                    pending: { text: 'Pending', class: 'bg-yellow-100 text-yellow-800' },
+                    processing: { text: 'Processing', class: 'bg-blue-100 text-blue-800' },
+                    shipped: { text: 'Shipped', class: 'bg-indigo-100 text-indigo-800' },
+                    delivered: { text: 'Delivered', class: 'bg-green-100 text-green-800' },
+                    cancelled: { text: 'Cancelled', class: 'bg-gray-200 text-gray-800' },
+                };
+
+                ordersTableContainer.innerHTML = `
+                <table class="min-w-full bg-white">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            <th class="py-3 px-4 rounded-tl-lg">Order ID</th>
-                            <th class="py-3 px-4">Product</th>
-                            <th class="py-3 px-4">Quantity</th>
-                            <th class="py-3 px-4">Customer</th>
-                            <th class="py-3 px-4 rounded-tr-lg w-60">Status</th> <!-- Added w-60 for fixed width -->
+                        <tr class="bg-gray-50 border-b border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th class="py-3 px-4 rounded-tl-lg">Order ID</th><th class="py-3 px-4">Products</th><th class="py-3 px-4">Date</th><th class="py-3 px-4">Total</th><th class="py-3 px-4 rounded-tr-lg">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-            `;
-            orders.forEach((order, index) => {
-                const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-                let statusColorClass = '';
-                switch (order.status) {
-                    case 'Delivered': statusColorClass = 'bg-green-100 text-green-800'; break;
-                    case 'Shipped': statusColorClass = 'bg-blue-100 text-blue-800'; break;
-                    case 'Processing': statusColorClass = 'bg-yellow-100 text-yellow-800'; break;
-                    case 'Pending': statusColorClass = 'bg-red-100 text-red-800'; break;
-                    case 'Cancelled': statusColorClass = 'bg-gray-200 text-gray-800'; break;
-                }
-
-                tableHTML += `
-                        <tr class="border-b border-gray-100 ${rowClass}">
-                            <td class="py-3 px-4 text-sm text-gray-700">${order.id}</td>
-                            <td class="py-3 px-4">${order.productName}</td>
-                            <td class="py-3 px-4">${order.quantity}</td>
-                            <td class="py-3 px-4">${order.customerName}</td>
-                            <td class="py-3 px-4 w-60"> <!-- Added w-60 for fixed width -->
-                                <div class="flex items-center space-x-2">
-                                    <select onchange="showSaveButtonForOrder('${order.id}', this)"
-                                        class="p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black ${statusColorClass}"
-                                        data-order-id="${order.id}">
-                                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                    <tbody class="divide-y divide-gray-200">
+                        ${orders.map(order => `
+                            <tr>
+                                <td class="py-3 px-4 font-mono text-sm text-gray-600">${order.id}</td>
+                                <td class="py-3 px-4 text-sm text-gray-600 max-w-xs truncate">${JSON.parse(order.products_ordered).map(p => `${p.name} (x${p.quantity})`).join(', ')}</td>
+                                <td class="py-3 px-4 text-sm text-gray-600">${new Date(order.order_date).toLocaleDateString()}</td>
+                                <td class="py-3 px-4 text-sm text-gray-800 font-medium">₱${order.total_amount.toFixed(2)}</td>
+                                <td class="py-3 px-4">
+                                    <select onchange="handleUpdateOrderStatus('${order.id}', this.value)" class="p-2 text-sm rounded-md border-gray-300 focus:outline-none focus:ring-1 focus:ring-black ${statusOptions[order.status].class}">
+                                        ${Object.entries(statusOptions).map(([value, { text }]) => `<option value="${value}" ${order.status === value ? 'selected' : ''}>${text}</option>`).join('')}
                                     </select>
-                                    <button id="saveStatusBtn-${order.id}"
-                                            onclick="updateOrderStatus('${order.id}')"
-                                            class="px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors text-sm hidden">
-                                        Save
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                `;
-            });
-            tableHTML += `
+                                </td>
+                            </tr>
+                        `).join('')}
                     </tbody>
-                </table>
-            `;
-            ordersTableContainer.innerHTML = tableHTML;
-        }
-
-        // --- Event Handlers and Logic ---
-
-        /**
-         * Switches the active dashboard tab.
-         * @param {string} tabName - 'products' or 'orders'.
-         */
-        function switchTab(tabName) {
-            // Define common classes for active and inactive states
-            const activeClasses = ['bg-black', 'text-white', 'hover:bg-gray-800'];
-            const inactiveClasses = ['bg-gray-200', 'text-gray-800', 'hover:bg-gray-300'];
-
-            if (tabName === 'products') {
-                productsSection.classList.remove('hidden');
-                ordersSection.classList.add('hidden');
-
-                // Products tab becomes active
-                productsTabBtn.classList.add(...activeClasses);
-                productsTabBtn.classList.remove(...inactiveClasses);
-
-                // Orders tab becomes inactive
-                ordersTabBtn.classList.add(...inactiveClasses);
-                ordersTabBtn.classList.remove(...activeClasses);
-
-                renderProducts();
-            } else if (tabName === 'orders') {
-                productsSection.classList.add('hidden');
-                ordersSection.classList.remove('hidden');
-
-                // Orders tab becomes active
-                ordersTabBtn.classList.add(...activeClasses);
-                ordersTabBtn.classList.remove(...inactiveClasses);
-
-                // Products tab becomes inactive
-                productsTabBtn.classList.add(...inactiveClasses);
-                productsTabBtn.classList.remove(...activeClasses);
-
-                renderOrders();
+                </table>`;
             }
-        }
 
-        /**
-         * Handles adding a new product.
-         * @param {Event} e - The form submission event.
-         */
-        addProductForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newProduct = {
-                id: `p${products.length + 1}`, // Simple ID generation
-                name: productNameInput.value,
-                price: parseFloat(productPriceInput.value),
-                stock: parseInt(productStockInput.value),
-                description: productDescriptionInput.value,
-            };
-            products.push(newProduct);
-            hideModal(addProductModal);
-            addProductForm.reset(); // Clear form fields
-            renderProducts();
-        });
-
-        /**
-         * Opens the edit product modal with pre-filled data.
-         * @param {string} productId - The ID of the product to edit.
-         */
-        function openEditProductModal(productId) {
-            const productToEdit = products.find(p => p.id === productId);
-            if (productToEdit) {
-                editProductIdInput.value = productToEdit.id;
-                editProductNameInput.value = productToEdit.name;
-                editProductPriceInput.value = productToEdit.price;
-                editProductStockInput.value = productToEdit.stock;
-                editProductDescriptionInput.value = productToEdit.description;
-                showModal(editProductModal);
+            // --- TAG INPUT LOGIC ---
+            const tagInstances = {};
+            function setupTagInput(containerId, hiddenInputId) {
+                const container = document.getElementById(containerId), hiddenInput = document.getElementById(hiddenInputId), textInput = container.querySelector('.tag-input');
+                let tags = [];
+                const renderTags = () => {
+                    container.querySelectorAll('.tag-item').forEach(tagEl => tagEl.remove());
+                    tags.slice().reverse().forEach((tag, i) => {
+                        const tagEl = document.createElement('div');
+                        tagEl.className = 'tag-item';
+                        tagEl.innerHTML = `<span>${tag}</span><i class="fas fa-times tag-remove-btn" data-index="${tags.length - 1 - i}"></i>`;
+                        container.prepend(tagEl);
+                    });
+                    hiddenInput.value = tags.join(',');
+                };
+                const addTag = (label) => { if ((label = label.trim()) && !tags.includes(label)) { tags.push(label); renderTags(); } textInput.value = ''; };
+                const removeTag = (index) => { tags.splice(index, 1); renderTags(); };
+                const populate = (csv) => { tags = csv ? csv.split(',').map(s => s.trim()).filter(Boolean) : []; renderTags(); };
+                container.addEventListener('click', e => e.target.classList.contains('tag-remove-btn') && removeTag(e.target.dataset.index));
+                textInput.addEventListener('keydown', e => (e.key === 'Enter' || e.key === ',') && (e.preventDefault(), addTag(textInput.value)));
+                tagInstances[containerId] = { populate };
             }
-        }
 
-        /**
-         * Handles updating an existing product.
-         * @param {Event} e - The form submission event.
-         */
-        editProductForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const updatedProduct = {
-                id: editProductIdInput.value,
-                name: editProductNameInput.value,
-                price: parseFloat(editProductPriceInput.value),
-                stock: parseInt(editProductStockInput.value),
-                description: editProductDescriptionInput.value,
-            };
-            products = products.map(p => (p.id === updatedProduct.id ? updatedProduct : p));
-            hideModal(editProductModal);
-            renderProducts();
-        });
+            // --- API HANDLERS ---
+            addProductForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData();
+                formData.append('product_name', document.getElementById('productName').value);
+                formData.append('product_full_name', document.getElementById('productFullName').value);
+                formData.append('description', document.getElementById('productDescription').value);
+                formData.append('category', productCategorySelect.value); // Get value from select
+                formData.append('brand', document.getElementById('productBrand').value);
+                formData.append('sku', document.getElementById('productSKU').value);
+                formData.append('price', document.getElementById('productPrice').value);
+                formData.append('stock', document.getElementById('productStock').value);
+                formData.append('type', document.getElementById('productType').value);
+                formData.append('type_options', document.getElementById('productTypeOptions').value);
+                formData.append('features', document.getElementById('productFeatures').value);
 
-        /**
-         * Confirms product deletion before proceeding.
-         * @param {string} productId - The ID of the product to delete.
-         */
-        async function confirmDeleteProduct(productId) {
-            currentDeleteProductId = productId;
-            const confirmed = await showConfirmation('Are you sure you want to delete this product? This action cannot be undone.');
-            if (confirmed) {
-                deleteProduct(currentDeleteProductId);
-            }
-            currentDeleteProductId = null; // Reset after action
-        }
-
-        /**
-         * Deletes a product from the list.
-         * @param {string} productId - The ID of the product to delete.
-         */
-        function deleteProduct(productId) {
-            products = products.filter(p => p.id !== productId);
-            renderProducts();
-        }
-
-        /**
-         * Shows the save button for a specific order status change.
-         * @param {string} orderId - The ID of the order.
-         * @param {HTMLSelectElement} selectElement - The select dropdown element.
-         */
-        function showSaveButtonForOrder(orderId, selectElement) {
-            const saveButton = document.getElementById(`saveStatusBtn-${orderId}`);
-            if (saveButton) {
-                saveButton.classList.remove('hidden');
-            }
-            // Store the new value temporarily, to be used when save is clicked
-            const orderToUpdate = orders.find(o => o.id === orderId);
-            if (orderToUpdate) {
-                orderToUpdate._tempStatus = selectElement.value; // Use a temporary property
-            }
-        }
-
-        /**
-         * Updates the status of an order when the save button is clicked.
-         * @param {string} orderId - The ID of the order to update.
-         */
-        function updateOrderStatus(orderId) {
-            const orderToUpdate = orders.find(o => o.id === orderId);
-            if (orderToUpdate && orderToUpdate._tempStatus) {
-                orders = orders.map(o => (o.id === orderId ? { ...o, status: orderToUpdate._tempStatus } : o));
-                delete orderToUpdate._tempStatus; // Clean up temporary property
-                renderOrders(); // Re-render to update status colors and hide save button
-            }
-            // Hide the save button regardless
-            const saveButton = document.getElementById(`saveStatusBtn-${orderId}`);
-            if (saveButton) {
-                saveButton.classList.add('hidden');
-            }
-        }
-
-        // --- Event Listeners ---
-
-        // Tab switching
-        productsTabBtn.addEventListener('click', () => switchTab('products'));
-        ordersTabBtn.addEventListener('click', () => switchTab('orders'));
-
-        // Add Product Modal
-        addProductBtn.addEventListener('click', () => showModal(addProductModal));
-        closeAddProductModalBtn.addEventListener('click', () => hideModal(addProductModal));
-        cancelAddProductBtn.addEventListener('click', () => hideModal(addProductModal));
-
-        // Edit Product Modal
-        closeEditProductModalBtn.addEventListener('click', () => hideModal(editProductModal));
-        cancelEditProductBtn.addEventListener('click', () => hideModal(editProductModal));
-
-        // Image Upload Logic
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('product-image-upload');
-        const imagePreviews = document.getElementById('image-previews');
-        const productImageActions = document.getElementById('product-image-actions'); // This element is now hidden by default in HTML
-
-        let uploadedFiles = [];
-
-        // Simulate opening the modal for testing
-        // You can remove this line in your actual application
-
-
-        // Prevent default drag behaviors
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false); // Prevent drop on entire body
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        // Highlight drop area when dragging over
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight() {
-            dropArea.classList.add('border-blue-500', 'bg-blue-50');
-        }
-
-        function unhighlight() {
-            dropArea.classList.remove('border-blue-500', 'bg-blue-50');
-        }
-
-        // Handle dropped files
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-
-        // Handle file input change
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
-
-        // Trigger file input click when drop area is clicked
-        dropArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        function handleFiles(files) {
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                if (file.type.startsWith('image/')) {
-                    uploadedFiles.push(file);
-                    previewFile(file);
-                }
-            }
-            // Removed the visibility toggle for productImageActions as save/cancel buttons are gone.
-            // If you want to show/hide based on image presence, you'd need to re-add logic here.
-        }
-
-        function previewFile(file) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onloadend = function() {
-                const imgContainer = document.createElement('div');
-                imgContainer.classList.add('relative', 'group', 'rounded-lg', 'overflow-hidden', 'aspect-w-1', 'aspect-h-1');
-
-                const img = document.createElement('img');
-                img.src = reader.result;
-                img.classList.add('w-[100px]', 'h-[100px]', 'object-cover', 'rounded-lg');
-
-                const removeButton = document.createElement('button');
-                removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-white">
-                                            <path d="M18 6 6 18" />
-                                            <path d="m6 6 12 12" />
-                                        </svg>`;
-                removeButton.classList.add('absolute', 'top-2', 'right-2', 'bg-red-500', 'bg-opacity-75', 'rounded-full', 'p-1', 'opacity-0', 'group-hover:opacity-100', 'transition-opacity', 'flex', 'items-center', 'justify-center');
-                removeButton.addEventListener('click', () => {
-                    removeImagePreview(file, imgContainer);
+                newProductImages.forEach(file => {
+                    formData.append('productImages', file);
                 });
 
-                imgContainer.appendChild(img);
-                imgContainer.appendChild(removeButton);
-                imagePreviews.appendChild(imgContainer);
+                try {
+                    const response = await fetch(`/add/product`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message || 'Failed to add product.');
+
+                    showToast(result.message || 'Product added successfully!');
+                    hideModal(addProductModal);
+                    addProductForm.reset();
+                    document.getElementById('image-previews').innerHTML = '';
+                    tagInstances['productTypeOptionsContainer'].populate('');
+                    tagInstances['productFeaturesContainer'].populate('');
+                    newProductImages = [];
+                    fetchAndRenderAllData(); // Refresh data
+                } catch (error) {
+                    console.error("Error adding product:", error);
+                    showToast(error.message, true);
+                }
+            });
+
+            function openEditProductModal(productId) {
+                const product = products.find(p => p.id === productId);
+                if (!product) return;
+
+                editImagesToDelete = [];
+                editNewProductImages = [];
+
+                const form = editProductForm;
+                form.querySelector('#editProductId').value = product.id;
+                form.querySelector('#editProductName').value = product.product_name;
+                form.querySelector('#editProductFullName').value = product.product_full_name;
+                // Populate category dropdown for edit modal
+                populateCategoryDropdown(editProductCategorySelect, managerAssignedCategories, product.category);
+                form.querySelector('#editProductBrand').value = product.brand;
+                form.querySelector('#editProductSKU').value = product.sku;
+                form.querySelector('#editProductPrice').value = product.price;
+                form.querySelector('#editProductStock').value = product.stock;
+                form.querySelector('#editProductDescription').value = product.description;
+                form.querySelector('#editProductType').value = product.type || '';
+
+                tagInstances['editProductTypeOptionsContainer'].populate(product.type_options || '');
+                tagInstances['editProductFeaturesContainer'].populate(product.features || '');
+
+                const previewsContainer = form.querySelector('#edit-image-previews');
+                previewsContainer.innerHTML = '';
+                // Your controller provides `existing_image_ids`. Use them to build the image URLs.
+                product.existing_image_ids?.forEach(imgId => {
+                    createImagePreview(`/get/product/image/${imgId}`, previewsContainer, 'existing', imgId);
+                });
+
+                showModal(editProductModal);
             }
-        }
 
-        function removeImagePreview(fileToRemove, container) {
-            uploadedFiles = uploadedFiles.filter(file => file !== fileToRemove);
-            container.remove();
-            // Removed the visibility toggle for productImageActions as save/cancel buttons are gone.
-        }
+            editProductForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const productId = form.querySelector('#editProductId').value;
+                const formData = new FormData();
+                formData.append('product_name', document.getElementById('editProductName').value);
+                formData.append('product_full_name', document.getElementById('editProductFullName').value);
+                formData.append('description', document.getElementById('editProductDescription').value);
+                formData.append('category', editProductCategorySelect.value); // Get value from select
+                formData.append('brand', document.getElementById('editProductBrand').value);
+                formData.append('sku', document.getElementById('editProductSKU').value);
+                formData.append('price', document.getElementById('editProductPrice').value);
+                formData.append('stock', document.getElementById('editProductStock').value);
+                formData.append('type', document.getElementById('editProductType').value);
+                formData.append('type_options', document.getElementById('editProductTypeOptions').value);
+                formData.append('features', document.getElementById('editProductFeatures').value);
 
-        // Initial render on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            switchTab('products'); // Start on the products tab
-        });
-    </script>
+                const previewsContainer = document.getElementById('edit-image-previews');
+                const existingImageIds = Array.from(previewsContainer.querySelectorAll('.image-preview-item[data-image-id]'))
+                    .map(item => item.dataset.imageId);
+                formData.append('existingImageIds', existingImageIds.join(','));
+
+                editNewProductImages.forEach(file => {
+                    formData.append('productImages', file);
+                });
+
+                try {
+                    const response = await fetch(`/edit/product/${productId}`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message || 'Failed to update product.');
+
+                    showToast(result.message || 'Product updated successfully!');
+                    hideModal(editProductModal);
+                    fetchAndRenderAllData();
+                } catch (error) {
+                    console.error("Error updating product:", error);
+                    showToast(error.message, true);
+                }
+            });
+
+            async function handleDeleteProduct(productId) {
+                const confirmed = await showConfirmation({ title: 'Delete Product', message: 'Are you sure you want to delete this product?', confirmText: 'Delete' });
+                if (confirmed) {
+                    try {
+                        const response = await fetch(`/delete/product/${productId}`, { method: 'POST' });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.message || 'Failed to delete product.');
+
+                        showToast(result.message || 'Product deleted successfully!');
+                        fetchAndRenderAllData();
+                    } catch (error) {
+                        console.error("Error deleting product:", error);
+                        showToast(error.message, true);
+                    }
+                }
+            }
+
+            async function handleUpdateOrderStatus(orderId, newStatus) {
+                try {
+                    const response = await fetch(`/update/status/${orderId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message || 'Failed to update status.');
+
+                    showToast(result.message || 'Order status updated!');
+                    const order = orders.find(o => o.id === orderId);
+                    if (order) order.status = newStatus;
+                    renderOrders();
+                } catch (error) {
+                    console.error("Error updating status:", error);
+                    showToast(error.message, true);
+                    fetchAndRenderAllData();
+                }
+            }
+
+            // --- IMAGE HANDLING ---
+            function createImagePreview(source, container, type, id = null) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'image-preview-item group';
+                if (id) wrapper.dataset.imageId = id;
+                
+                const img = document.createElement('img');
+                img.src = source;
+                img.onerror = () => { img.src = 'https://placehold.co/100x100/E2E8F0/A0AEC0?text=Error'; };
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', () => {
+                    if (type === 'new-add') newProductImages = newProductImages.filter(f => URL.createObjectURL(f) !== source);
+                    else if (type === 'new-edit') editNewProductImages = editNewProductImages.filter(f => URL.createObjectURL(f) !== source);
+                    wrapper.remove();
+                });
+                wrapper.append(img, removeBtn);
+                container.appendChild(wrapper);
+            }
+
+            function handleFiles(files, context) {
+                const container = document.getElementById(context.containerId);
+                const currentImageCount = container.querySelectorAll('.image-preview-item').length;
+                if (currentImageCount + files.length > MAX_IMAGES) {
+                    return showToast(`You can only upload a maximum of ${MAX_IMAGES} images.`, true);
+                }
+                for (const file of files) {
+                    if (!file.type.startsWith('image/')) continue;
+                    const fileArray = context.mode === 'add' ? newProductImages : editNewProductImages;
+                    const previewType = context.mode === 'add' ? 'new-add' : 'new-edit';
+                    fileArray.push(file);
+                    createImagePreview(URL.createObjectURL(file), container, previewType);
+                }
+            }
+
+            // --- EVENT LISTENERS & INITIALIZATION ---
+            function setupEventListeners() {
+                productsTabBtn.addEventListener('click', () => switchTab('products'));
+                ordersTabBtn.addEventListener('click', () => switchTab('orders'));
+                document.getElementById('addProductBtn').addEventListener('click', () => {
+                    addProductForm.reset();
+                    document.getElementById('image-previews').innerHTML = '';
+                    tagInstances['productTypeOptionsContainer'].populate('');
+                    tagInstances['productFeaturesContainer'].populate('');
+                    newProductImages = [];
+                    // Populate category dropdown for Add modal
+                    populateCategoryDropdown(productCategorySelect, managerAssignedCategories); 
+                    showModal(addProductModal);
+                });
+                document.getElementById('closeAddProductModalBtn').addEventListener('click', () => hideModal(addProductModal));
+                document.getElementById('cancelAddProductBtn').addEventListener('click', () => hideModal(addProductModal));
+                document.getElementById('closeEditProductModalBtn').addEventListener('click', () => hideModal(editProductModal));
+                document.getElementById('cancelEditProductBtn').addEventListener('click', () => hideModal(editProductModal));
+                
+                const dropContexts = [
+                    { area: 'drop-area', input: 'product-image-upload', containerId: 'image-previews', mode: 'add' },
+                    { area: 'edit-drop-area', input: 'edit-product-image-upload', containerId: 'edit-image-previews', mode: 'edit' }
+                ];
+                dropContexts.forEach(ctx => {
+                    const dropArea = document.getElementById(ctx.area), fileInput = document.getElementById(ctx.input);
+                    if (!dropArea || !fileInput) return;
+                    dropArea.addEventListener('click', () => fileInput.click());
+                    fileInput.addEventListener('change', (e) => handleFiles(e.target.files, ctx));
+                    ['dragenter','dragover','dragleave','drop'].forEach(ev => dropArea.addEventListener(ev, e => {
+                        e.preventDefault(); e.stopPropagation();
+                        if (['dragenter','dragover'].includes(ev)) dropArea.classList.add('highlight'); else dropArea.classList.remove('highlight');
+                        if (ev === 'drop') handleFiles(e.dataTransfer.files, ctx);
+                    }));
+                });
+                
+                setupTagInput('productTypeOptionsContainer', 'productTypeOptions');
+                setupTagInput('productFeaturesContainer', 'productFeatures');
+                setupTagInput('editProductTypeOptionsContainer', 'editProductTypeOptions');
+                setupTagInput('editProductFeaturesContainer', 'editProductFeatures');
+            }
+
+            function switchTab(tabName) {
+                const isProducts = tabName === 'products';
+                productsSection.classList.toggle('hidden', !isProducts);
+                ordersSection.classList.toggle('hidden', isProducts);
+                productsTabBtn.classList.toggle('bg-black', isProducts);
+                productsTabBtn.classList.toggle('text-white', isProducts);
+                productsTabBtn.classList.toggle('bg-gray-200', !isProducts);
+                productsTabBtn.classList.toggle('text-gray-700', !isProducts);
+                productsTabBtn.classList.toggle('hover:bg-gray-300', !isProducts);
+                ordersTabBtn.classList.toggle('bg-black', !isProducts);
+                ordersTabBtn.classList.toggle('text-white', !isProducts);
+                ordersTabBtn.classList.toggle('bg-gray-200', isProducts);
+                ordersTabBtn.classList.toggle('text-gray-700', isProducts);
+                ordersTabBtn.classList.toggle('hover:bg-gray-300', isProducts);
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                setupEventListeners();
+                switchTab('products');
+                fetchAndRenderAllData();
+            });
+        </script>
 </body>
+
 </html>

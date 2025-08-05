@@ -55,6 +55,7 @@ CREATE TABLE products (
     brand TEXT NOT NULL,
     sku TEXT NOT NULL UNIQUE,
     price REAL NOT NULL,
+    stock INTEGER NOT NULL DEFAULT 0, -- New: Stock quantity for inventory management
     type TEXT, -- e.g., "Color", "Size"
     type_options TEXT, -- Stores JSON string, e.g., '["Yellow", "White", "Blue"]'
     features TEXT, -- Stores JSON string, e.g., '["100% Cotton", "Breathable", "Unisex"]'
