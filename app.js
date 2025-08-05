@@ -80,6 +80,10 @@ app.get('/error', (req, res) => {
     res.render('error');
 });
 
+app.get('/ordersinventory', (req, res) => {
+    res.render('ordersinventory');
+});
+
 
 // --- Start Server ---
 const PORT = process.env.PORT || 3000; // Use environment variable or default to 3000

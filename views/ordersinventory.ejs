@@ -428,7 +428,7 @@
                             <th class="py-3 px-4">Product</th>
                             <th class="py-3 px-4">Quantity</th>
                             <th class="py-3 px-4">Customer</th>
-                            <th class="py-3 px-4 rounded-tr-lg">Status</th>
+                            <th class="py-3 px-4 rounded-tr-lg w-60">Status</th> <!-- Added w-60 for fixed width -->
                         </tr>
                     </thead>
                     <tbody>
@@ -450,15 +450,23 @@
                             <td class="py-3 px-4">${order.productName}</td>
                             <td class="py-3 px-4">${order.quantity}</td>
                             <td class="py-3 px-4">${order.customerName}</td>
-                            <td class="py-3 px-4">
-                                <select onchange="updateOrderStatus('${order.id}', this.value)"
-                                    class="p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black ${statusColorClass}">
-                                    <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                    <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                                    <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                                    <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                                    <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                                </select>
+                            <td class="py-3 px-4 w-60"> <!-- Added w-60 for fixed width -->
+                                <div class="flex items-center space-x-2">
+                                    <select onchange="showSaveButtonForOrder('${order.id}', this)"
+                                        class="p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black ${statusColorClass}"
+                                        data-order-id="${order.id}">
+                                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    </select>
+                                    <button id="saveStatusBtn-${order.id}"
+                                            onclick="updateOrderStatus('${order.id}')"
+                                            class="px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors text-sm hidden">
+                                        Save
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                 `;
@@ -586,13 +594,38 @@
         }
 
         /**
-         * Updates the status of an order.
-         * @param {string} orderId - The ID of the order to update.
-         * @param {string} newStatus - The new status for the order.
+         * Shows the save button for a specific order status change.
+         * @param {string} orderId - The ID of the order.
+         * @param {HTMLSelectElement} selectElement - The select dropdown element.
          */
-        function updateOrderStatus(orderId, newStatus) {
-            orders = orders.map(o => (o.id === orderId ? { ...o, status: newStatus } : o));
-            renderOrders(); // Re-render to update status colors
+        function showSaveButtonForOrder(orderId, selectElement) {
+            const saveButton = document.getElementById(`saveStatusBtn-${orderId}`);
+            if (saveButton) {
+                saveButton.classList.remove('hidden');
+            }
+            // Store the new value temporarily, to be used when save is clicked
+            const orderToUpdate = orders.find(o => o.id === orderId);
+            if (orderToUpdate) {
+                orderToUpdate._tempStatus = selectElement.value; // Use a temporary property
+            }
+        }
+
+        /**
+         * Updates the status of an order when the save button is clicked.
+         * @param {string} orderId - The ID of the order to update.
+         */
+        function updateOrderStatus(orderId) {
+            const orderToUpdate = orders.find(o => o.id === orderId);
+            if (orderToUpdate && orderToUpdate._tempStatus) {
+                orders = orders.map(o => (o.id === orderId ? { ...o, status: orderToUpdate._tempStatus } : o));
+                delete orderToUpdate._tempStatus; // Clean up temporary property
+                renderOrders(); // Re-render to update status colors and hide save button
+            }
+            // Hide the save button regardless
+            const saveButton = document.getElementById(`saveStatusBtn-${orderId}`);
+            if (saveButton) {
+                saveButton.classList.add('hidden');
+            }
         }
 
         // --- Event Listeners ---
