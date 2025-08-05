@@ -30,5 +30,11 @@ function ensureAuthenticated(req, res, next) {
         res.redirect('/error');
     }
 }
+function ensureUnauthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return res.redirect('/home');
+    }
+    next();
+}
 
-module.exports = { ensureAdmin, ensureManager, ensureCustomer, ensureAuthenticated };
+module.exports = { ensureAdmin, ensureManager, ensureCustomer, ensureAuthenticated, ensureUnauthenticated };
