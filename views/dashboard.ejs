@@ -229,10 +229,10 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-100 sticky top-0">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap rounded-tl-lg cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="id">ID</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="employeeName">Employee</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap rounded-tl-lg cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="id">Order ID</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="customerName">Customer</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="itemName">Item</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="productName">Product</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="category">Category</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="quantity">Qty</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="price">Price</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-200" data-table="transactions" data-column="date">Date</th>
@@ -397,34 +397,14 @@
         let customers = <%- JSON.stringify(customers || []) %>;
         // Use the 'employees' data passed from the backend
         let employees = <%- JSON.stringify(employees || []) %>;
+        // Initialize transactions as an empty array, will be fetched from backend
+        let transactions = [];
 
-        // --- Mock Data (for transactions and items, if not provided by backend) ---
-        // You might want to fetch these dynamically if they are also database-driven.
-        const mockItems = [
+        // --- Mock Data (for categories, if not provided by backend) ---
+        // This is used for employee category assignments.
+        const mockCategories = [
             'Living Room', 'Bedroom', 'Dining Room', 'Office', 'Outdoor', 'Storage', 'Children\'s', 'Entryway', 'Accent', 'Modular'
         ];
-        const generateMockTransactions = () => {
-            const transactions = [];
-            const today = new Date();
-            const statuses = ['Completed', 'Pending', 'Failed', 'Refunded'];
-            for (let i = 0; i < 50; i++) {
-                transactions.push({
-                    id: `TRX${1000 + i}`,
-                    // Use actual employee names if available, otherwise fallback to mock
-                    employeeName: employees[Math.floor(Math.random() * employees.length)]?.username || `Employee ${i+1}`,
-                    // Use actual customer names if available, otherwise fallback to mock
-                    customerName: customers[Math.floor(Math.random() * customers.length)]?.username || `Customer ${i+1}`,
-                    itemName: mockItems[Math.floor(Math.random() * mockItems.length)],
-                    quantity: Math.floor(Math.random() * 3) + 1,
-                    price: (Math.random() * 500 + 20),
-                    date: new Date(today.getFullYear(), today.getMonth(), Math.floor(Math.random() * 28) + 1),
-                    status: statuses[Math.floor(Math.random() * statuses.length)]
-                });
-            }
-            return transactions;
-        };
-        let mockTransactions = generateMockTransactions();
-
 
         // --- State Management ---
         let customerSearchTerm = '';
@@ -457,11 +437,11 @@
             return data.filter(item => {
                 const searchableItem = { ...item };
                 if (tableType === 'transactions') {
+                    // Ensure date and price are stringified for consistent searching
                     searchableItem.price = `$${item.price.toFixed(2)}`;
-                    searchableItem.date = item.date.toLocaleDateString();
+                    searchableItem.date = new Date(item.date).toLocaleDateString();
                 }
                 if (tableType === 'customers') {
-                    // Assuming customer objects have 'username', 'address', 'created_at'
                     searchableItem.created_at = new Date(item.created_at).toLocaleDateString();
                 }
                 return Object.values(searchableItem).some(val =>
@@ -472,7 +452,12 @@
 
         const getSortValue = (obj, column) => {
             const value = obj[column];
-            if (value instanceof Date) return value.getTime();
+            // If the column is 'date' or a date-like string, normalize to start of day for sorting
+            if (column === 'date' && (value instanceof Date || (typeof value === 'string' && !isNaN(new Date(value))))) {
+                const date = new Date(value);
+                date.setHours(0, 0, 0, 0); // Set time to 00:00:00.000
+                return date.getTime(); // Return timestamp for comparison
+            }
             if (typeof value === 'number') return value;
             if (typeof value === 'string') return value.toLowerCase();
             return value;
@@ -507,18 +492,18 @@
         };
 
         const renderTransactions = () => {
-            const filtered = filterData(mockTransactions, transactionSearchTerm, 'transactions');
+            const filtered = filterData(transactions, transactionSearchTerm, 'transactions'); // Use 'transactions' from backend
             const sorted = sortData(filtered, transactionSortCriteria);
             const tableBody = document.getElementById('transactions-table-body');
             const statusColors = { 'Completed': 'bg-green-100 text-green-800', 'Pending': 'bg-yellow-100 text-yellow-800', 'Failed': 'bg-red-100 text-red-800', 'Refunded': 'bg-blue-100 text-blue-800' };
             tableBody.innerHTML = sorted.map(t => `
                 <tr class="hover:bg-gray-100">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${t.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.employeeName}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.customerName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.itemName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.productName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${t.category}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${t.quantity}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">$${t.price.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">₱${t.price.toFixed(2)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${new Date(t.date).toLocaleDateString()}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[t.status] || 'bg-gray-100'}">${t.status}</span></td>
                 </tr>
@@ -526,7 +511,9 @@
         };
 
         const renderMonthlySales = () => {
-            document.getElementById('monthly-sales').textContent = `$${mockTransactions.reduce((acc, t) => acc + t.price, 0).toFixed(2)}`;
+            // Calculate total sales from the fetched transactions
+            const totalSales = transactions.reduce((acc, t) => acc + (t.price * t.quantity), 0);
+            document.getElementById('monthly-sales').textContent = `₱${totalSales.toFixed(2)}`;
             document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
         };
 
@@ -559,6 +546,24 @@
                     header.appendChild(indicator);
                 }
             });
+        };
+
+        // --- Data Fetching and Initial Render ---
+        const fetchAndRenderAllData = async () => {
+            try {
+                // Fetch transactions
+                const transactionsResponse = await fetch('/get/transactions');
+                if (!transactionsResponse.ok) {
+                    throw new Error(`Failed to fetch transactions: ${transactionsResponse.statusText}`);
+                }
+                transactions = await transactionsResponse.json();
+
+                // Re-render all sections that depend on fetched data
+                fullRender();
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                showMessage(`Error loading data: ${error.message}`, 'error');
+            }
         };
 
         const fullRender = () => {
@@ -646,8 +651,8 @@
             document.getElementById('modal-employee-name').textContent = employee.username; // Use username for display
             const select = document.getElementById('modal-assigned-items');
 
-            // Ensure assignedItems is an array before using .includes()
-            select.innerHTML = mockItems.map(item => `<option value="${item}" ${employee.assignedItems && employee.assignedItems.includes(item) ? 'selected' : ''}>${item}</option>`).join('');
+            // Populate select with mockCategories (or fetch real categories from backend)
+            select.innerHTML = mockCategories.map(item => `<option value="${item}" ${employee.assignedItems && employee.assignedItems.includes(item) ? 'selected' : ''}>${item}</option>`).join('');
             openModal('edit-assignment-modal');
         };
         document.getElementById('save-edit-btn').addEventListener('click', async () => { // Made async
@@ -947,8 +952,8 @@
 
         // Initial Render
         document.addEventListener('DOMContentLoaded', () => {
-            // Call fullRender to display all dashboard sections
-            fullRender();
+            // Call fetchAndRenderAllData to fetch data and then display all dashboard sections
+            fetchAndRenderAllData();
 
             // Initialize password strength for both modals if they are open on load (though usually hidden)
             checkPasswordComplexity('admin-password', 'adminStrengthBarFill', 'adminStrengthText', 'adminModalLengthCheck', 'adminModalUppercaseCheck', 'adminModalLowercaseCheck', 'adminModalNumberCheck', 'adminModalSpecialCharCheck');

@@ -96,6 +96,52 @@ const orderController = {
                 return res.status(500).json({ message: 'An unexpected error occurred while placing your order. Please try again.' });
             }
         }
+    },
+
+    getTransactions: async (req, res) => {
+        try {
+            // Fetch all orders
+            const selectOrdersStmt = OccasioDB.prepare('SELECT * FROM orders');
+            const allOrders = selectOrdersStmt.all();
+
+            // Fetch all customers (accounts with role 'customer') for name lookup
+            const selectCustomersStmt = OccasioDB.prepare('SELECT id, username FROM accounts WHERE role = \'customer\'');
+            const customers = selectCustomersStmt.all();
+            const customerMap = new Map(customers.map(c => [c.id, c.username]));
+
+            const transactions = [];
+
+            for (const order of allOrders) {
+                let productsOrdered;
+                try {
+                    productsOrdered = JSON.parse(order.products_ordered);
+                } catch (e) {
+                    console.error(`Error parsing products_ordered for order ID ${order.id}:`, e);
+                    continue; // Skip this order if its products_ordered is invalid
+                }
+
+                const customerName = customerMap.get(order.customer_id) || 'Unknown Customer';
+
+                for (const productDetail of productsOrdered) {
+                    transactions.push({
+                        id: order.id, // Order ID as transaction ID
+                        customerName: customerName,
+                        productName: productDetail.name,
+                        category: productDetail.category || 'N/A', // Ensure category is included
+                        quantity: productDetail.quantity,
+                        price: productDetail.price_at_order,
+                        date: order.order_date,
+                        status: order.status
+                    });
+                }
+            }
+
+            res.status(200).json(transactions);
+
+        } catch (error) {
+            console.error('Error fetching transaction records:', error.message);
+            res.status(500).json({ message: 'Failed to fetch transaction records.' });
+        }
     }
 };
 
