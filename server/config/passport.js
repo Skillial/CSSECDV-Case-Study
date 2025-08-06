@@ -63,8 +63,9 @@ module.exports = function (passport) {
                 const isMatch = await bcrypt.compare(password, user.password_hash); // Use user.password_hash
 
                 if (isMatch) {
-                    // Password is correct. Reset login attempts and update last successful login.
+                    // Build the login report message
                     let lastLoginReportMessage = '';
+
                     const lastAttemptTimestamp = user.last_login_attempt;
                     const lastSuccessfulTimestamp = user.last_successful_login;
 
@@ -81,12 +82,13 @@ module.exports = function (passport) {
                         lastLoginReportMessage = 'This is your first login.';
                     }
 
-                    req.session.lastLoginReport = lastLoginReportMessage; // Store this detailed message in session
+                    // ✅ Add it to the user object (just temporarily)
+                    user._lastLoginReportMessage = lastLoginReportMessage;
 
-                    // Use prepared statement for run
                     updateSuccessfulLoginStmt.run(new Date().toISOString(), new Date().toISOString(), user.id);
-                    return done(null, user); // Authentication successful
-                } else {
+                    return done(null, user);
+                }
+                else {
                     // --- Incorrect Password & Lockout Increment ---
                     const newAttempts = user.login_attempts + 1;
                     const lockoutThreshold = 5; // 5 attempts

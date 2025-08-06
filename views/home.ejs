@@ -219,7 +219,7 @@
                         <p class="text-lg font-bold text-gray-900 mt-2">₱${product.price ? product.price.toFixed(2) : '0.00'}</p>
                         <p class="text-xs text-gray-500 mt-1">Stock: ${product.stock || 0}</p>
                     </div>
-                `;  
+                `;
                 productsContainer.appendChild(productCard);
             });
         }
@@ -327,7 +327,7 @@
                 noProductsMessage.classList.remove('hidden');
             }
 
-            // --- NEW: Display flash messages from server on page load ---
+            // --- Display flash messages from server on page load ---
             // Check for success messages passed from the server
             <% if (success_messages && success_messages.length > 0) { %>
                 showToast(`<%= success_messages[0].replace(/`/g, '\\`') %>`, false); // Display first success message
@@ -336,6 +336,11 @@
             // Check for error messages passed from the server
             <% if (error_messages && error_messages.length > 0) { %>
                 showToast(`<%= error_messages[0].replace(/`/g, '\\`') %>`, true); // Display first error message
+            <% } %>
+
+            // --- NEW: Display lastLoginReport from server on page load ---
+            <% if (lastLoginReport) { %>
+                showToast(`<%= lastLoginReport.replace(/`/g, '\\`') %>`, false); // Display last login report as a success message
             <% } %>
         });
     </script>

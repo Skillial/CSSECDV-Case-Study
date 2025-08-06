@@ -993,8 +993,13 @@
                         setupEventListeners();
                         switchTab('products');
                         fetchAndRenderAllData();
+
+                        // --- NEW: Display lastLoginReport from server on page load ---
+                        <% if (lastLoginReport) { %>
+                            showToast(`<%= lastLoginReport.replace(/`/g, '\\`') %>`, false); // Display last login report as a success message
+                        <% } %>
                     });
                 </script>
         </body>
 
-        </html> 
+        </html>

@@ -125,7 +125,6 @@ const controller = {
     // Handles new admin registration (now sends JSON response)
     registerAdmin: async (req, res) => {
         const { username, password, confirmPassword } = req.body;
-        console.log(username, password, confirmPassword);
         let errors = [];
 
         // --- Input Validation ---

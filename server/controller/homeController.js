@@ -1,25 +1,22 @@
-// Import necessary modules
-const { OccasioDB } = require('./../config/db'); // Adjust the path if your db.js is located elsewhere.
+const { OccasioDB } = require('./../config/db');
 
-const homeController = {
-    // MODIFIED: This function now fetches the first page of products,
-    // optionally filtering by search query and category.
+const controller = {
+
     page: (req, res) => {
+        // Retrieve last login report from session set by Passport.js
+        const lastLoginReport = req.session.lastLoginReport;
+        // Clear the session variable immediately after retrieving it
+        delete req.session.lastLoginReport;
+
         const urlMessage = req.query.message;
         const urlMessageType = req.query.type; // 'success' or 'error'
 
         if (urlMessage && urlMessageType) {
             req.flash(urlMessageType, urlMessage);
-            // Clear the query parameters from the URL after flashing them
-            // This prevents the message from reappearing on refresh
-            // Note: This requires a redirect, which might cause a double-render.
-            // A more robust solution for single-page apps would be to handle messages purely client-side.
-            // For EJS, this is a common pattern.
-            const newUrl = req.originalUrl.split('?')[0]; // Get URL without query params
-            return res.redirect(newUrl); // Redirect to clean URL
+            const newUrl = req.originalUrl.split('?')[0];
+            return res.redirect(newUrl);
         }
 
-        // Logic for admin and manager roles remains the same.
         if (req.user.role === 'admin') {
             try {
                 // Fetch customer data for the dashboard
@@ -27,7 +24,6 @@ const homeController = {
                 const customers = customerStmt.all();
 
                 // Fetch employee data (users with 'manager' role) and their assigned categories
-                // This query joins accounts with employee_categories and groups by employee to get all categories
                 const employeeCategoriesStmt = OccasioDB.prepare(`
                         SELECT
                             a.id,
@@ -48,34 +44,64 @@ const homeController = {
                 // Process employees to convert assigned_categories_json string into an array
                 employees = employees.map(employee => ({
                     ...employee,
-                    // If assigned_categories_json is null/empty string, default to empty array
                     assignedItems: employee.assigned_categories_json ? employee.assigned_categories_json.split(',') : []
                 }));
-
-                // Render the dashboard, passing the fetched data
+                // Render the dashboard, passing the fetched data and last login report
                 res.render('dashboard', {
                     customers: customers,
-                    employees: employees
-                    // Note: mockItems and mockTransactions are currently client-side in dashboard.ejs.
-                    // If these also need to be dynamic, you'd fetch them here and pass them too.
+                    employees: employees,
+                    lastLoginReport: lastLoginReport || null // Pass the report to the template
                 });
 
             } catch (dbError) {
                 console.error("Database query error on dashboard load:", dbError.message);
                 req.flash('error', 'Failed to load dashboard data due to a database error.');
-                res.redirect('/home'); // Redirect to a safe page
+                res.redirect('/home');
             }
         } else if (req.user.role === 'manager') {
-            return res.render('ordersinventory');
+            try {
+                // Fetch employee data (users with 'manager' role) and their assigned categories
+                const employeeCategoriesStmt = OccasioDB.prepare(`
+                        SELECT
+                            a.id,
+                            a.username,
+                            a.address,
+                            GROUP_CONCAT(ec.category_name) AS assigned_categories_json
+                        FROM
+                            accounts a
+                        LEFT JOIN
+                            employee_categories ec ON a.id = ec.employee_id
+                        WHERE
+                            a.role = 'manager' AND a.id = ?
+                        GROUP BY
+                            a.id, a.username, a.address
+                    `);
+                let currentManagerAssignments = employeeCategoriesStmt.all(req.user.id);
+
+                // Process assignments to convert assigned_categories_json string into an array
+                currentManagerAssignments = currentManagerAssignments.map(employee => ({
+                    ...employee,
+                    assignedItems: employee.assigned_categories_json ? employee.assigned_categories_json.split(',') : []
+                }));
+
+                // Render the ordersinventory page, passing the current manager's assignments and last login report
+                res.render('ordersinventory', {
+                    managerAssignments: currentManagerAssignments.length > 0 ? currentManagerAssignments[0].assignedItems : [],
+                    lastLoginReport: lastLoginReport || null // Pass the report to the template
+                });
+            } catch (dbError) {
+                console.error("Database query error on ordersinventory load:", dbError.message);
+                req.flash('error', 'Failed to load manager dashboard data due to a database error.');
+                res.redirect('/home');
+            }
         } else if (req.user.role === 'customer') {
             try {
                 const initialLimit = 8;
-                const { search, category } = req.query; // Get filters from query string
+                const { search, category } = req.query;
 
                 let queryParams = [];
                 let whereClauses = [];
 
-                // Base query to select products and their primary image
                 let sql = `
                         SELECT
                             p.id,
@@ -88,7 +114,6 @@ const homeController = {
                         FROM products p
                     `;
 
-                // Dynamically add WHERE clauses for filtering
                 if (search) {
                     whereClauses.push("p.product_name LIKE ?");
                     queryParams.push(`%${search}%`);
@@ -117,23 +142,23 @@ const homeController = {
                     return { ...product, imageUrl };
                 });
 
-                // Pass products and current filters to the template
+                // Pass products, current filters, and last login report to the template
                 res.render('home', {
                     products: productsWithImages,
                     search: search || '',
-                    category: category || ''
+                    category: category || '',
+                    lastLoginReport: lastLoginReport || null // Pass the report to the template
                 });
 
             } catch (dbError) {
                 console.error("Database error on home page load:", dbError.message);
                 req.flash('error', 'Could not load products at this time.');
-                res.render('home', { products: [], search: '', category: '' });
+                res.render('home', { products: [], search: '', category: '', lastLoginReport: lastLoginReport || null });
             }
         }
 
     },
 
-    // MODIFIED: This API endpoint now accepts search and category parameters.
     showProducts: (req, res) => {
         try {
             const page = parseInt(req.query.page) || 1;
@@ -207,7 +232,6 @@ const homeController = {
         try {
             const productId = req.params.id;
 
-            // 1. Fetch product details
             const productStmt = OccasioDB.prepare(`
                 SELECT
                     id, product_name, product_full_name, description, category, brand, sku, price, stock, type, type_options, features
@@ -218,10 +242,9 @@ const homeController = {
 
             if (!product) {
                 req.flash('error', 'Product not found.');
-                return res.redirect('/home'); // Redirect if product not found
+                return res.redirect('/home');
             }
 
-            // 2. Fetch all images for the product
             const imagesStmt = OccasioDB.prepare(`
                 SELECT id, image_data, image_mime_type, display_order
                 FROM product_images
@@ -235,16 +258,15 @@ const homeController = {
                 return {
                     id: img.id,
                     src: `data:${img.image_mime_type};base64,${base64Image}`,
-                    alt: product.product_name + ' image' // Generic alt text
+                    alt: product.product_name + ' image'
                 };
             });
 
-            // Parse JSON strings back to arrays/values for frontend
             const parsedProduct = {
                 ...product,
                 type_options: product.type_options ? JSON.parse(product.type_options) : [],
                 features: product.features ? JSON.parse(product.features) : [],
-                images: productImages // Add the formatted images array
+                images: productImages
             };
 
             res.render('product', { product: parsedProduct });
@@ -257,4 +279,4 @@ const homeController = {
     }
 };
 
-module.exports = homeController;
+module.exports = controller;

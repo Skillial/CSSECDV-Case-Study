@@ -68,18 +68,9 @@ app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
-app.get('/product', (req, res) => {
-    res.render('product');
-});
-
 app.get('/error', (req, res) => {
     res.render('error');
 });
-
-app.get('/ordersinventory', (req, res) => {
-    res.render('ordersinventory');
-});
-
 
 app.use((req, res, next) => {
     res.status(404).render('error', { message: 'Page Not Found', statusCode: 404 });
