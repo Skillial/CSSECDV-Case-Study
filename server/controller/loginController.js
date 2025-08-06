@@ -22,20 +22,28 @@ const controller = {
     login: (req, res, next) => {
         passport.authenticate('local', (err, user, info) => {
             if (err) return next(err);
-            if (!user) return res.redirect('/login');
+            if (!user) {
+                // Set the flash message for authentication failure
+                req.flash('error', info.message || 'Authentication failed');
+                // Manually save session before redirect to ensure flash message is persisted
+                return req.session.save(() => {
+                    res.redirect('/login');
+                });
+            }
 
-            req.logIn(user, (err) => {
+            req.logIn(user, async (err) => {
                 if (err) return next(err);
 
                 // ✅ Now this will work, because _lastLoginReportMessage exists
                 req.session.lastLoginReport = user._lastLoginReportMessage;
+
                 req.session.save(() => {
+                    console.log(`session: ${JSON.stringify(req.session)}`);
                     res.redirect('/home');
                 });
             });
         })(req, res, next);
     },
-
 
     // Handles user logout
     logout: (req, res, next) => {
@@ -100,6 +108,9 @@ const controller = {
             const isQuestionMatch = question === securityQuestion.question_text;
             // FIX: Use bcrypt.compareSync to compare the plain-text answer with the stored hash
             const isAnswerMatch = bcrypt.compareSync(answer, securityQuestion.answer_hash);
+
+            console.log(`Verification for user '${username}': Question match: ${isQuestionMatch}, Answer match: ${isAnswerMatch}`);
+            console.log(`Provided Answer (plain): ${answer}, Stored Answer Hash: ${securityQuestion.answer_hash}`);
 
 
             if (isQuestionMatch && isAnswerMatch) {
