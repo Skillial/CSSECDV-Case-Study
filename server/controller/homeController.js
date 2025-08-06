@@ -1,5 +1,8 @@
 const { OccasioDB } = require('./../config/db');
 
+// Define a constant for the maximum allowed search term length
+const MAX_SEARCH_LENGTH = 100;
+
 const controller = {
 
     page: (req, res) => {
@@ -99,6 +102,12 @@ const controller = {
                 const initialLimit = 8;
                 const { search, category } = req.query;
 
+                // Backend validation for search term length
+                if (search && search.length > MAX_SEARCH_LENGTH) {
+                    req.flash('error', `Search term cannot exceed ${MAX_SEARCH_LENGTH} characters.`);
+                    return res.redirect('/home'); // Redirect back to home with an error
+                }
+
                 let queryParams = [];
                 let whereClauses = [];
 
@@ -165,6 +174,11 @@ const controller = {
             const limit = parseInt(req.query.limit) || 8;
             const { search, category } = req.query;
             const offset = (page - 1) * limit;
+
+            // Backend validation for search term length
+            if (search && search.length > MAX_SEARCH_LENGTH) {
+                return res.status(400).json({ message: `Search term cannot exceed ${MAX_SEARCH_LENGTH} characters.` });
+            }
 
             let queryParams = [];
             let whereClauses = [];

@@ -36,16 +36,16 @@
             <form id="loginForm" action="/login" method="POST" class="flex flex-col gap-5">
                 <!-- Username Input -->
                 <div class="relative">
-                    <input value="manager1"
+                    <input id="usernameInput" value="manager1"
                         class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="text" name="username" placeholder="Username" aria-label="username" required>
+                        type="text" name="username" placeholder="Username" aria-label="username" required minlength="3" maxlength="20">
                 </div>
 
                 <!-- Password Input -->
                 <div class="relative">
                     <input id="passwordInput" value="aaaaaA@3"
                         class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="password" name="password" placeholder="Password" aria-label="Password" required>
+                        type="password" name="password" placeholder="Password" aria-label="Password" required minlength="8" maxlength="50">
                     <!-- SVG icons -->
                     <svg id="togglePassword"
                         class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
@@ -82,10 +82,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const usernameInput = document.getElementById('usernameInput'); // Get username input
             const passwordInput = document.getElementById('passwordInput');
             const togglePassword = document.getElementById('togglePassword');
             const eyeSlashPath = document.getElementById('eyeSlashPath');
-            const unifiedMessageDisplay = document.getElementById('unifiedMessageDisplay'); // Get the unified message display div
+            const unifiedMessageDisplay = document.getElementById('unifiedMessageDisplay');
+            const loginForm = document.getElementById('loginForm'); // Get the form
 
             togglePassword.addEventListener('click', function () {
                 const isPassword = passwordInput.type === 'password';
@@ -93,8 +95,7 @@
                 eyeSlashPath.classList.toggle('hidden');
             });
 
-            // Function to display messages in the unified message area
-            function showUnifiedMessage(message, type = 'error') { // type can be 'error' or 'success'
+            function showUnifiedMessage(message, type = 'error') {
                 unifiedMessageDisplay.innerHTML = `<p>${message}</p>`;
                 unifiedMessageDisplay.classList.remove('hidden', 'bg-red-100', 'border-red-400', 'text-red-700', 'bg-green-100', 'border-green-400', 'text-green-700');
                 if (type === 'error') {
@@ -104,14 +105,12 @@
                 }
             }
 
-            // Function to hide the unified message area
             function hideUnifiedMessage() {
                 unifiedMessageDisplay.classList.add('hidden');
-                unifiedMessageDisplay.innerHTML = ''; // Clear content
+                unifiedMessageDisplay.innerHTML = '';
             }
 
             // --- Initial Load: Display server-side flash messages if any ---
-            // This relies on EJS to pass error_messages and success_messages from the server.
             <% if (error_messages && error_messages.length > 0) { %>
                 showUnifiedMessage(`<%= error_messages[0].replace(/`/g, '\\`') %>`, 'error');
             <% } else if (success_messages && success_messages.length > 0) { %>
@@ -121,8 +120,32 @@
             <% } %>
 
             // Hide messages when user starts typing in username or password fields
-            document.querySelector('input[name="username"]').addEventListener('input', hideUnifiedMessage);
-            document.querySelector('input[name="password"]').addEventListener('input', hideUnifiedMessage);
+            usernameInput.addEventListener('input', hideUnifiedMessage);
+            passwordInput.addEventListener('input', hideUnifiedMessage);
+
+            // Client-side validation on form submission
+            loginForm.addEventListener('submit', function(event) {
+                let clientErrors = [];
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+
+                // Username length validation
+                if (username.length < 3 || username.length > 20) {
+                    clientErrors.push('Username must be between 3 and 20 characters long.');
+                }
+
+                // Password length validation
+                if (password.length < 8 || password.length > 50) {
+                    clientErrors.push('Password must be between 8 and 50 characters long.');
+                }
+
+                if (clientErrors.length > 0) {
+                    event.preventDefault(); // Stop form submission
+                    showUnifiedMessage(clientErrors.join('<br>'), 'error');
+                } else {
+                    hideUnifiedMessage(); // Clear any previous errors
+                }
+            });
         });
     </script>
 

@@ -285,12 +285,12 @@
             <form id="adminForm" class="space-y-4"> <!-- Removed action and method -->
                 <div>
                     <label for="admin-username" class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" id="admin-username" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username" required>
+                    <input type="text" id="admin-username" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username" required minlength="3" maxlength="20">
                 </div>
                 <div>
                     <label for="admin-password" class="block text-sm font-medium text-gray-700">Password</label>
                     <div class="relative mt-1">
-                        <input type="password" id="admin-password" name="password" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password" required>
+                        <input type="password" id="admin-password" name="password" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password" required maxlength="50">
                         <svg id="toggleAdminPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="adminEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
                     </div>
                 </div>
@@ -309,7 +309,7 @@
                 <div>
                     <label for="admin-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
                     <div class="relative mt-1">
-                        <input type="password" id="admin-confirm-password" name="confirmPassword" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Confirm password" required>
+                        <input type="password" id="admin-confirm-password" name="confirmPassword" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Confirm password" required maxlength="50">
                         <svg id="toggleAdminConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="adminConfirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
                     </div>
                 </div>
@@ -347,12 +347,12 @@
             <form id="employeeForm" class="space-y-4"> <!-- Removed action and method -->
                 <div>
                     <label for="employee-username" class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" id="employee-username" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username" required>
+                    <input type="text" id="employee-username" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Enter username" required minlength="3" maxlength="20">
                 </div>
                 <div>
                     <label for="employee-password" class="block text-sm font-medium text-gray-700">Password</label>
                     <div class="relative mt-1">
-                        <input type="password" id="employee-password" name="password" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password" required>
+                        <input type="password" id="employee-password" name="password" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Set password" required maxlength="50">
                         <svg id="toggleEmployeePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="employeeEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
                     </div>
                 </div>
@@ -371,7 +371,7 @@
                 <div>
                     <label for="employee-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
                     <div class="relative mt-1">
-                        <input type="password" id="employee-confirm-password" name="confirmPassword" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Confirm password" required>
+                        <input type="password" id="employee-confirm-password" name="confirmPassword" class="block w-full px-3 py-2 border border-gray-300 rounded-md pr-10" placeholder="Confirm password" required maxlength="50">
                         <svg id="toggleEmployeeConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle><path id="employeeConfirmEyeSlashPath" class="hidden" d="M1 1l22 22"></path></svg>
                     </div>
                 </div>
@@ -767,11 +767,16 @@
         // Function to display errors in the unified message area for modals
         function showModalErrors(displayElementId, messages) {
             const displayElement = document.getElementById(displayElementId);
+            // Clear previous messages and hide
+            displayElement.innerHTML = '';
+            displayElement.classList.add('hidden');
+            displayElement.classList.remove('bg-red-100', 'border-red-400', 'text-red-700');
+
             if (messages && messages.length > 0) {
-                displayElement.innerHTML = `<p>${messages[0]}</p>`;
+                // Display all messages if there are multiple, or just the first one
+                displayElement.innerHTML = messages.map(msg => `<p>${msg}</p>`).join('');
                 displayElement.classList.remove('hidden');
-            } else {
-                hideModalErrors(displayElementId);
+                displayElement.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
             }
         }
 
@@ -783,6 +788,7 @@
         }
 
         // Admin Form Password Logic
+        const adminUsernameInput = document.getElementById('admin-username');
         const adminPasswordInput = document.getElementById('admin-password');
         const adminConfirmPasswordInput = document.getElementById('admin-confirm-password');
         const adminForm = document.getElementById('adminForm');
@@ -795,13 +801,29 @@
         adminConfirmPasswordInput.addEventListener('input', () => {
             hideModalErrors('admin-error-message-display');
         });
+        adminUsernameInput.addEventListener('input', () => { // Added for username input
+            hideModalErrors('admin-error-message-display');
+        });
 
         adminForm.addEventListener('submit', async function(event) { // Added async
             event.preventDefault();
             let clientErrors = [];
+            const username = adminUsernameInput.value.trim();
+            const password = adminPasswordInput.value;
+
+            // Username length validation
+            if (username.length < 3 || username.length > 20) {
+                clientErrors.push('Username must be between 3 and 20 characters long.');
+            }
+
+            // Password length validation (max length)
+            if (password.length > 50) {
+                clientErrors.push('Password cannot exceed 50 characters.');
+            }
+
             const isPasswordComplex = checkPasswordComplexity('admin-password', 'adminStrengthBarFill', 'adminStrengthText', 'adminModalLengthCheck', 'adminModalUppercaseCheck', 'adminModalLowercaseCheck', 'adminModalNumberCheck', 'adminModalSpecialCharCheck');
 
-            if (adminPasswordInput.value !== adminConfirmPasswordInput.value) {
+            if (password !== adminConfirmPasswordInput.value) {
                 clientErrors.push('Passwords do not match.');
             }
             if (!isPasswordComplex) {
@@ -820,8 +842,8 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            username: document.getElementById('admin-username').value,
-                            password: adminPasswordInput.value,
+                            username: username, // Use validated username
+                            password: password, // Use validated password
                             confirmPassword: adminConfirmPasswordInput.value
                         })
                     });
@@ -857,6 +879,7 @@
 
 
         // Employee Form Password Logic (similar to Admin)
+        const employeeUsernameInput = document.getElementById('employee-username');
         const employeePasswordInput = document.getElementById('employee-password');
         const employeeConfirmPasswordInput = document.getElementById('employee-confirm-password');
         const employeeForm = document.getElementById('employeeForm');
@@ -869,13 +892,29 @@
         employeeConfirmPasswordInput.addEventListener('input', () => {
             hideModalErrors('employee-error-message-display');
         });
+        employeeUsernameInput.addEventListener('input', () => { // Added for username input
+            hideModalErrors('employee-error-message-display');
+        });
 
         employeeForm.addEventListener('submit', async function(event) { // Added async
             event.preventDefault();
             let clientErrors = [];
+            const username = employeeUsernameInput.value.trim();
+            const password = employeePasswordInput.value;
+
+            // Username length validation
+            if (username.length < 3 || username.length > 20) {
+                clientErrors.push('Username must be between 3 and 20 characters long.');
+            }
+
+            // Password length validation (max length)
+            if (password.length > 50) {
+                clientErrors.push('Password cannot exceed 50 characters.');
+            }
+
             const isPasswordComplex = checkPasswordComplexity('employee-password', 'employeeStrengthBarFill', 'employeeStrengthText', 'employeeModalLengthCheck', 'employeeModalUppercaseCheck', 'employeeModalLowercaseCheck', 'employeeModalNumberCheck', 'employeeModalSpecialCharCheck');
 
-            if (employeePasswordInput.value !== employeeConfirmPasswordInput.value) {
+            if (password !== employeeConfirmPasswordInput.value) {
                 clientErrors.push('Passwords do not match.');
             }
             if (!isPasswordComplex) {
@@ -894,8 +933,8 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            username: document.getElementById('employee-username').value,
-                            password: employeePasswordInput.value,
+                            username: username, // Use validated username
+                            password: password, // Use validated password
                             confirmPassword: employeeConfirmPasswordInput.value
                         })
                     });

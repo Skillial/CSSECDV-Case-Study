@@ -28,6 +28,16 @@ const controller = {
             errors.push('Please fill in all fields.');
         }
 
+        // Validate username length
+        if (username.length < 3 || username.length > 20) {
+            errors.push('Username must be between 3 and 20 characters long.');
+        }
+
+        // Validate password max length
+        if (password.length > 50) {
+            errors.push('Password cannot exceed 50 characters.');
+        }
+
         // Check if passwords match
         if (password !== confirmPassword) {
             errors.push('Passwords do not match.');
@@ -132,6 +142,16 @@ const controller = {
             errors.push('Please fill in all fields.');
         }
 
+        // Validate username length
+        if (username.length < 3 || username.length > 20) {
+            errors.push('Username must be between 3 and 20 characters long.');
+        }
+
+        // Validate password max length
+        if (password.length > 50) {
+            errors.push('Password cannot exceed 50 characters.');
+        }
+
         if (password !== confirmPassword) {
             errors.push('Passwords do not match.');
         }
@@ -215,6 +235,16 @@ const controller = {
         // --- Input Validation ---
         if (!username || !password || !confirmPassword) {
             errors.push('Please fill in all fields.');
+        }
+
+        // Validate username length
+        if (username.length < 3 || username.length > 20) {
+            errors.push('Username must be between 3 and 20 characters long.');
+        }
+
+        // Validate password max length
+        if (password.length > 50) {
+            errors.push('Password cannot exceed 50 characters.');
         }
 
         if (password !== confirmPassword) {

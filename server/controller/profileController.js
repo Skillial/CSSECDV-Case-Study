@@ -36,7 +36,7 @@ const fileFilter = (req, file, cb) => {
 // --- Multer Upload Middleware Instance ---
 // This creates a multer instance with the defined memory storage and file filter.
 // .single('profileImage') means it expects a single file upload with the field name 'profileImage'.
-// It also sets a file size limit (5MB in this case).
+// It also sets a file size limit (50MB in this case).
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
@@ -75,6 +75,21 @@ const controller = {
         const { address } = req.body;
         const userId = req.user.id;
 
+        let errors = [];
+
+        // Input validation for address
+        if (!address || address.trim() === '') {
+            errors.push('Address is required.');
+        } else if (address.length < 5 || address.length > 255) {
+            errors.push('Address must be between 5 and 255 characters long.');
+        }
+
+        if (errors.length > 0) {
+            // Use req.flash for redirect, or send JSON for client-side handling
+            // Since the frontend uses fetch and expects JSON, we'll send JSON.
+            return res.status(400).json({ message: errors.join('<br>') });
+        }
+
         try {
             // Start a database transaction for atomicity
             const updateTransaction = OccasioDB.transaction(() => {
@@ -93,13 +108,12 @@ const controller = {
             // If transaction is successful, update req.user to reflect the new address
             req.user.address = address; // Update the session user object
 
-            req.flash('success', 'Profile updated successfully!');
-            res.redirect('/profile');
+            // Send JSON response for successful update
+            res.status(200).json({ message: 'Profile updated successfully!' });
 
         } catch (error) {
             console.error("Error updating profile:", error.message);
-            req.flash('error', 'An unexpected error occurred while updating your profile.');
-            res.redirect('/profile');
+            res.status(500).json({ message: 'An unexpected error occurred while updating your profile.' });
         }
     },
 
@@ -109,12 +123,18 @@ const controller = {
 
         let errors = [];
 
-        // Input validation
-        if (!oldPassword || !newPassword) {
-            errors.push('Both current and new password are required.');
+        // Input validation for old password
+        if (!oldPassword || oldPassword.trim() === '') {
+            errors.push('Current password is required.');
+        } else if (oldPassword.length < 8 || oldPassword.length > 50) {
+            errors.push('Current password must be between 8 and 50 characters long.');
         }
-        if (newPassword && newPassword.length < 8) {
-            errors.push('New password must be at least 8 characters long.');
+
+        // Input validation for new password
+        if (!newPassword || newPassword.trim() === '') {
+            errors.push('New password is required.');
+        } else if (newPassword.length < 8 || newPassword.length > 50) { // Consistent with frontend
+            errors.push('New password must be between 8 and 50 characters long.');
         }
         if (newPassword && !/[A-Z]/.test(newPassword)) {
             errors.push('New password must contain an uppercase letter.');
@@ -163,7 +183,7 @@ const controller = {
                     }
                 }
 
-                const checkHistoryStmt = OccasioDB.prepare('SELECT password_hash FROM password_history WHERE account_id = ?');
+                const checkHistoryStmt = OccasioDB.prepare('SELECT password_hash FROM password_history WHERE account_id = ? ORDER BY created_at');
                 const history = checkHistoryStmt.all(userId);
                 const isNewPasswordInHistory = history.some(entry =>
                     bcrypt.compareSync(newPassword, entry.password_hash)
@@ -177,7 +197,7 @@ const controller = {
                 const updateInfo = updateAccountStmt.run(hashedNewPassword, currentTime, userId);
 
                 if (updateInfo.changes === 0) {
-                    throw new new Error('Failed to update password in accounts table.');
+                    throw new Error('Failed to update password in accounts table.');
                 }
 
                 const insertHistoryStmt = OccasioDB.prepare('INSERT INTO password_history (account_id, password_hash, created_at) VALUES (?, ?, ?)');
@@ -210,15 +230,23 @@ const controller = {
 
         let errors = [];
 
-        // 2. Server-side Input Validation
+        // 2. Server-side Input Validation with length checks
         if (!question || question.trim() === '') {
             errors.push('Security question cannot be empty.');
+        } else if (question.length < 1 || question.length > 255) {
+            errors.push('Security question must be between 1 and 255 characters long.');
         }
+
         if (!answer || answer.trim() === '') {
             errors.push('Answer to security question cannot be empty.');
+        } else if (answer.length < 1 || answer.length > 100) {
+            errors.push('Answer must be between 1 and 100 characters long.');
         }
+
         if (!currentPassword || currentPassword.trim() === '') {
             errors.push('Current password is required to confirm changes.');
+        } else if (currentPassword.length < 8 || currentPassword.length > 50) {
+            errors.push('Current password must be between 8 and 50 characters long.');
         }
 
         if (errors.length > 0) {

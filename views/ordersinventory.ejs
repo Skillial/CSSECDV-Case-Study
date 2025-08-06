@@ -227,7 +227,7 @@
                                     <div>
                                         <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Product
                                             Name</label>
-                                        <input type="text" id="productName"
+                                        <input type="text" id="productName" maxlength="100"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
@@ -235,7 +235,7 @@
                                         <label for="productFullName"
                                             class="block text-sm font-medium text-gray-700 mb-1">Product
                                             Full Name</label>
-                                        <input type="text" id="productFullName"
+                                        <input type="text" id="productFullName" maxlength="255"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
@@ -251,34 +251,34 @@
                                     <div>
                                         <label for="productBrand"
                                             class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                                        <input type="text" id="productBrand"
+                                        <input type="text" id="productBrand" maxlength="100"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
                                     <div>
                                         <label for="productSKU" class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                                        <input type="text" id="productSKU"
+                                        <input type="text" id="productSKU" maxlength="50"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
                                     <div>
                                         <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-1">Price
                                             (₱)</label>
-                                        <input type="number" id="productPrice"
+                                        <input type="number" id="productPrice" min="0.01" max="999999.99"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             step="0.01" required>
                                     </div>
                                     <div>
                                         <label for="productStock" class="block text-sm font-medium text-gray-700 mb-1">Stock
                                             Quantity</label>
-                                        <input type="number" id="productStock"
+                                        <input type="number" id="productStock" min="0" max="99999"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
                                     <div>
                                         <label for="productDescription"
                                             class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                        <textarea id="productDescription"
+                                        <textarea id="productDescription" maxlength="1000"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-y"
                                             rows="4"></textarea>
                                     </div>
@@ -301,7 +301,7 @@
                                         <label for="productType" class="block text-sm font-medium text-gray-700 mb-1">Type
                                             (e.g.,
                                             Color)</label>
-                                        <input type="text" id="productType"
+                                        <input type="text" id="productType" maxlength="50"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black">
                                     </div>
                                     <div>
@@ -309,7 +309,7 @@
                                             class="block text-sm font-medium text-gray-700 mb-1">Type
                                             Options</label>
                                         <div id="productTypeOptionsContainer" class="tag-input-container">
-                                            <input type="text" class="tag-input" placeholder="Add option and press Enter...">
+                                            <input type="text" class="tag-input" placeholder="Add option and press Enter..." maxlength="50">
                                         </div>
                                         <input type="hidden" id="productTypeOptions" name="productTypeOptions">
                                     </div>
@@ -317,7 +317,7 @@
                                         <label for="productFeatures"
                                             class="block text-sm font-medium text-gray-700 mb-1">Features</label>
                                         <div id="productFeaturesContainer" class="tag-input-container">
-                                            <input type="text" class="tag-input" placeholder="Add feature and press Enter...">
+                                            <input type="text" class="tag-input" placeholder="Add feature and press Enter..." maxlength="100">
                                         </div>
                                         <input type="hidden" id="productFeatures" name="productFeatures">
                                     </div>
@@ -355,14 +355,14 @@
                                         <label for="editProductName"
                                             class="block text-sm font-medium text-gray-700 mb-1">Product
                                             Name</label>
-                                        <input type="text" id="editProductName"
+                                        <input type="text" id="editProductName" maxlength="100"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
                                     <div>
                                         <label for="editProductFullName"
                                             class="block text-sm font-medium text-gray-700 mb-1">Product Full Name</label>
-                                        <input type="text" id="editProductFullName"
+                                        <input type="text" id="editProductFullName" maxlength="255"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
@@ -378,35 +378,35 @@
                                     <div>
                                         <label for="editProductBrand"
                                             class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                                        <input type="text" id="editProductBrand"
+                                        <input type="text" id="editProductBrand" maxlength="100"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
                                     <div>
                                         <label for="editProductSKU"
                                             class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                                        <input type="text" id="editProductSKU"
+                                        <input type="text" id="editProductSKU" maxlength="50"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
                                     <div>
                                         <label for="editProductPrice" class="block text-sm font-medium text-gray-700 mb-1">Price
                                             (₱)</label>
-                                        <input type="number" id="editProductPrice"
+                                        <input type="number" id="editProductPrice" min="0.01" max="999999.99"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             step="0.01" required>
                                     </div>
                                     <div>
                                         <label for="editProductStock" class="block text-sm font-medium text-gray-700 mb-1">Stock
                                             Quantity</label>
-                                        <input type="number" id="editProductStock"
+                                        <input type="number" id="editProductStock" min="0" max="99999"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                             required>
                                     </div>
                                     <div>
                                         <label for="editProductDescription"
                                             class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                        <textarea id="editProductDescription"
+                                        <textarea id="editProductDescription" maxlength="1000"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black resize-y"
                                             rows="3"></textarea>
                                     </div>
@@ -427,14 +427,14 @@
                                     <div>
                                         <label for="editProductType" class="block text-sm font-medium text-gray-700 mb-1">Type
                                             (e.g., Color)</label>
-                                        <input type="text" id="editProductType"
+                                        <input type="text" id="editProductType" maxlength="50"
                                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black">
                                     </div>
                                     <div>
                                         <label for="editProductTypeOptions"
                                             class="block text-sm font-medium text-gray-700 mb-1">Type Options</label>
                                         <div id="editProductTypeOptionsContainer" class="tag-input-container">
-                                            <input type="text" class="tag-input" placeholder="Add option and press Enter...">
+                                            <input type="text" class="tag-input" placeholder="Add option and press Enter..." maxlength="50">
                                         </div>
                                         <input type="hidden" id="editProductTypeOptions" name="editProductTypeOptions">
                                     </div>
@@ -442,7 +442,7 @@
                                         <label for="editProductFeatures"
                                             class="block text-sm font-medium text-gray-700 mb-1">Features</label>
                                         <div id="editProductFeaturesContainer" class="tag-input-container">
-                                            <input type="text" class="tag-input" placeholder="Add feature and press Enter...">
+                                            <input type="text" class="tag-input" placeholder="Add feature and press Enter..." maxlength="100">
                                         </div>
                                         <input type="hidden" id="editProductFeatures" name="editProductFeatures">
                                     </div>
@@ -482,6 +482,14 @@
                 <script>
                     // --- CONFIG & GLOBAL STATE ---
                     const MAX_IMAGES = 5;
+                    const MAX_TAGS_PER_TYPE = 10;
+                    const MAX_TAG_LENGTH_TYPE_OPTION = 50;
+                    const MAX_TAG_LENGTH_FEATURE = 100;
+                    const MIN_PRICE = 0.01;
+                    const MAX_PRICE = 999999.99;
+                    const MIN_STOCK = 0;
+                    const MAX_STOCK = 99999;
+
 
                     // Global state to hold data from the backend
                     let products = [];
@@ -557,22 +565,138 @@
                         });
                     }
 
+                    /**
+                     * Validates product data based on predefined rules.
+                     * @param {Object} data - The product data object.
+                     * @param {string} mode - 'add' or 'edit' to adjust validation rules (e.g., image requirement).
+                     * @param {number} currentImageCount - The number of images currently associated with the product.
+                     * @returns {string[]} An array of error messages.
+                     */
+                    function validateProductData(data, mode, currentImageCount = 0) {
+                        const errors = [];
+
+                        // Product Name
+                        if (!data.product_name || data.product_name.trim() === '') {
+                            errors.push('Product Name is required.');
+                        } else if (data.product_name.length < 3 || data.product_name.length > 100) {
+                            errors.push('Product Name must be between 3 and 100 characters.');
+                        }
+
+                        // Product Full Name
+                        if (!data.product_full_name || data.product_full_name.trim() === '') {
+                            errors.push('Product Full Name is required.');
+                        } else if (data.product_full_name.length < 5 || data.product_full_name.length > 255) {
+                            errors.push('Product Full Name must be between 5 and 255 characters.');
+                        }
+
+                        // Category
+                        if (!data.category || data.category.trim() === '' || data.category === 'Select Category') {
+                            errors.push('Category is required.');
+                        }
+
+                        // Brand
+                        if (!data.brand || data.brand.trim() === '') {
+                            errors.push('Brand is required.');
+                        } else if (data.brand.length < 2 || data.brand.length > 100) {
+                            errors.push('Brand must be between 2 and 100 characters.');
+                        }
+
+                        // SKU
+                        if (!data.sku || data.sku.trim() === '') {
+                            errors.push('SKU is required.');
+                        } else if (data.sku.length < 3 || data.sku.length > 50) {
+                            errors.push('SKU must be between 3 and 50 characters.');
+                        } else if (!/^[a-zA-Z0-9-]+$/.test(data.sku)) {
+                            errors.push('SKU can only contain alphanumeric characters and hyphens.');
+                        }
+
+                        // Price
+                        const price = parseFloat(data.price);
+                        if (isNaN(price)) {
+                            errors.push('Price must be a number.');
+                        } else if (price < MIN_PRICE || price > MAX_PRICE) {
+                            errors.push(`Price must be between ₱${MIN_PRICE.toFixed(2)} and ₱${MAX_PRICE.toFixed(2)}.`);
+                        }
+
+                        // Stock Quantity
+                        const stock = parseInt(data.stock, 10);
+                        if (isNaN(stock)) {
+                            errors.push('Stock Quantity must be an integer.');
+                        } else if (stock < MIN_STOCK || stock > MAX_STOCK) {
+                            errors.push(`Stock Quantity must be between ${MIN_STOCK} and ${MAX_STOCK}.`);
+                        }
+
+                        // Description (optional, max length)
+                        if (data.description && data.description.length > 1000) {
+                            errors.push('Description cannot exceed 1000 characters.');
+                        }
+
+                        // Type (optional, max length)
+                        if (data.type && data.type.length > 50) {
+                            errors.push('Type cannot exceed 50 characters.');
+                        }
+
+                        // Type Options (CSV string)
+                        if (data.type_options) {
+                            const options = data.type_options.split(',').map(s => s.trim()).filter(Boolean);
+                            if (options.length > MAX_TAGS_PER_TYPE) {
+                                errors.push(`You can add a maximum of ${MAX_TAGS_PER_TYPE} type options.`);
+                            }
+                            for (const option of options) {
+                                if (option.length > MAX_TAG_LENGTH_TYPE_OPTION) {
+                                    errors.push(`Each type option cannot exceed ${MAX_TAG_LENGTH_TYPE_OPTION} characters.`);
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Features (CSV string)
+                        if (data.features) {
+                            const features = data.features.split(',').map(s => s.trim()).filter(Boolean);
+                            if (features.length > MAX_TAGS_PER_TYPE) { // Reusing MAX_TAGS_PER_TYPE for features too
+                                errors.push(`You can add a maximum of ${MAX_TAGS_PER_TYPE} features.`);
+                            }
+                            for (const feature of features) {
+                                if (feature.length > MAX_TAG_LENGTH_FEATURE) {
+                                    errors.push(`Each feature cannot exceed ${MAX_TAG_LENGTH_FEATURE} characters.`);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (currentImageCount > MAX_IMAGES) {
+                             errors.push(`You can upload a maximum of ${MAX_IMAGES} images.`);
+                        }
+
+                        return errors;
+                    }
+
+
                     // --- DATA FETCHING & RENDERING ---
 
                     /**
                      * Populates a select dropdown with category options.
                      * @param {HTMLElement} selectElement - The select DOM element.
                      * @param {string[]} categories - An array of category names.
-                     * @param {string|null} selectedValue - The value to pre-select.
+                     * @param {string|null} selectedValue - The value to pre-select. If null, defaults to the first category.
                      */
                     function populateCategoryDropdown(selectElement, categories, selectedValue = null) {
                         selectElement.innerHTML = ''; // Clear existing options
-                        const defaultOption = document.createElement('option');
-                        defaultOption.value = '';
-                        defaultOption.textContent = 'Select Category';
-                        defaultOption.disabled = true;
-                        defaultOption.selected = true;
-                        selectElement.appendChild(defaultOption);
+
+                        if (categories.length === 0) {
+                            const noCategoryOption = document.createElement('option');
+                            noCategoryOption.value = '';
+                            noCategoryOption.textContent = 'No Categories Available';
+                            noCategoryOption.disabled = true;
+                            noCategoryOption.selected = true;
+                            selectElement.appendChild(noCategoryOption);
+                            return;
+                        }
+
+                        // If no specific value is selected, default to the first category
+                        if (selectedValue === null || selectedValue === '') {
+                            selectedValue = categories[0];
+                        }
 
                         categories.forEach(category => {
                             const option = document.createElement('option');
@@ -706,29 +830,63 @@
                             });
                             hiddenInput.value = tags.join(',');
                         };
-                        const addTag = (label) => { if ((label = label.trim()) && !tags.includes(label)) { tags.push(label); renderTags(); } textInput.value = ''; };
+                        const addTag = (label, maxTagLength) => {
+                            if ((label = label.trim()) && !tags.includes(label)) {
+                                if (label.length > maxTagLength) {
+                                    showToast(`Tag "${label}" exceeds maximum length of ${maxTagLength} characters.`, true);
+                                    return;
+                                }
+                                if (tags.length >= MAX_TAGS_PER_TYPE) {
+                                    showToast(`You can add a maximum of ${MAX_TAGS_PER_TYPE} tags.`, true);
+                                    return;
+                                }
+                                tags.push(label);
+                                renderTags();
+                            }
+                            textInput.value = '';
+                        };
                         const removeTag = (index) => { tags.splice(index, 1); renderTags(); };
                         const populate = (csv) => { tags = csv ? csv.split(',').map(s => s.trim()).filter(Boolean) : []; renderTags(); };
                         container.addEventListener('click', e => e.target.classList.contains('tag-remove-btn') && removeTag(e.target.dataset.index));
-                        textInput.addEventListener('keydown', e => (e.key === 'Enter' || e.key === ',') && (e.preventDefault(), addTag(textInput.value)));
-                        tagInstances[containerId] = { populate };
+                        textInput.addEventListener('keydown', e => {
+                            if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                const maxLen = containerId.includes('TypeOptions') ? MAX_TAG_LENGTH_TYPE_OPTION : MAX_TAG_LENGTH_FEATURE;
+                                addTag(textInput.value, maxLen);
+                            }
+                        });
+                        tagInstances[containerId] = { populate, getTags: () => tags }; // Added getTags for validation
                     }
 
                     // --- API HANDLERS ---
                     addProductForm.addEventListener('submit', async (e) => {
                         e.preventDefault();
+
+                        const productData = {
+                            product_name: document.getElementById('productName').value,
+                            product_full_name: document.getElementById('productFullName').value,
+                            description: document.getElementById('productDescription').value,
+                            category: productCategorySelect.value,
+                            brand: document.getElementById('productBrand').value,
+                            sku: document.getElementById('productSKU').value,
+                            price: document.getElementById('productPrice').value,
+                            stock: document.getElementById('productStock').value,
+                            type: document.getElementById('productType').value,
+                            type_options: tagInstances['productTypeOptionsContainer'].getTags().join(','),
+                            features: tagInstances['productFeaturesContainer'].getTags().join(','),
+                        };
+
+                        const errors = validateProductData(productData, 'add', newProductImages.length);
+
+                        if (errors.length > 0) {
+                            showToast(errors.join('<br>'), true);
+                            return;
+                        }
+
                         const formData = new FormData();
-                        formData.append('product_name', document.getElementById('productName').value);
-                        formData.append('product_full_name', document.getElementById('productFullName').value);
-                        formData.append('description', document.getElementById('productDescription').value);
-                        formData.append('category', productCategorySelect.value); // Get value from select
-                        formData.append('brand', document.getElementById('productBrand').value);
-                        formData.append('sku', document.getElementById('productSKU').value);
-                        formData.append('price', document.getElementById('productPrice').value);
-                        formData.append('stock', document.getElementById('productStock').value);
-                        formData.append('type', document.getElementById('productType').value);
-                        formData.append('type_options', document.getElementById('productTypeOptions').value);
-                        formData.append('features', document.getElementById('productFeatures').value);
+                        for (const key in productData) {
+                            formData.append(key, productData[key]);
+                        }
 
                         newProductImages.forEach(file => {
                             formData.append('productImages', file);
@@ -793,19 +951,39 @@
                         e.preventDefault();
                         const form = e.target;
                         const productId = form.querySelector('#editProductId').value;
-                        const formData = new FormData();
-                        formData.append('product_name', document.getElementById('editProductName').value);
-                        formData.append('product_full_name', document.getElementById('editProductFullName').value);
-                        formData.append('description', document.getElementById('editProductDescription').value);
-                        formData.append('category', editProductCategorySelect.value); // Get value from select
-                        formData.append('brand', document.getElementById('editProductBrand').value);
-                        formData.append('sku', document.getElementById('editProductSKU').value);
-                        formData.append('price', document.getElementById('editProductPrice').value);
-                        formData.append('stock', document.getElementById('editProductStock').value);
-                        formData.append('type', document.getElementById('editProductType').value);
-                        formData.append('type_options', document.getElementById('editProductTypeOptions').value);
-                        formData.append('features', document.getElementById('editProductFeatures').value);
 
+                        const existingImageCount = document.getElementById('edit-image-previews').querySelectorAll('.image-preview-item[data-image-id]').length;
+                        const totalImageCount = existingImageCount + editNewProductImages.length;
+
+                        const productData = {
+                            product_name: document.getElementById('editProductName').value,
+                            product_full_name: document.getElementById('editProductFullName').value,
+                            description: document.getElementById('editProductDescription').value,
+                            category: editProductCategorySelect.value,
+                            brand: document.getElementById('editProductBrand').value,
+                            sku: document.getElementById('editProductSKU').value,
+                            price: document.getElementById('editProductPrice').value,
+                            stock: document.getElementById('editProductStock').value,
+                            type: document.getElementById('editProductType').value,
+                            type_options: tagInstances['editProductTypeOptionsContainer'].getTags().join(','),
+                            features: tagInstances['editProductFeaturesContainer'].getTags().join(','),
+                        };
+
+                        // For edit, we don't strictly require new images if existing ones are present.
+                        // The `currentImageCount` here should reflect the total number of images *after* potential deletions and additions.
+                        const errors = validateProductData(productData, 'edit', totalImageCount);
+
+                        if (errors.length > 0) {
+                            showToast(errors.join('<br>'), true);
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        for (const key in productData) {
+                            formData.append(key, productData[key]);
+                        }
+
+                        // Append IDs of existing images that are still present
                         const previewsContainer = document.getElementById('edit-image-previews');
                         const existingImageIds = Array.from(previewsContainer.querySelectorAll('.image-preview-item[data-image-id]'))
                             .map(item => item.dataset.imageId);
@@ -942,7 +1120,7 @@
                             tagInstances['productTypeOptionsContainer'].populate('');
                             tagInstances['productFeaturesContainer'].populate('');
                             newProductImages = [];
-                            // Populate category dropdown for Add modal
+                            // Populate category dropdown for Add modal, defaulting to the first category
                             populateCategoryDropdown(productCategorySelect, managerAssignedCategories);
                             showModal(addProductModal);
                         });

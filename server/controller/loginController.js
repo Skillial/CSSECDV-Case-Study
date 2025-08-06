@@ -20,6 +20,28 @@ const controller = {
 
     // Handles user login attempt
     login: (req, res, next) => {
+        const { username, password } = req.body;
+        let errors = [];
+
+        // --- Server-side Input Validation for Login ---
+        // Validate username length
+        if (username.length < 3 || username.length > 20) {
+            errors.push('Username must be between 3 and 20 characters long.');
+        }
+
+        // Validate password length
+        if (password.length < 8 || password.length > 50) {
+            errors.push('Password must be between 8 and 50 characters long.');
+        }
+
+        if (errors.length > 0) {
+            req.flash('error', errors[0]); // Flash only the first error message
+            return req.session.save(() => { // Save session before redirect to ensure flash message is persisted
+                res.redirect('/login');
+            });
+        }
+        // --- End Server-side Input Validation for Login ---
+
         passport.authenticate('local', (err, user, info) => {
             if (err) return next(err);
             if (!user) {
@@ -67,15 +89,23 @@ const controller = {
         const { username, question, answer } = req.body;
         let errors = [];
 
-        // Input validation
+        // Input validation with length checks
         if (!username || username.trim() === '') {
             errors.push('Username is required.');
+        } else if (username.length < 3 || username.length > 20) {
+            errors.push('Username must be between 3 and 20 characters long.');
         }
+
         if (!question || question.trim() === '') {
             errors.push('Security question is required.');
+        } else if (question.length < 1 || question.length > 255) { // Assuming question text can be longer
+            errors.push('Security question must be between 1 and 255 characters long.');
         }
+
         if (!answer || answer.trim() === '') {
             errors.push('Answer is required.');
+        } else if (answer.length < 1 || answer.length > 100) {
+            errors.push('Answer must be between 1 and 100 characters long.');
         }
 
         if (errors.length > 0) {
@@ -141,15 +171,18 @@ const controller = {
         const { username, newPassword } = req.body; // In a real app, this would also include a verification token
         let errors = [];
 
-        // Input validation for new password
+        // Input validation for username
         if (!username || username.trim() === '') {
             errors.push('Username is required.');
+        } else if (username.length < 3 || username.length > 20) {
+            errors.push('Username must be between 3 and 20 characters long.');
         }
+
+        // Input validation for new password
         if (!newPassword || newPassword.trim() === '') {
             errors.push('New password is required.');
-        }
-        if (newPassword && newPassword.length < 8) {
-            errors.push('New password must be at least 8 characters long.');
+        } else if (newPassword.length < 8 || newPassword.length > 50) { // Consistent with frontend
+            errors.push('New password must be between 8 and 50 characters long.');
         }
         if (newPassword && !/[A-Z]/.test(newPassword)) {
             errors.push('New password must contain an uppercase letter.');

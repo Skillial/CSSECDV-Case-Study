@@ -163,6 +163,9 @@
         let isLoading = false;
         let hasMoreProducts = true; // Will be determined by fetchProducts
 
+        // Define search limits
+        const MAX_SEARCH_LENGTH = 100; // Maximum allowed characters for search input
+
         // DOM Elements
         const productsContainer = document.getElementById('productsContainer');
         const categoryFiltersContainer = document.getElementById('categoryFiltersContainer');
@@ -281,7 +284,12 @@
         });
 
         searchButton.addEventListener('click', () => {
-            currentSearchTerm = searchInput.value.trim();
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm.length > MAX_SEARCH_LENGTH) {
+                showToast(`Search term cannot exceed ${MAX_SEARCH_LENGTH} characters.`, true);
+                return; // Prevent search if validation fails
+            }
+            currentSearchTerm = searchTerm;
             currentPage = 1;
             hasMoreProducts = true;
             productsContainer.innerHTML = '';

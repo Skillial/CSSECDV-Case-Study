@@ -208,7 +208,7 @@
                         </div>
                         <div>
                             <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                            <textarea id="address" name="address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm"><%= user.address %></textarea>
+                            <textarea id="address" name="address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="5" maxlength="255"><%= user.address %></textarea>
                         </div>
                         <div id="editProfileActions" class="flex justify-end gap-3 pt-4 hidden">
                             <button type="button" id="cancelEditProfileBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
@@ -266,26 +266,26 @@
                 <div>
                     <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Security Question</label>
                     <select id="question" name="question" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
-                        <option value="">Select a question</option>
-                        <option value="fictional_character">What was the name of your favorite fictional character?</option>
-                        <option value="first_album">What was the first album you ever fully listened to?</option>
-                        <option value="favorite_teacher">What was the name of your favorite teacher in high school?</option>
-                        <option value="first_movie">What was the first movie you remember seeing in a theater?</option>
-                        <option value="first_concert">What was the first concert you ever attended?</option>
-                        <option value="historical_figure">What is the name of a historical figure you admire?</option>
-                        <option value="first_job">What was the first job you had that wasn't for a company?</option>
+                        <option value="" disabled selected>Select a question</option>
+                        <option value="What was the name of your favorite fictional character?">What was the name of your favorite fictional character?</option>
+                        <option value="What was the first album you ever fully listened?">What was the first album you ever fully listened?</option>
+                        <option value="What was the name of your favorite teacher in high school?">What was the name of your favorite teacher in high school?</option>
+                        <option value="What was the first movie you remember seeing in a theater?">What was the first movie you remember seeing in a theater?</option>
+                        <option value="What was the first concert you ever attended?">What was the first concert you ever attended?</option>
+                        <option value="What is the name of a historical figure you admire?">What is the name of a historical figure you admire?</option>
+                        <option value="What was the first job you had that wasn't for a company?">What was the first job you had that wasn't for a company?</option>
                     </select>
                 </div>
                 <div>
                     <label for="answer" class="block text-sm font-medium text-gray-700 mb-1">Answer</label>
-                    <input type="text" id="answer" name="answer" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                    <input type="text" id="answer" name="answer" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="1" maxlength="100">
                 </div>
 
                 <!-- Password Confirmation -->
                 <div>
                     <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm with Password</label>
                     <div class="relative">
-                        <input type="password" id="currentPassword" name="currentPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <input type="password" id="currentPassword" name="currentPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="8" maxlength="50">
                         <!-- Eye icon for confirm password visibility toggle -->
                         <svg id="toggleCurrentPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -321,7 +321,7 @@
                 <div>
                     <label for="oldPassword" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
                     <div class="relative">
-                        <input type="password" id="oldPassword" name="oldPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <input type="password" id="oldPassword" name="oldPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="8" maxlength="50">
                         <!-- Eye icon for old password visibility toggle -->
                         <svg id="toggleOldPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -334,7 +334,7 @@
                 <div>
                     <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                     <div class="relative">
-                        <input type="password" id="newPassword" name="newPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <input type="password" id="newPassword" name="newPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="8" maxlength="50">
                         <!-- Eye icon for new password visibility toggle -->
                         <svg id="toggleNewPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -359,7 +359,7 @@
                 <div>
                     <label for="confirmNewPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
                     <div class="relative">
-                        <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                        <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="8" maxlength="50">
                         <!-- Eye icon for confirm new password visibility toggle -->
                         <svg id="toggleConfirmNewPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -607,11 +607,11 @@
                 if (!questionText || questionSelect.value === "") { // Check if a question is selected
                     clientErrors.push('Please select a security question.');
                 }
-                if (!answer) {
-                    clientErrors.push('Please provide an answer to your security question.');
+                if (!answer || answer.length < 1 || answer.length > 100) { // Added length check
+                    clientErrors.push('Security answer must be between 1 and 100 characters long.');
                 }
-                if (!currentPassword) {
-                    clientErrors.push('Please confirm with your current password.');
+                if (!currentPassword || currentPassword.length < 8 || currentPassword.length > 50) { // Added length check
+                    clientErrors.push('Current password must be between 8 and 50 characters long.');
                 }
 
                 if (clientErrors.length > 0) {
@@ -828,6 +828,11 @@
 
                 let clientErrors = []; // Array to collect client-side validation errors
 
+                // Validate old password is not empty and meets length requirements
+                if (!oldPasswordInput.value.trim() || oldPasswordInput.value.length < 8 || oldPasswordInput.value.length > 50) {
+                    clientErrors.push('Current password must be between 8 and 50 characters long.');
+                }
+
                 const isNewPasswordComplex = checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
 
                 // Client-side password match check
@@ -837,6 +842,10 @@
                 // Client-side password complexity check
                 if (!isNewPasswordComplex) {
                     clientErrors.push('New password does not meet complexity requirements.');
+                }
+                // Client-side new password length check
+                if (newPasswordInput.value.length < 8 || newPasswordInput.value.length > 50) {
+                    clientErrors.push('New password must be between 8 and 50 characters long.');
                 }
 
                 // If there are client-side errors, display them and prevent form submission
@@ -862,7 +871,7 @@
 
                     const result = await response.json(); // Assuming backend always returns JSON
 
-                    if (response.ok) { 
+                    if (response.ok) {
                         hideMessage(changePasswordErrorMessageDisplay); // Ensure modal error is hidden
                         changePasswordModal.classList.add('hidden'); // Hide the modal
                         displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Password changed successfully!'], 'success'); // Show success on main page
@@ -968,6 +977,54 @@
                 addressInput.value = originalAddress;
                 editProfileActions.classList.add('hidden'); // Hide buttons after canceling
                 hideMessage(editProfileErrorMessageDisplay); // Hide errors on cancel
+            });
+
+            // Event listener for Edit Profile form submission
+            editProfileForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default HTML submission
+
+                let clientErrors = [];
+                const address = addressInput.value.trim();
+
+                if (!address || address.length < 5 || address.length > 255) {
+                    clientErrors.push('Address must be between 5 and 255 characters long.');
+                }
+
+                if (clientErrors.length > 0) {
+                    displayMessage(editProfileErrorMessageDisplay, clientErrors, 'error');
+                    return;
+                } else {
+                    hideMessage(editProfileErrorMessageDisplay);
+                }
+
+                try {
+                    const response = await fetch('/profile/edit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            address: address
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        originalAddress = address; // Update original address on successful save
+                        editProfileActions.classList.add('hidden');
+                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Profile updated successfully!'], 'success');
+                        hideMessage(editProfileErrorMessageDisplay);
+                    } else {
+                        console.error('Profile update failed:', result.message);
+                        displayMessage(editProfileErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
+                        hideMessage(mainPageSuccessMessageDisplay);
+                    }
+                } catch (error) {
+                    console.error('Network or unexpected error during profile update:', error);
+                    displayMessage(editProfileErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+                    hideMessage(mainPageSuccessMessageDisplay);
+                }
             });
 
 
