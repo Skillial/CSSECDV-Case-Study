@@ -1,4 +1,5 @@
 const { OccasioDB } = require('./../config/db');
+const { auditLogger } = require('./../middleware/auditLogger')
 
 // Define a constant for the maximum allowed search term length
 const MAX_SEARCH_LENGTH = 100;
@@ -28,20 +29,20 @@ const controller = {
 
                 // Fetch employee data (users with 'manager' role) and their assigned categories
                 const employeeCategoriesStmt = OccasioDB.prepare(`
-                        SELECT
-                            a.id,
-                            a.username,
-                            a.address,
-                            GROUP_CONCAT(ec.category_name) AS assigned_categories_json
-                        FROM
-                            accounts a
-                        LEFT JOIN
-                            employee_categories ec ON a.id = ec.employee_id
-                        WHERE
-                            a.role = 'manager'
-                        GROUP BY
-                            a.id, a.username, a.address
-                    `);
+                    SELECT
+                        a.id,
+                        a.username,
+                        a.address,
+                        GROUP_CONCAT(ec.category_name) AS assigned_categories_json
+                    FROM
+                        accounts a
+                    LEFT JOIN
+                        employee_categories ec ON a.id = ec.employee_id
+                    WHERE
+                        a.role = 'manager'
+                    GROUP BY
+                        a.id, a.username, a.address
+                `);
                 let employees = employeeCategoriesStmt.all();
 
                 // Process employees to convert assigned_categories_json string into an array
@@ -65,20 +66,20 @@ const controller = {
             try {
                 // Fetch employee data (users with 'manager' role) and their assigned categories
                 const employeeCategoriesStmt = OccasioDB.prepare(`
-                        SELECT
-                            a.id,
-                            a.username,
-                            a.address,
-                            GROUP_CONCAT(ec.category_name) AS assigned_categories_json
-                        FROM
-                            accounts a
-                        LEFT JOIN
-                            employee_categories ec ON a.id = ec.employee_id
-                        WHERE
-                            a.role = 'manager' AND a.id = ?
-                        GROUP BY
-                            a.id, a.username, a.address
-                    `);
+                    SELECT
+                        a.id,
+                        a.username,
+                        a.address,
+                        GROUP_CONCAT(ec.category_name) AS assigned_categories_json
+                    FROM
+                        accounts a
+                    LEFT JOIN
+                        employee_categories ec ON a.id = ec.employee_id
+                    WHERE
+                        a.role = 'manager' AND a.id = ?
+                    GROUP BY
+                        a.id, a.username, a.address
+                `);
                 let currentManagerAssignments = employeeCategoriesStmt.all(req.user.id);
 
                 // Process assignments to convert assigned_categories_json string into an array
@@ -104,6 +105,15 @@ const controller = {
 
                 // Backend validation for search term length
                 if (search && search.length > MAX_SEARCH_LENGTH) {
+                    // 🪵 Audit Log: Input Validation Failure
+                    auditLogger({
+                        eventType: 'Input Validation',
+                        userId: req.user.id,
+                        username: req.user.username,
+                        ip_address: req.ip,
+                        status: 'Failure',
+                        description: `Search term exceeded maximum length. Term: "${search}"`
+                    });
                     req.flash('error', `Search term cannot exceed ${MAX_SEARCH_LENGTH} characters.`);
                     return res.redirect('/home'); // Redirect back to home with an error
                 }
@@ -112,16 +122,16 @@ const controller = {
                 let whereClauses = [];
 
                 let sql = `
-                        SELECT
-                            p.id,
-                            p.product_name as name,
-                            p.price,
-                            p.category,
-                            p.stock,
-                            (SELECT pi.image_data FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC, pi.id ASC LIMIT 1) as image_data,
-                            (SELECT pi.image_mime_type FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC, pi.id ASC LIMIT 1) as image_mime_type
-                        FROM products p
-                    `;
+                    SELECT
+                        p.id,
+                        p.product_name as name,
+                        p.price,
+                        p.category,
+                        p.stock,
+                        (SELECT pi.image_data FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC, pi.id ASC LIMIT 1) as image_data,
+                        (SELECT pi.image_mime_type FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC, pi.id ASC LIMIT 1) as image_mime_type
+                    FROM products p
+                `;
 
                 if (search) {
                     whereClauses.push("p.product_name LIKE ?");
@@ -177,6 +187,15 @@ const controller = {
 
             // Backend validation for search term length
             if (search && search.length > MAX_SEARCH_LENGTH) {
+                // 🪵 Audit Log: Input Validation Failure
+                auditLogger({
+                    eventType: 'Input Validation',
+                    userId: req.user.id,
+                    username: req.user.username,
+                    ip_address: req.ip,
+                    status: 'Failure',
+                    description: `API search term exceeded maximum length. Term: "${search}"`
+                });
                 return res.status(400).json({ message: `Search term cannot exceed ${MAX_SEARCH_LENGTH} characters.` });
             }
 
@@ -239,10 +258,6 @@ const controller = {
     },
 
     getProductDetails: (req, res) => {
-        if (!req.isAuthenticated()) {
-            req.flash('error', 'You must be logged in to view product details.');
-            return res.redirect('/login');
-        }
         try {
             const productId = req.params.id;
 

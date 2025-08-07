@@ -87,3 +87,16 @@ CREATE TABLE orders (
     updated_at TEXT, -- ISO 8601 format, for status changes
     FOREIGN KEY (customer_id) REFERENCES accounts(id)
 );
+
+-- audit_logs table
+CREATE TABLE audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    event_type TEXT NOT NULL CHECK (event_type IN ('Authentication', 'Access Control', 'Input Validation', 'Account Management', 'Order Management')),
+    user_id INTEGER, -- Can be NULL if the event is not associated with a logged-in user (e.g., failed login attempt with an unknown username)
+    username TEXT, -- Store the username involved, especially for failed attempts where user_id might not exist
+    ip_address TEXT, -- To store the IP address of the user performing the action
+    status TEXT NOT NULL CHECK (status IN ('Success', 'Failure')),
+    description TEXT NOT NULL, -- Detailed description of the event
+    FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE SET NULL
+);

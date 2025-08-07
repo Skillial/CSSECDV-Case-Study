@@ -1,17 +1,16 @@
 const passport = require('passport');
 const { OccasioDB } = require('./../config/db');
 const bcrypt = require('bcrypt');
-const { hashString } = require('./../config/hash'); // Assuming you have a utility function for hashing passwords
+const { hashString } = require('./../config/hash');
+const { auditLogger } = require('./../middleware/auditLogger')
+
+
 const controller = {
 
     // Renders the login page
     page: (req, res) => {
-        // Retrieve flash messages from res.locals, which were set by app.js middleware
         const errorMessages = res.locals.error_messages || [];
         const successMessages = res.locals.success_messages || [];
-
-        // Pass only the first error message (if any) to the template
-        // Pass all success messages (if any) as they might come from registration success
         res.render("login", {
             error_messages: errorMessages.length > 0 ? [errorMessages[0]] : [],
             success_messages: successMessages
@@ -21,22 +20,29 @@ const controller = {
     // Handles user login attempt
     login: (req, res, next) => {
         const { username, password } = req.body;
+        const ip_address = req.ip; // Get user's IP address
         let errors = [];
 
         // --- Server-side Input Validation for Login ---
-        // Validate username length
         if (username.length < 3 || username.length > 20) {
             errors.push('Username must be between 3 and 20 characters long.');
         }
-
-        // Validate password length
         if (password.length < 8 || password.length > 50) {
             errors.push('Password must be between 8 and 50 characters long.');
         }
 
         if (errors.length > 0) {
-            req.flash('error', errors[0]); // Flash only the first error message
-            return req.session.save(() => { // Save session before redirect to ensure flash message is persisted
+            // 🪵 Audit Log: Input Validation Failure
+            auditLogger({
+                eventType: 'Input Validation',
+                userId: null,
+                username: username, // Log the username they attempted to use
+                ip_address: ip_address,
+                status: 'Failure',
+                description: `Login attempt failed due to invalid input: ${errors[0]}`
+            });
+            req.flash('error', errors[0]);
+            return req.session.save(() => {
                 res.redirect('/login');
             });
         }
@@ -45,9 +51,16 @@ const controller = {
         passport.authenticate('local', (err, user, info) => {
             if (err) return next(err);
             if (!user) {
-                // Set the flash message for authentication failure
+                // 🪵 Audit Log: Authentication Failure
+                auditLogger({
+                    eventType: 'Authentication',
+                    userId: null, // User is not authenticated, so ID is unknown
+                    username: username,
+                    ip_address: ip_address,
+                    status: 'Failure',
+                    description: `Failed login attempt for username '${username}'. Reason: ${info.message}`
+                });
                 req.flash('error', info.message || 'Authentication failed');
-                // Manually save session before redirect to ensure flash message is persisted
                 return req.session.save(() => {
                     res.redirect('/login');
                 });
@@ -56,11 +69,18 @@ const controller = {
             req.logIn(user, async (err) => {
                 if (err) return next(err);
 
-                // ✅ Now this will work, because _lastLoginReportMessage exists
-                req.session.lastLoginReport = user._lastLoginReportMessage;
+                // 🪵 Audit Log: Successful Login
+                auditLogger({
+                    eventType: 'Authentication',
+                    userId: user.id,
+                    username: user.username,
+                    ip_address: ip_address,
+                    status: 'Success',
+                    description: `User '${user.username}' successfully logged in.`
+                });
 
+                req.session.lastLoginReport = user._lastLoginReportMessage;
                 req.session.save(() => {
-                    console.log(`session: ${JSON.stringify(req.session)}`);
                     res.redirect('/home');
                 });
             });
@@ -69,24 +89,41 @@ const controller = {
 
     // Handles user logout
     logout: (req, res, next) => {
-        req.logout((err) => { // Passport.js logout method
+        const user = req.user; // Capture user details before they are cleared by logout
+        const ip_address = req.ip;
+
+        req.logout((err) => {
             if (err) {
                 return next(err);
             }
-            req.flash('success', 'You are logged out.'); // Optional: Flash a logout success message
-            res.redirect('/login'); // Redirect to login page after logout
+
+            // 🪵 Audit Log: Successful Logout
+            if (user) { // Only log if a user was actually logged in
+                auditLogger({
+                    eventType: 'Authentication',
+                    userId: user.id,
+                    username: user.username,
+                    ip_address: ip_address,
+                    status: 'Success',
+                    description: `User '${user.username}' successfully logged out.`
+                });
+            }
+
+            req.flash('success', 'You are logged out.');
+            res.redirect('/login');
         });
     },
 
     forgetPassword: (req, res) => {
-        // Render the forget password page
         res.render("forgetpassword", {
             error_messages: res.locals.error_messages || [],
             success_messages: res.locals.success_messages || []
         });
     },
+
     verifyDetails: async (req, res) => {
         const { username, question, answer } = req.body;
+        const ip_address = req.ip;
         let errors = [];
 
         // Input validation with length checks
@@ -109,66 +146,72 @@ const controller = {
         }
 
         if (errors.length > 0) {
+            // 🪵 Audit Log: Input Validation Failure for password recovery
+            auditLogger({
+                eventType: 'Input Validation',
+                userId: null, // We don't know the user ID for sure yet
+                username: username,
+                ip_address: ip_address,
+                status: 'Failure',
+                description: `Password recovery verification failed due to invalid input: ${errors[0]}`
+            });
             // For security, even for direct input validation errors, we return a generic message.
             return res.status(400).json({ message: 'Could not verify your details. Please try again.' });
         }
 
         try {
-            // 1. Find the user by username in the accounts table
-            const getUserStmt = OccasioDB.prepare('SELECT id, username, password_hash FROM accounts WHERE username = ?');
+            const getUserStmt = OccasioDB.prepare('SELECT id, username FROM accounts WHERE username = ?');
             const user = getUserStmt.get(username);
 
-            // If user not found, return generic error for security
             if (!user) {
-                console.warn(`Attempted verification for non-existent username: ${username}`);
+                // 🪵 Audit Log: Password recovery attempt for non-existent user
+                auditLogger({
+                    eventType: 'Account Management',
+                    userId: null,
+                    username: username,
+                    ip_address: ip_address,
+                    status: 'Failure',
+                    description: `Password recovery verification failed: username '${username}' does not exist.`
+                });
                 return res.status(404).json({ message: 'Could not verify your details. Please try again.' });
             }
-
-            // 2. Find the security question for this user
+            
             const getSecurityQuestionStmt = OccasioDB.prepare('SELECT question_text, answer_hash FROM security_questions WHERE account_id = ?');
             const securityQuestion = getSecurityQuestionStmt.get(user.id);
 
-            // If no security question is set for this user, return generic error
-            if (!securityQuestion) {
-                console.warn(`User '${username}' exists but has no security question set.`);
-                return res.status(404).json({ message: 'Could not verify your details. Please try again.' });
-            }
-
-            // 3. Compare the provided question text and hashed answer with the stored ones
-            const isQuestionMatch = question === securityQuestion.question_text;
-            // FIX: Use bcrypt.compareSync to compare the plain-text answer with the stored hash
-            const isAnswerMatch = bcrypt.compareSync(answer, securityQuestion.answer_hash);
-
-            console.log(`Verification for user '${username}': Question match: ${isQuestionMatch}, Answer match: ${isAnswerMatch}`);
-            console.log(`Provided Answer (plain): ${answer}, Stored Answer Hash: ${securityQuestion.answer_hash}`);
-
-
-            if (isQuestionMatch && isAnswerMatch) {
-                // All details match, verification successful
-                // In a real application, you might generate a temporary token here
-                // that allows the user to proceed to the password reset step.
-                // For this example, we'll just indicate success.
-                return res.status(200).json({ message: 'Details verified successfully. Proceed to password reset.' });
-            } else {
-                // If either question or answer (or both) don't match, return generic error
-                console.warn(`Verification failed for user '${username}'. Question match: ${isQuestionMatch}, Answer match: ${isAnswerMatch}`);
+            if (!securityQuestion || question !== securityQuestion.question_text || !bcrypt.compareSync(answer, securityQuestion.answer_hash)) {
+                 // 🪵 Audit Log: Failed password recovery verification
+                 auditLogger({
+                    eventType: 'Account Management',
+                    userId: user.id,
+                    username: user.username,
+                    ip_address: ip_address,
+                    status: 'Failure',
+                    description: `Password recovery verification failed for user '${user.username}'.`
+                });
                 return res.status(400).json({ message: 'Could not verify your details. Please try again.' });
             }
+
+            // 🪵 Audit Log: Successful password recovery verification
+            auditLogger({
+                eventType: 'Account Management',
+                userId: user.id,
+                username: user.username,
+                ip_address: ip_address,
+                status: 'Success',
+                description: `Password recovery verification successful for user '${user.username}'.`
+            });
+            return res.status(200).json({ message: 'Details verified successfully. Proceed to password reset.' });
 
         } catch (error) {
             console.error('Error during forgot password verification:', error.message);
             return res.status(500).json({ message: 'An unexpected error occurred. Please try again later.' });
         }
     },
-
-    /**
-     * Handles the actual password reset after successful verification.
-     * Expected req.body: { username: string, newPassword: string }
-     * This function should only be called after a successful call to verifyDetails
-     * and ideally with a token to prevent direct access.
-     */
+    
     resetPassword: async (req, res) => {
-        const { username, newPassword } = req.body; // In a real app, this would also include a verification token
+        const { username, newPassword } = req.body;
+        const ip_address = req.ip;
         let errors = [];
 
         // Input validation for username
@@ -198,25 +241,39 @@ const controller = {
         }
 
         if (errors.length > 0) {
+             // 🪵 Audit Log: Input Validation Failure for password reset
+             auditLogger({
+                eventType: 'Input Validation',
+                userId: null,
+                username: username,
+                ip_address: ip_address,
+                status: 'Failure',
+                description: `Password reset failed due to invalid input: ${errors.join(' ')}`
+            });
             return res.status(400).json({ message: errors.join('<br>') });
         }
 
         try {
-            // 1. Find the user by username
-            // Modified to also select last_password_change for the age check
             const getUserStmt = OccasioDB.prepare('SELECT id, password_hash, last_password_change FROM accounts WHERE username = ?');
             const user = getUserStmt.get(username);
 
             if (!user) {
+                // This case should ideally be prevented by the verification step, but we log it for completeness.
+                auditLogger({
+                    eventType: 'Account Management',
+                    userId: null,
+                    username: username,
+                    ip_address: ip_address,
+                    status: 'Failure',
+                    description: `Password reset failed: user '${username}' not found.`
+                });
                 return res.status(404).json({ message: 'User not found.' });
             }
+            
+            const hashedNewPassword = await hashString(newPassword); // Hash it once before the transaction
 
-            // 2. Hash the new password
-            const hashedNewPassword = await hashString(newPassword);
-
-            // 3. Perform password reset operations in a transaction
             OccasioDB.transaction(() => {
-                // Check if the new password is the same as the current one
+                 // Check if the new password is the same as the current one
                 if (bcrypt.compareSync(newPassword, user.password_hash)) {
                     throw new Error('NEW_PASSWORD_SAME_AS_OLD');
                 }
@@ -237,7 +294,6 @@ const controller = {
                 const history = checkHistoryStmt.all(user.id);
 
                 const isNewPasswordInHistory = history.some(entry =>
-                    // Compare the new plain password with the hashed history entries
                     bcrypt.compareSync(newPassword, entry.password_hash)
                 );
 
@@ -248,26 +304,56 @@ const controller = {
                 // Update the password in the accounts table
                 const updateAccountStmt = OccasioDB.prepare('UPDATE accounts SET password_hash = ?, last_password_change = ?, login_attempts = 0, lockout_until = NULL WHERE id = ?');
                 const currentTime = new Date().toISOString();
-                const info = updateAccountStmt.run(hashedNewPassword, currentTime, user.id);
-
-                if (info.changes === 0) {
-                    throw new Error('Failed to update password in accounts table.');
-                }
-
+                updateAccountStmt.run(hashedNewPassword, currentTime, user.id);
+                
                 // Add the new hashed password to the password history table
                 const insertHistoryStmt = OccasioDB.prepare('INSERT INTO password_history (account_id, password_hash, created_at) VALUES (?, ?, ?)');
                 insertHistoryStmt.run(user.id, hashedNewPassword, currentTime);
-            })(); // Immediately invoke the transaction function
+            })();
+
+            // 🪵 Audit Log: Successful Password Reset
+            auditLogger({
+                eventType: 'Account Management',
+                userId: user.id,
+                username: user.username,
+                ip_address: ip_address,
+                status: 'Success',
+                description: `User '${user.username}' successfully reset their password.`
+            });
 
             res.status(200).json({ message: 'Your password has been reset successfully!' });
 
         } catch (error) {
-            console.error('Error during password reset:', error.message);
+            const userForLog = { id: null, username: username };
+            try {
+                const userLookup = OccasioDB.prepare('SELECT id FROM accounts WHERE username = ?').get(username);
+                if(userLookup) userForLog.id = userLookup.id;
+            } catch (e) { /* ignore lookup error */ }
+
+            let description = `Password reset failed for user '${username}'. Reason: An unexpected error occurred.`;
+            if (error.message === 'NEW_PASSWORD_SAME_AS_OLD') {
+                description = `Password reset failed for user '${username}'. Reason: New password was the same as the old one.`;
+            } else if (error.message === 'PASSWORD_IN_HISTORY') {
+                description = `Password reset failed for user '${username}'. Reason: New password was found in recent history.`;
+            } else if (error.message === 'PASSWORD_TOO_RECENT') {
+                description = `Password reset failed for user '${username}'. Reason: Attempted to change password too soon.`;
+            }
+
+            // 🪵 Audit Log: Failed Password Reset
+            auditLogger({
+                eventType: 'Account Management',
+                userId: userForLog.id,
+                username: userForLog.username,
+                ip_address: ip_address,
+                status: 'Failure',
+                description: description
+            });
+            
             if (error.message === 'NEW_PASSWORD_SAME_AS_OLD') {
                 return res.status(400).json({ message: 'New password cannot be the same as your current password.' });
             } else if (error.message === 'PASSWORD_IN_HISTORY') {
                 return res.status(400).json({ message: 'New password cannot be one of your recently used passwords.' });
-            } else if (error.message === 'PASSWORD_TOO_RECENT') { // Added new error handling
+            } else if (error.message === 'PASSWORD_TOO_RECENT') {
                 return res.status(400).json({ message: 'You must wait at least 1 day before changing your password again.' });
             }
             return res.status(500).json({ message: 'An unexpected error occurred during password reset. Please try again.' });
