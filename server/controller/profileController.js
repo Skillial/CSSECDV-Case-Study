@@ -234,7 +234,7 @@ const controller = {
 
     getProfileImage: (req, res) => {
         try {
-            const result = getProfileImageBlobStmt.get(userId);
+            const result = getProfileImageBlobStmt.get(req.user.id);
             if (result && result.profile_image_blob) {
                 res.setHeader('Content-Type', result.profile_image_mimetype || 'application/octet-stream');
                 res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

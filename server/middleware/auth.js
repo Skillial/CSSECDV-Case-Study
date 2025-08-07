@@ -2,6 +2,15 @@ const { auditLogger } = require('./auditLogger'); // Adjust path as needed
 
 function ensureAdmin(req, res, next) {
     if (req.isAuthenticated() && req.user.role === 'admin') {
+        auditLogger
+            ({
+                eventType: 'Access Control',
+                userId: req.user.id,
+                username: req.user.username,
+                ip_address: req.ip,
+                status: 'Success',
+                description: `User ${req.user.username} accessed an admin-only route at ${req.originalUrl}.`
+            });
         return next();
     } else {
         // 🪵 Audit Log: Access Control Failure
@@ -19,6 +28,15 @@ function ensureAdmin(req, res, next) {
 
 function ensureManager(req, res, next) {
     if (req.isAuthenticated() && req.user.role === 'manager') {
+        auditLogger
+            ({
+                eventType: 'Access Control',
+                userId: req.user.id,
+                username: req.user.username,
+                ip_address: req.ip,
+                status: 'Success',
+                description: `User ${req.user.username} accessed an manager-only route at ${req.originalUrl}.`
+            });
         return next();
     } else {
         // 🪵 Audit Log: Access Control Failure
@@ -36,6 +54,15 @@ function ensureManager(req, res, next) {
 
 function ensureCustomer(req, res, next) {
     if (req.isAuthenticated() && req.user.role === 'customer') {
+        auditLogger
+            ({
+                eventType: 'Access Control',
+                userId: req.user.id,
+                username: req.user.username,
+                ip_address: req.ip,
+                status: 'Success',
+                description: `User ${req.user.username} accessed a customer-only route at ${req.originalUrl}.`
+            });
         return next();
     } else {
         // 🪵 Audit Log: Access Control Failure

@@ -98,7 +98,7 @@ const controller = {
 
             // 🪵 Audit Log: Product Added Successfully
             auditLogger({
-                eventType: 'Account Management',
+                eventType: 'Order Management',
                 userId: req.user.id,
                 username: req.user.username,
                 ip_address: req.ip,
@@ -186,7 +186,7 @@ const controller = {
             OccasioDB.transaction(() => {
                 const updateProductStmt = OccasioDB.prepare(`UPDATE products SET product_name = ?, product_full_name = ?, description = ?, category = ?, brand = ?, sku = ?, price = ?, stock = ?, type = ?, type_options = ?, features = ?, updated_at = ? WHERE id = ?`);
                 updateProductStmt.run(product_name, product_full_name, description || null, category, brand, sku, parsedPrice, parsedStock, type || null, parsedTypeOptions, parsedFeatures, currentTime, productId);
-                
+
                 // Image handling logic
                 const idsToKeep = existingImageIds ? existingImageIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id)) : [];
                 if (idsToKeep.length > 0) {
@@ -207,7 +207,7 @@ const controller = {
 
             // 🪵 Audit Log: Product Edited Successfully
             auditLogger({
-                eventType: 'Account Management',
+                eventType: 'Order Management',
                 userId: req.user.id,
                 username: req.user.username,
                 ip_address: req.ip,
@@ -263,10 +263,10 @@ const controller = {
                 });
                 return res.status(404).json({ message: 'Product not found.' });
             }
-            
+
             // 🪵 Audit Log: Product Deleted Successfully
             auditLogger({
-                eventType: 'Account Management',
+                eventType: 'Order Management',
                 userId: req.user.id,
                 username: req.user.username,
                 ip_address: req.ip,
@@ -293,7 +293,7 @@ const controller = {
     updateOrderStatus: async (req, res) => {
         const orderId = req.params.id;
         const { status } = req.body;
-        
+
         // --- Validation ---
         if (!status) {
             auditLogger({ eventType: 'Input Validation', userId: req.user.id, username: req.user.username, ip_address: req.ip, status: 'Failure', description: `Order status update failed for order ID ${orderId}. Reason: Status is required.` });
@@ -331,7 +331,7 @@ const controller = {
             res.status(500).json({ message: 'Failed to update order status.' });
         }
     },
-    
+
     getProducts: async (req, res) => {
         try {
             const managerId = req.user.id; // Get manager ID from authenticated user
@@ -447,6 +447,33 @@ const controller = {
         } catch (error) {
             console.error('Error fetching assigned categories:', error.message);
             res.status(500).json({ message: 'Failed to fetch assigned categories.' });
+        }
+    },
+
+    getDashboardData: async (req, res) => {
+        try {
+   
+            // 3. Fetch Audit Logs
+            const auditLogStmt = OccasioDB.prepare("SELECT * FROM audit_logs ORDER BY timestamp DESC");
+            const auditLogs = auditLogStmt.all();
+
+            // 4. Send all data in a single JSON response
+            res.status(200).json(
+                auditLogs
+            );
+
+        } catch (error) {
+            // Log the error using the audit logger for tracking
+            auditLogger({
+                eventType: 'Access Control',
+                userId: req.user.id,
+                username: req.user.username,
+                ip_address: req.ip,
+                status: 'Failure',
+                description: `Admin failed to fetch dashboard data. Reason: ${error.message}`
+            });
+            console.error('Error fetching dashboard data:', error.message);
+            res.status(500).json({ message: 'Failed to fetch dashboard data.' });
         }
     }
 };

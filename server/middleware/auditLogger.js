@@ -1,3 +1,5 @@
+// Import necessary modules
+const { OccasioDB } = require('./../config/db');
 /**
  * Audit Logger Utility Function
  * A centralized function to handle inserting logs into the audit_logs table.

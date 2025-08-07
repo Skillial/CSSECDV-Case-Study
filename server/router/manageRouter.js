@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('./../controller/manageController');
-const { ensureManager } = require('./../middleware/auth');
+const { ensureManager, ensureAdmin } = require('./../middleware/auth');
 
 router.post('/add/product', ensureManager, controller.uploadImages, controller.addProduct);
 router.post('/edit/product/:id', ensureManager, controller.uploadImages, controller.editProduct);
@@ -11,5 +11,6 @@ router.get('/get/product/image/:id', ensureManager, controller.getProductImage);
 router.get('/get/orders', ensureManager, controller.getOrders);
 router.post('/update/status/:id', ensureManager, controller.updateOrderStatus);
 router.get('/get/categories', ensureManager, controller.getCategories);
+router.get('/get/dashboard', ensureAdmin, controller.getDashboardData);
 
 module.exports = router;
