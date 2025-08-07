@@ -1,4 +1,4 @@
-const { auditLogger } = require('./auditLogger'); // Adjust path as needed
+const { auditLogger } = require('./auditLogger');
 
 function ensureAdmin(req, res, next) {
     if (req.isAuthenticated() && req.user.role === 'admin') {
@@ -13,7 +13,6 @@ function ensureAdmin(req, res, next) {
             });
         return next();
     } else {
-        // 🪵 Audit Log: Access Control Failure
         auditLogger({
             eventType: 'Access Control',
             userId: req.user ? req.user.id : null,
@@ -39,7 +38,6 @@ function ensureManager(req, res, next) {
             });
         return next();
     } else {
-        // 🪵 Audit Log: Access Control Failure
         auditLogger({
             eventType: 'Access Control',
             userId: req.user ? req.user.id : null,
@@ -65,7 +63,6 @@ function ensureCustomer(req, res, next) {
             });
         return next();
     } else {
-        // 🪵 Audit Log: Access Control Failure
         auditLogger({
             eventType: 'Access Control',
             userId: req.user ? req.user.id : null,
@@ -82,7 +79,6 @@ function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
         return next();
     } else {
-        // 🪵 Audit Log: Access Control Failure
         auditLogger({
             eventType: 'Access Control',
             userId: null,

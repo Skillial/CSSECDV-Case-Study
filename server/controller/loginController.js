@@ -7,7 +7,6 @@ const { auditLogger } = require('./../middleware/auditLogger')
 
 const controller = {
 
-    // Renders the login page
     page: (req, res) => {
         const errorMessages = res.locals.error_messages || [];
         const successMessages = res.locals.success_messages || [];
@@ -17,13 +16,11 @@ const controller = {
         });
     },
 
-    // Handles user login attempt
     login: (req, res, next) => {
         const { username, password } = req.body;
-        const ip_address = req.ip; // Get user's IP address
+        const ip_address = req.ip;
         let errors = [];
 
-        // --- Server-side Input Validation for Login ---
         if (username.length < 3 || username.length > 20) {
             errors.push('Username must be between 3 and 20 characters long.');
         }
@@ -32,11 +29,10 @@ const controller = {
         }
 
         if (errors.length > 0) {
-            // 🪵 Audit Log: Input Validation Failure
             auditLogger({
                 eventType: 'Input Validation',
                 userId: null,
-                username: username, // Log the username they attempted to use
+                username: username,
                 ip_address: ip_address,
                 status: 'Failure',
                 description: `Login attempt failed due to invalid input: ${errors[0]}`
@@ -46,15 +42,13 @@ const controller = {
                 res.redirect('/login');
             });
         }
-        // --- End Server-side Input Validation for Login ---
 
         passport.authenticate('local', (err, user, info) => {
             if (err) return next(err);
             if (!user) {
-                // 🪵 Audit Log: Authentication Failure
                 auditLogger({
                     eventType: 'Authentication',
-                    userId: null, // User is not authenticated, so ID is unknown
+                    userId: null,
                     username: username,
                     ip_address: ip_address,
                     status: 'Failure',
@@ -69,7 +63,6 @@ const controller = {
             req.logIn(user, async (err) => {
                 if (err) return next(err);
 
-                // 🪵 Audit Log: Successful Login
                 auditLogger({
                     eventType: 'Authentication',
                     userId: user.id,
@@ -87,9 +80,8 @@ const controller = {
         })(req, res, next);
     },
 
-    // Handles user logout
     logout: (req, res, next) => {
-        const user = req.user; // Capture user details before they are cleared by logout
+        const user = req.user;
         const ip_address = req.ip;
 
         req.logout((err) => {
@@ -97,8 +89,7 @@ const controller = {
                 return next(err);
             }
 
-            // 🪵 Audit Log: Successful Logout
-            if (user) { // Only log if a user was actually logged in
+            if (user) {
                 auditLogger({
                     eventType: 'Authentication',
                     userId: user.id,
@@ -126,7 +117,6 @@ const controller = {
         const ip_address = req.ip;
         let errors = [];
 
-        // Input validation with length checks
         if (!username || username.trim() === '') {
             errors.push('Username is required.');
         } else if (username.length < 3 || username.length > 20) {
@@ -135,7 +125,7 @@ const controller = {
 
         if (!question || question.trim() === '') {
             errors.push('Security question is required.');
-        } else if (question.length < 1 || question.length > 255) { // Assuming question text can be longer
+        } else if (question.length < 1 || question.length > 255) {
             errors.push('Security question must be between 1 and 255 characters long.');
         }
 
@@ -146,16 +136,14 @@ const controller = {
         }
 
         if (errors.length > 0) {
-            // 🪵 Audit Log: Input Validation Failure for password recovery
             auditLogger({
                 eventType: 'Input Validation',
-                userId: null, // We don't know the user ID for sure yet
+                userId: null,
                 username: username,
                 ip_address: ip_address,
                 status: 'Failure',
                 description: `Password recovery verification failed due to invalid input: ${errors[0]}`
             });
-            // For security, even for direct input validation errors, we return a generic message.
             return res.status(400).json({ message: 'Could not verify your details. Please try again.' });
         }
 
@@ -164,7 +152,6 @@ const controller = {
             const user = getUserStmt.get(username);
 
             if (!user) {
-                // 🪵 Audit Log: Password recovery attempt for non-existent user
                 auditLogger({
                     eventType: 'Account Management',
                     userId: null,
@@ -175,13 +162,12 @@ const controller = {
                 });
                 return res.status(404).json({ message: 'Could not verify your details. Please try again.' });
             }
-            
+
             const getSecurityQuestionStmt = OccasioDB.prepare('SELECT question_text, answer_hash FROM security_questions WHERE account_id = ?');
             const securityQuestion = getSecurityQuestionStmt.get(user.id);
 
             if (!securityQuestion || question !== securityQuestion.question_text || !bcrypt.compareSync(answer, securityQuestion.answer_hash)) {
-                 // 🪵 Audit Log: Failed password recovery verification
-                 auditLogger({
+                auditLogger({
                     eventType: 'Account Management',
                     userId: user.id,
                     username: user.username,
@@ -192,7 +178,6 @@ const controller = {
                 return res.status(400).json({ message: 'Could not verify your details. Please try again.' });
             }
 
-            // 🪵 Audit Log: Successful password recovery verification
             auditLogger({
                 eventType: 'Account Management',
                 userId: user.id,
@@ -208,23 +193,21 @@ const controller = {
             return res.status(500).json({ message: 'An unexpected error occurred. Please try again later.' });
         }
     },
-    
+
     resetPassword: async (req, res) => {
         const { username, newPassword } = req.body;
         const ip_address = req.ip;
         let errors = [];
 
-        // Input validation for username
         if (!username || username.trim() === '') {
             errors.push('Username is required.');
         } else if (username.length < 3 || username.length > 20) {
             errors.push('Username must be between 3 and 20 characters long.');
         }
 
-        // Input validation for new password
         if (!newPassword || newPassword.trim() === '') {
             errors.push('New password is required.');
-        } else if (newPassword.length < 8 || newPassword.length > 50) { // Consistent with frontend
+        } else if (newPassword.length < 8 || newPassword.length > 50) {
             errors.push('New password must be between 8 and 50 characters long.');
         }
         if (newPassword && !/[A-Z]/.test(newPassword)) {
@@ -241,8 +224,7 @@ const controller = {
         }
 
         if (errors.length > 0) {
-             // 🪵 Audit Log: Input Validation Failure for password reset
-             auditLogger({
+            auditLogger({
                 eventType: 'Input Validation',
                 userId: null,
                 username: username,
@@ -258,7 +240,6 @@ const controller = {
             const user = getUserStmt.get(username);
 
             if (!user) {
-                // This case should ideally be prevented by the verification step, but we log it for completeness.
                 auditLogger({
                     eventType: 'Account Management',
                     userId: null,
@@ -269,27 +250,24 @@ const controller = {
                 });
                 return res.status(404).json({ message: 'User not found.' });
             }
-            
-            const hashedNewPassword = await hashString(newPassword); // Hash it once before the transaction
+
+            const hashedNewPassword = await hashString(newPassword);
 
             OccasioDB.transaction(() => {
-                 // Check if the new password is the same as the current one
                 if (bcrypt.compareSync(newPassword, user.password_hash)) {
                     throw new Error('NEW_PASSWORD_SAME_AS_OLD');
                 }
 
-                // Enforce minimum password age of 1 day
                 if (user.last_password_change) {
                     const lastChangeTime = new Date(user.last_password_change);
                     const now = new Date();
                     const diffInMs = now - lastChangeTime;
-                    const oneDayInMs = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+                    const oneDayInMs = 24 * 60 * 60 * 1000;
                     if (diffInMs < oneDayInMs) {
                         throw new Error('PASSWORD_TOO_RECENT');
                     }
                 }
 
-                // Check if the new password has been used recently (e.g., last 5 passwords)
                 const checkHistoryStmt = OccasioDB.prepare('SELECT password_hash FROM password_history WHERE account_id = ? ORDER BY created_at DESC LIMIT 5');
                 const history = checkHistoryStmt.all(user.id);
 
@@ -301,17 +279,14 @@ const controller = {
                     throw new Error('PASSWORD_IN_HISTORY');
                 }
 
-                // Update the password in the accounts table
                 const updateAccountStmt = OccasioDB.prepare('UPDATE accounts SET password_hash = ?, last_password_change = ?, login_attempts = 0, lockout_until = NULL WHERE id = ?');
                 const currentTime = new Date().toISOString();
                 updateAccountStmt.run(hashedNewPassword, currentTime, user.id);
-                
-                // Add the new hashed password to the password history table
+
                 const insertHistoryStmt = OccasioDB.prepare('INSERT INTO password_history (account_id, password_hash, created_at) VALUES (?, ?, ?)');
                 insertHistoryStmt.run(user.id, hashedNewPassword, currentTime);
             })();
 
-            // 🪵 Audit Log: Successful Password Reset
             auditLogger({
                 eventType: 'Account Management',
                 userId: user.id,
@@ -327,8 +302,8 @@ const controller = {
             const userForLog = { id: null, username: username };
             try {
                 const userLookup = OccasioDB.prepare('SELECT id FROM accounts WHERE username = ?').get(username);
-                if(userLookup) userForLog.id = userLookup.id;
-            } catch (e) { /* ignore lookup error */ }
+                if (userLookup) userForLog.id = userLookup.id;
+            } catch (e) { }
 
             let description = `Password reset failed for user '${username}'. Reason: An unexpected error occurred.`;
             if (error.message === 'NEW_PASSWORD_SAME_AS_OLD') {
@@ -339,7 +314,6 @@ const controller = {
                 description = `Password reset failed for user '${username}'. Reason: Attempted to change password too soon.`;
             }
 
-            // 🪵 Audit Log: Failed Password Reset
             auditLogger({
                 eventType: 'Account Management',
                 userId: userForLog.id,
@@ -348,7 +322,7 @@ const controller = {
                 status: 'Failure',
                 description: description
             });
-            
+
             if (error.message === 'NEW_PASSWORD_SAME_AS_OLD') {
                 return res.status(400).json({ message: 'New password cannot be the same as your current password.' });
             } else if (error.message === 'PASSWORD_IN_HISTORY') {

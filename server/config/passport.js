@@ -1,10 +1,9 @@
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
-const { OccasioDB } = require('./db'); // Adjust the path as necessary, assuming db.js exports { OccasioDB }
+const { OccasioDB } = require('./db');
 
 module.exports = function (passport) {
 
-    // Prepared statements for common queries (defined once for efficiency)
     const getAccountByUsernameStmt = OccasioDB.prepare('SELECT * FROM accounts WHERE username = ?');
     const getAccountByIdStmt = OccasioDB.prepare('SELECT * FROM accounts WHERE id = ?');
     const updateLastLoginAttemptStmt = OccasioDB.prepare('UPDATE accounts SET last_login_attempt = ? WHERE username = ?');
@@ -13,57 +12,39 @@ module.exports = function (passport) {
     const updateFailedLoginAttemptStmt = OccasioDB.prepare('UPDATE accounts SET login_attempts = ?, last_login_attempt = ? WHERE id = ?');
     const lockAccountStmt = OccasioDB.prepare('UPDATE accounts SET login_attempts = ?, lockout_until = ?, last_login_attempt = ? WHERE id = ?');
 
-
-    // Helper function to get account by username (synchronous with better-sqlite3)
-    // This function will return the row directly or undefined if not found.
-    // Errors will be thrown synchronously and caught by the caller's try/catch.
     function getAccountByUsername(username) {
         return getAccountByUsernameStmt.get(username);
     }
 
-    // Helper function to get account by ID (synchronous with better-sqlite3)
-    // This function will return the row directly or undefined if not found.
-    // Errors will be thrown synchronously and caught by the caller's try/catch.
     function getAccountById(id) {
         return getAccountByIdStmt.get(id);
     }
 
-    // Configure the LocalStrategy for username/password authentication
     passport.use(new LocalStrategy(
-        { usernameField: 'username', passReqToCallback: true }, // 'usernameField' matches your schema, 'passReqToCallback' allows access to req
-        async (req, username, password, done) => { // Added 'req' parameter
+        { usernameField: 'username', passReqToCallback: true },
+        async (req, username, password, done) => {
             try {
-                const user = getAccountByUsername(username); // Synchronous call
+                const user = getAccountByUsername(username);
 
-                // --- Vague Error Message & User Not Found Handling ---
                 if (!user) {
-                    // Update last login attempt for non-existent user (optional, for logging/auditing)
-                    // Use prepared statement for run
                     updateLastLoginAttemptStmt.run(new Date().toISOString(), username);
                     return done(null, false, { message: 'Invalid username and/or password' });
                 }
 
-                // --- Account Lockout Logic ---
                 if (user.lockout_until) {
                     const lockoutTimestamp = new Date(user.lockout_until);
                     const currentTime = new Date();
 
                     if (lockoutTimestamp > currentTime) {
-                        // Account is still locked
-                        return done(null, false, { message: 'Invalid username and/or password' }); // Vague message
+                        return done(null, false, { message: 'Invalid username and/or password' });
                     } else {
-                        // Lockout period has expired, reset lockout status
-                        // Use prepared statement for run
                         resetLockoutStmt.run(user.id);
-                        // Continue to password comparison
                     }
                 }
 
-                // --- Password Comparison ---
-                const isMatch = await bcrypt.compare(password, user.password_hash); // Use user.password_hash
+                const isMatch = await bcrypt.compare(password, user.password_hash);
 
                 if (isMatch) {
-                    // Build the login report message
                     let lastLoginReportMessage = '';
 
                     const lastAttemptTimestamp = user.last_login_attempt;
@@ -82,45 +63,39 @@ module.exports = function (passport) {
                         lastLoginReportMessage = 'This is your first login.';
                     }
 
-                    // ✅ Add it to the user object (just temporarily)
                     user._lastLoginReportMessage = lastLoginReportMessage;
 
                     updateSuccessfulLoginStmt.run(new Date().toISOString(), new Date().toISOString(), user.id);
                     return done(null, user);
                 }
                 else {
-                    // --- Incorrect Password & Lockout Increment ---
                     const newAttempts = user.login_attempts + 1;
-                    const lockoutThreshold = 5; // 5 attempts
-                    const lockoutPeriodSeconds = 10 * 60; // 10 minutes
+                    const lockoutThreshold = 5;
+                    const lockoutPeriodSeconds = 10 * 60;
 
                     if (newAttempts >= lockoutThreshold) {
                         const lockoutUntil = new Date(Date.now() + lockoutPeriodSeconds * 1000).toISOString();
-                        // Use prepared statement for run
                         lockAccountStmt.run(newAttempts, lockoutUntil, new Date().toISOString(), user.id);
-                        return done(null, false, { message: 'Invalid username and/or password' }); // Vague message
+                        return done(null, false, { message: 'Invalid username and/or password' });
                     } else {
-                        // Use prepared statement for run
                         updateFailedLoginAttemptStmt.run(newAttempts, new Date().toISOString(), user.id);
-                        return done(null, false, { message: 'Invalid username and/or password' }); // Vague message
+                        return done(null, false, { message: 'Invalid username and/or password' });
                     }
                 }
             } catch (error) {
                 console.error("Passport LocalStrategy error:", error.message);
-                return done(error); // Pass database or other errors to Passport
+                return done(error);
             }
         }
     ));
 
-    // Serialize user: Store only the user ID in the session
     passport.serializeUser((user, done) => {
-        done(null, user.id); // Use user.id from the database record
+        done(null, user.id);
     });
 
-    // Deserialize user: Retrieve user object from the database using ID from session
     passport.deserializeUser(async (id, done) => {
         try {
-            const user = getAccountById(id); // Synchronous call
+            const user = getAccountById(id);
             return done(null, user);
         } catch (error) {
             console.error("Passport Deserialize error:", error.message);

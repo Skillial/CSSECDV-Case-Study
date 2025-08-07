@@ -8,6 +8,6 @@ router.post('/login', ensureUnauthenticated, controller.login);
 router.get('/logout', ensureAuthenticated, controller.logout);
 router.get('/forget/password', ensureUnauthenticated, controller.forgetPassword);
 router.post('/verify-details', ensureUnauthenticated, controller.verifyDetails);
-router.post('/reset-password', ensureUnauthenticated, controller.resetPassword); // For the actual password reset
+router.post('/reset-password', ensureUnauthenticated, controller.resetPassword);
 
 module.exports = router;

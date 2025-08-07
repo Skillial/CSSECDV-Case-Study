@@ -1,21 +1,14 @@
-// server/controller/orderController.js
 const { OccasioDB } = require('./../config/db');
 const { auditLogger } = require('./../middleware/auditLogger')
 
 const orderController = {
-    /**
-     * Handles adding a new order to the database.
-     * Expected req.body: { productId: string, quantity: number, selectedOptions: object, category: string }
-     */
     addOrder: async (req, res) => {
         const { productId, quantity, selectedOptions, category } = req.body;
-        const customerId = req.user.id; // Get customer ID from authenticated user
+        const customerId = req.user.id;
         const username = req.user.username;
         const ip_address = req.ip;
 
-        // --- Basic server-side validation ---
         if (!productId || !quantity || quantity <= 0) {
-            // 🪵 Audit Log: Input Validation Failure
             auditLogger({
                 eventType: 'Input Validation',
                 userId: customerId,
@@ -27,7 +20,6 @@ const orderController = {
             return res.status(400).json({ message: 'Invalid product or quantity provided.' });
         }
         if (!category || typeof category !== 'string' || category.trim() === '') {
-            // 🪵 Audit Log: Input Validation Failure
             auditLogger({
                 eventType: 'Input Validation',
                 userId: customerId,
@@ -38,17 +30,15 @@ const orderController = {
             });
             return res.status(400).json({ message: 'Product category is required.' });
         }
-        // --- End Validation ---
 
         try {
             let productNameForLog = `ID ${productId}`;
-            // Start a database transaction for atomicity
             OccasioDB.transaction(() => {
                 const getProductStmt = OccasioDB.prepare('SELECT product_name, product_full_name, price, stock, type, type_options FROM products WHERE id = ?');
                 const product = getProductStmt.get(productId);
-                
+
                 if (product) {
-                    productNameForLog = product.product_name; // Get product name for logging
+                    productNameForLog = product.product_name;
                 }
 
                 if (!product) {
@@ -83,9 +73,8 @@ const orderController = {
                 if (stockInfo.changes === 0) {
                     throw new Error('Failed to update product stock.');
                 }
-            })(); // Immediately invoke the transaction function
+            })();
 
-            // 🪵 Audit Log: Successful Order
             auditLogger({
                 eventType: 'Order Management',
                 userId: customerId,
@@ -109,7 +98,6 @@ const orderController = {
                 responseMessage = 'Not enough stock available for your requested quantity.';
             }
 
-            // 🪵 Audit Log: Order Placement Failure
             auditLogger({
                 eventType: 'Order Management',
                 userId: customerId,
@@ -125,11 +113,9 @@ const orderController = {
 
     getTransactions: async (req, res) => {
         try {
-            // Fetch all orders
             const selectOrdersStmt = OccasioDB.prepare('SELECT * FROM orders');
             const allOrders = selectOrdersStmt.all();
 
-            // Fetch all customers for name lookup
             const selectCustomersStmt = OccasioDB.prepare('SELECT id, username FROM accounts WHERE role = \'customer\'');
             const customers = selectCustomersStmt.all();
             const customerMap = new Map(customers.map(c => [c.id, c.username]));
@@ -142,7 +128,7 @@ const orderController = {
                     productsOrdered = JSON.parse(order.products_ordered);
                 } catch (e) {
                     console.error(`Error parsing products_ordered for order ID ${order.id}:`, e);
-                    continue; // Skip malformed order
+                    continue;
                 }
 
                 const customerName = customerMap.get(order.customer_id) || 'Unknown Customer';
@@ -164,7 +150,6 @@ const orderController = {
             res.status(200).json(transactions);
 
         } catch (error) {
-            // 🪵 Audit Log: Transaction Fetch Failure (Admin action)
             auditLogger({
                 eventType: 'Access Control',
                 userId: req.user.id,

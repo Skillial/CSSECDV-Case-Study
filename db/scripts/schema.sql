@@ -1,33 +1,28 @@
--- accounts table
 CREATE TABLE accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
     address TEXT,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL, -- Stores 'admin', 'manager', or 'customer'
+    role TEXT NOT NULL,
     login_attempts INTEGER DEFAULT 0 NOT NULL,
-    lockout_until TEXT, -- Stores ISO 8601 strings for DATETIME. Presence implies locked.
+    lockout_until TEXT,
     last_successful_login TEXT,
     last_password_change TEXT,
     last_login_attempt TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
     profile_image_blob BLOB,
-    profile_image_mime_type TEXT, -- e.g., 'image/png', 'image/jpeg'
+    profile_image_mime_type TEXT, 
 );
 
--- employee_categories table
 CREATE TABLE employee_categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     employee_id INTEGER NOT NULL,
-    category_name TEXT NOT NULL, -- The name of the category assigned to the employee
+    category_name TEXT NOT NULL, 
     created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    -- Ensure an employee can only be assigned to a specific category once
     UNIQUE(employee_id, category_name),
-    -- Foreign key constraint to link to the accounts table (for employees)
     FOREIGN KEY (employee_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
 
--- password_history table
 CREATE TABLE password_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id INTEGER NOT NULL,
@@ -36,16 +31,14 @@ CREATE TABLE password_history (
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
 
--- security_questions table
 CREATE TABLE security_questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id INTEGER NOT NULL UNIQUE,
-    question_text TEXT NOT NULL, -- This will store the text of the pre-defined question chosen by the user
+    question_text TEXT NOT NULL, 
     answer_hash TEXT NOT NULL,
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
 
--- products table
 CREATE TABLE products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     product_name TEXT NOT NULL,
@@ -55,48 +48,45 @@ CREATE TABLE products (
     brand TEXT NOT NULL,
     sku TEXT NOT NULL UNIQUE,
     price REAL NOT NULL,
-    stock INTEGER NOT NULL DEFAULT 0, -- New: Stock quantity for inventory management
-    type TEXT, -- e.g., "Color", "Size"
-    type_options TEXT, -- Stores JSON string, e.g., '["Yellow", "White", "Blue"]'
-    features TEXT, -- Stores JSON string, e.g., '["100% Cotton", "Breathable", "Unisex"]'
-    created_at TEXT NOT NULL, -- ISO 8601 format
-    updated_at TEXT -- ISO 8601 format
+    stock INTEGER NOT NULL DEFAULT 0, 
+    type TEXT, 
+    type_options TEXT,
+    features TEXT,
+    created_at TEXT NOT NULL, 
+    updated_at TEXT 
 );
 
--- product_images table (NEW: for multiple images per product)
 CREATE TABLE product_images (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    product_id INTEGER NOT NULL, -- Foreign key linking to the products table
-    image_data BLOB NOT NULL,   -- Stores the raw binary data of the image
-    image_mime_type TEXT NOT NULL, -- e.g., 'image/png', 'image/jpeg' - crucial for serving
-    display_order INTEGER,      -- Optional: to define the order of images (e.g., main image first)
-    created_at TEXT NOT NULL,   -- ISO 8601 format
+    product_id INTEGER NOT NULL, 
+    image_data BLOB NOT NULL,  
+    image_mime_type TEXT NOT NULL, 
+    display_order INTEGER,    
+    created_at TEXT NOT NULL,   
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
--- orders table
 CREATE TABLE orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_id INTEGER NOT NULL,
-    order_date TEXT NOT NULL, -- ISO 8601 format
+    order_date TEXT NOT NULL, 
     status TEXT NOT NULL CHECK (status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')) DEFAULT 'pending',
     total_amount REAL NOT NULL,
-    products_ordered TEXT NOT NULL, -- JSON string: '[{"product_id": 1, "name": "T-Shirt", "price_at_order": 29.99, "quantity": 2, "selected_options": {"color": "Yellow"}}]'
-    shipping_address TEXT, -- Optional JSON string of shipping details
-    payment_status TEXT, -- Optional: 'paid', 'unpaid', 'refunded'
-    updated_at TEXT, -- ISO 8601 format, for status changes
+    products_ordered TEXT NOT NULL,
+    shipping_address TEXT, 
+    payment_status TEXT,
+    updated_at TEXT, 
     FOREIGN KEY (customer_id) REFERENCES accounts(id)
 );
 
--- audit_logs table
 CREATE TABLE audit_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
     event_type TEXT NOT NULL CHECK (event_type IN ('Authentication', 'Access Control', 'Input Validation', 'Account Management', 'Order Management')),
-    user_id INTEGER, -- Can be NULL if the event is not associated with a logged-in user (e.g., failed login attempt with an unknown username)
-    username TEXT, -- Store the username involved, especially for failed attempts where user_id might not exist
-    ip_address TEXT, -- To store the IP address of the user performing the action
+    user_id INTEGER,
+    username TEXT, 
+    ip_address TEXT,
     status TEXT NOT NULL CHECK (status IN ('Success', 'Failure')),
-    description TEXT NOT NULL, -- Detailed description of the event
+    description TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE SET NULL
 );

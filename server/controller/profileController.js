@@ -1,4 +1,3 @@
-// Import necessary modules
 const { OccasioDB } = require('./../config/db');
 const bcrypt = require('bcrypt');
 const { hashString } = require('./../config/hash');
@@ -7,11 +6,9 @@ const path = require('path');
 const fs = require('fs');
 const { auditLogger } = require('./../middleware/auditLogger')
 
-// --- Database Prepared Statements ---
 const updateProfileImageBlobStmt = OccasioDB.prepare('UPDATE accounts SET profile_image_blob = ?, profile_image_mimetype = ? WHERE id = ?');
 const getProfileImageBlobStmt = OccasioDB.prepare('SELECT profile_image_blob, profile_image_mimetype FROM accounts WHERE id = ?');
 
-// --- Multer Configuration ---
 const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -85,7 +82,6 @@ const controller = {
         const ip_address = req.ip;
         let errors = [];
 
-        // --- Input validation ---
         if (!oldPassword || oldPassword.trim() === '') errors.push('Current password is required.');
         if (!newPassword || newPassword.trim() === '') errors.push('New password is required.');
         else if (newPassword.length < 8 || newPassword.length > 50) errors.push('New password must be between 8 and 50 characters long.');
@@ -99,7 +95,6 @@ const controller = {
             auditLogger({ eventType: 'Input Validation', userId, username, ip_address, status: 'Failure', description: `Password change failed. Reason: ${errors[0]}` });
             return res.status(400).json({ message: errors.join('<br>') });
         }
-        // --- End validation ---
 
         try {
             const hashedNewPassword = await hashString(newPassword);
@@ -157,7 +152,6 @@ const controller = {
         const ip_address = req.ip;
         let errors = [];
 
-        // --- Validation ---
         if (!question || question.trim() === '') errors.push('Security question cannot be empty.');
         else if (question.length > 255) errors.push('Security question must be 255 characters or less.');
         if (!answer || answer.trim() === '') errors.push('Answer cannot be empty.');
@@ -168,7 +162,6 @@ const controller = {
             auditLogger({ eventType: 'Input Validation', userId, username, ip_address, status: 'Failure', description: `Security question update failed. Reason: ${errors[0]}` });
             return res.status(400).json({ message: errors.join('<br>') });
         }
-        // --- End Validation ---
 
         try {
             const user = OccasioDB.prepare('SELECT password_hash FROM accounts WHERE id = ?').get(userId);

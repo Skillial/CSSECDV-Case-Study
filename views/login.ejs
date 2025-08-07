@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login / Sign Up</title>
+    <title>Login </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -16,45 +16,40 @@
 
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans">
     <div class="bg-white flex flex-col md:flex-row rounded-3xl shadow-2xl overflow-hidden max-w-4xl w-full">
-        <!-- Left Panel: Image -->
         <div class="md:w-1/2 p-6 hidden md:flex items-center justify-center bg-white">
-            <img class="rounded-2xl max-w-full h-auto object-cover" src="https://placehold.co/600x400/F0F0F0/333333?text=Welcome+Back!"
+            <img class="rounded-2xl max-w-full h-auto object-cover"
+                src="https://placehold.co/600x400/F0F0F0/333333?text=Welcome+Back!"
                 onerror="this.onerror=null;this.src='https://placehold.co/600x400/F8F8F8/333333?text=Image+Not+Found';"
                 alt="Placeholder for logo or abstract design">
         </div>
 
-        <!-- Right Panel: Form -->
         <div class="md:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
             <h2 class="font-extrabold text-3xl text-center text-gray-900 mb-2">Welcome Back!</h2>
             <p class="text-sm text-center text-gray-700 mb-8">Sign in to your account or create a new one.</p>
 
-            <!-- Unified Error/Success Message Display -->
-            <div id="unifiedMessageDisplay" class="px-4 py-3 rounded-xl relative text-sm text-center mb-4 hidden" role="alert">
-                <!-- Content will be set by EJS for server-side messages -->
+            <div id="unifiedMessageDisplay" class="px-4 py-3 rounded-xl relative text-sm text-center mb-4 hidden"
+                role="alert">
             </div>
 
             <form id="loginForm" action="/login" method="POST" class="flex flex-col gap-5">
-                <!-- Username Input -->
                 <div class="relative">
                     <input id="usernameInput" value="manager1"
                         class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="text" name="username" placeholder="Username" aria-label="username" required minlength="3" maxlength="20">
+                        type="text" name="username" placeholder="Username" aria-label="username" required minlength="3"
+                        maxlength="20">
                 </div>
 
-                <!-- Password Input -->
                 <div class="relative">
                     <input id="passwordInput" value="aaaaaA@3"
                         class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
-                        type="password" name="password" placeholder="Password" aria-label="Password" required minlength="8" maxlength="50">
-                    <!-- SVG icons -->
+                        type="password" name="password" placeholder="Password" aria-label="Password" required
+                        minlength="8" maxlength="50">
                     <svg id="togglePassword"
                         class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
                         xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Base eye icon (always visible) -->
                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
-                        <!-- The slash, which is toggled on and off -->
                         <path id="eyeSlashPath" class="hidden" d="M1 1l22 22"></path>
                     </svg>
                 </div>
@@ -81,13 +76,13 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const usernameInput = document.getElementById('usernameInput'); // Get username input
+        document.addEventListener('DOMContentLoaded', function () {
+            const usernameInput = document.getElementById('usernameInput');
             const passwordInput = document.getElementById('passwordInput');
             const togglePassword = document.getElementById('togglePassword');
             const eyeSlashPath = document.getElementById('eyeSlashPath');
             const unifiedMessageDisplay = document.getElementById('unifiedMessageDisplay');
-            const loginForm = document.getElementById('loginForm'); // Get the form
+            const loginForm = document.getElementById('loginForm');
 
             togglePassword.addEventListener('click', function () {
                 const isPassword = passwordInput.type === 'password';
@@ -110,40 +105,35 @@
                 unifiedMessageDisplay.innerHTML = '';
             }
 
-            // --- Initial Load: Display server-side flash messages if any ---
             <% if (error_messages && error_messages.length > 0) { %>
-                showUnifiedMessage(`<%= error_messages[0].replace(/`/g, '\\`') %>`, 'error');
+                showUnifiedMessage(`<%= error_messages[0].replace(/` / g, '\\`') %> `, 'error');
             <% } else if (success_messages && success_messages.length > 0) { %>
                 showUnifiedMessage(`<%= success_messages[0].replace(/`/g, '\\`') %>`, 'success');
             <% } else { %>
                 hideUnifiedMessage();
             <% } %>
 
-            // Hide messages when user starts typing in username or password fields
             usernameInput.addEventListener('input', hideUnifiedMessage);
             passwordInput.addEventListener('input', hideUnifiedMessage);
 
-            // Client-side validation on form submission
             loginForm.addEventListener('submit', function(event) {
                 let clientErrors = [];
                 const username = usernameInput.value.trim();
                 const password = passwordInput.value;
 
-                // Username length validation
                 if (username.length < 3 || username.length > 20) {
                     clientErrors.push('Username must be between 3 and 20 characters long.');
                 }
 
-                // Password length validation
                 if (password.length < 8 || password.length > 50) {
                     clientErrors.push('Password must be between 8 and 50 characters long.');
                 }
 
                 if (clientErrors.length > 0) {
-                    event.preventDefault(); // Stop form submission
+                    event.preventDefault(); 
                     showUnifiedMessage(clientErrors.join('<br>'), 'error');
                 } else {
-                    hideUnifiedMessage(); // Clear any previous errors
+                    hideUnifiedMessage(); 
                 }
             });
         });

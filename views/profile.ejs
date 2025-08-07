@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Occasio Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        /* Custom styles for password complexity bar and modal */
         .password-strength-bar {
             width: 100%;
             height: 8px;
-            background-color: #e0e0e0; /* Gray background for empty bar */
+            background-color: #e0e0e0;
             border-radius: 4px;
             overflow: hidden;
             margin-top: 4px;
         }
+
         .password-strength-bar-fill {
             height: 100%;
             width: 0%;
-            background-color: #e0e0e0; /* Default fill color */
+            background-color: #e0e0e0;
             transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
             border-radius: 4px;
         }
 
-        /* Modal Overlay */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -46,7 +46,6 @@
             visibility: visible;
         }
 
-        /* Modal Content */
         .modal-content {
             background-color: #fff;
             padding: 24px;
@@ -62,990 +61,928 @@
             transform: translateY(0);
         }
 
-        /* Unified Error Message Display within modals */
         .modal-error-display {
-            background-color: #fee2e2; /* Red-100 */
-            border: 1px solid #ef4444; /* Red-400 */
-            color: #b91c1c; /* Red-700 */
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #b91c1c;
             padding: 12px 16px;
             border-radius: 12px;
             text-align: center;
-            font-size: 0.875rem; /* text-sm */
-            margin-bottom: 16px; /* mb-4 */
-            display: none; /* hidden */
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+            display: none;
         }
+
         .modal-error-display.show {
             display: block;
         }
 
-        /* Unified Success Message Display within modals */
         .modal-success-display {
-            background-color: #d1fae5; /* Green-100 */
-            border: 1px solid #34d399; /* Green-400 */
-            color: #065f46; /* Green-800 */
+            background-color: #d1fae5;
+            border: 1px solid #34d399;
+            color: #065f46;
             padding: 12px 16px;
             border-radius: 12px;
             text-align: center;
-            font-size: 0.875rem; /* text-sm */
-            margin-bottom: 16px; /* mb-4 */
-            display: none; /* hidden */
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+            display: none;
         }
+
         .modal-success-display.show {
             display: block;
         }
 
-
-        /* General error display for main page content */
         .page-error-display {
-            background-color: #fee2e2; /* Red-100 */
-            border: 1px solid #ef4444; /* Red-400 */
-            color: #b91c1c; /* Red-700 */
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #b91c1c;
             padding: 12px 16px;
             border-radius: 12px;
             text-align: center;
-            font-size: 0.875rem; /* text-sm */
-            margin-bottom: 16px; /* mb-4 */
-            display: none; /* hidden */
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+            display: none;
         }
+
         .page-error-display.show {
             display: block;
         }
 
-        /* General success display for main page content */
         .page-success-display {
-            background-color: #d1fae5; /* Green-100 */
-            border: 1px solid #34d399; /* Green-400 */
-            color: #065f46; /* Green-800 */
+            background-color: #d1fae5;
+            border: 1px solid #34d399;
+            color: #065f46;
             padding: 12px 16px;
             border-radius: 12px;
             text-align: center;
-            font-size: 0.875rem; /* text-sm */
-            margin-bottom: 16px; /* mb-4 */
-            display: none; /* hidden */
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+            display: none;
         }
+
         .page-success-display.show {
             display: block;
         }
     </style>
 </head>
+
 <body class="bg-gray-100 text-gray-900 font-sans min-h-screen flex flex-col">
     <%- include('component/navbar') %>
 
-    <!-- Main Profile Content -->
-    <main class="flex-grow container mx-auto px-6 py-8 max-w-6xl flex-col">
-        <!-- Success Message Display for main page content -->
-        <div id="mainPageSuccessMessageDisplay" class="page-success-display" role="alert">
-            <!-- Content will be set by EJS for server-side messages, or by JavaScript -->
-        </div>
-        <!-- Error Message Display for main page content (e.g., for profile picture upload errors) -->
-        <div id="mainPageErrorMessageDisplay" class="page-error-display" role="alert">
-            <!-- Content will be set by JavaScript -->
-        </div>
-
-        <div class="flex flex-col md:flex-row items-start md:items-stretch gap-8 md:gap-12">
-            <!-- Left Column: Profile Picture and Basic Info -->
-            <div class="flex flex-col items-center gap-4 w-full md:w-1/4 lg:w-1/5 bg-white rounded-xl shadow-md p-6">
-                <!-- Profile Picture Section with Hover Upload -->
-                <div id="profilePictureContainer" class="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-300 flex items-center justify-center group cursor-pointer">
-                    <%
-                        // Define ORIGINAL_PROFILE_IMAGE_SRC here so EJS can access it during rendering
-                        const ORIGINAL_PROFILE_IMAGE_SRC = 'https://placehold.co/128x128/cccccc/333333?text=User';
-
-                        // Determine the image source based on whether a BLOB exists
-                        let profileImageSrc = ORIGINAL_PROFILE_IMAGE_SRC; // Default placeholder
-                        if (user.profile_image_blob && user.id) {
-                            // If a BLOB exists, construct the URL to the new BLOB serving endpoint
-                            profileImageSrc = `/profile/image/${user.id}`;
-                        } else if (user.profile_image_url) {
-                            // Fallback to old URL if BLOB not present but URL is (for migration period)
-                            profileImageSrc = user.profile_image_url;
-                        }
-                    %>
-                    <img id="profileImage" src="<%= profileImageSrc %>" alt="Profile Picture" class="object-cover w-full h-full transition-opacity duration-300 group-hover:opacity-50">
-                    <!-- Overlay for upload option -->
-                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full">
-                        <i class="fas fa-camera text-white text-2xl"></i>
-                        <span class="text-white text-sm mt-1">Upload Photo</span>
-                    </div>
-                    <!-- Hidden file input for actual upload functionality -->
-                    <input type="file" id="profilePictureUpload" class="hidden" accept="image/*">
-                </div>
-
-                <!-- Save/Cancel buttons for profile picture -->
-                <div id="profilePicActions" class="flex gap-2 mt-4 w-full justify-center hidden">
-                    <button type="button" id="cancelProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition-colors font-medium">
-                        Cancel
-                    </button>
-                    <button type="button" id="saveProfilePicBtn" class="flex-1 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors font-medium shadow-sm">
-                        Save
-                    </button>
-                </div>
-
-                <!-- Basic User Info -->
-                <p class="text-lg font-medium text-gray-800"><%= user.username %></p>
-                <p class="text-sm text-gray-600 text-center"><%= user.address %></p>
+        <main class="flex-grow container mx-auto px-6 py-8 max-w-6xl flex-col">
+            <div id="mainPageSuccessMessageDisplay" class="page-success-display" role="alert">
+            </div>
+            <div id="mainPageErrorMessageDisplay" class="page-error-display" role="alert">
             </div>
 
-            <!-- Right Column: Edit Forms and Management Cards -->
-            <div class="flex flex-col gap-6 w-full md:w-3/4 lg:w-4/5">
+            <div class="flex flex-col md:flex-row items-start md:items-stretch gap-8 md:gap-12">
+                <div
+                    class="flex flex-col items-center gap-4 w-full md:w-1/4 lg:w-1/5 bg-white rounded-xl shadow-md p-6">
+                    <div id="profilePictureContainer"
+                        class="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-300 flex items-center justify-center group cursor-pointer">
+                        <% const ORIGINAL_PROFILE_IMAGE_SRC='https://placehold.co/128x128/cccccc/333333?text=User' ; let
+                            profileImageSrc=ORIGINAL_PROFILE_IMAGE_SRC; if (user.profile_image_blob && user.id) {
+                            profileImageSrc=`/profile/image/${user.id}`; } else if (user.profile_image_url) {
+                            profileImageSrc=user.profile_image_url; } %>
+                            <img id="profileImage" src="<%= profileImageSrc %>" alt="Profile Picture"
+                                class="object-cover w-full h-full transition-opacity duration-300 group-hover:opacity-50">
+                            <div
+                                class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full">
+                                <i class="fas fa-camera text-white text-2xl"></i>
+                                <span class="text-white text-sm mt-1">Upload Photo</span>
+                            </div>
+                            <input type="file" id="profilePictureUpload" class="hidden" accept="image/*">
+                    </div>
 
-                <!-- Edit Profile Card -->
-                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div id="profilePicActions" class="flex gap-2 mt-4 w-full justify-center hidden">
+                        <button type="button" id="cancelProfilePicBtn"
+                            class="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition-colors font-medium">
+                            Cancel
+                        </button>
+                        <button type="button" id="saveProfilePicBtn"
+                            class="flex-1 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors font-medium shadow-sm">
+                            Save
+                        </button>
+                    </div>
+
+                    <p class="text-lg font-medium text-gray-800">
+                        <%= user.username %>
+                    </p>
+                    <p class="text-sm text-gray-600 text-center">
+                        <%= user.address %>
+                    </p>
+                </div>
+
+                <div class="flex flex-col gap-6 w-full md:w-3/4 lg:w-4/5">
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                            <i class="fas fa-user-edit mr-3 text-gray-700"></i> Edit Profile Information
+                        </h3>
+                        <div id="editProfileErrorMessageDisplay" class="page-error-display" role="alert">
+                        </div>
+                        <form id="editProfileForm" action="/profile/edit" method="POST" class="space-y-4">
+                            <div>
+                                <label for="usernameDisplay"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                <p id="usernameDisplay"
+                                    class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700 select-none">
+                                    <%= user.username %>
+                                </p>
+                            </div>
+                            <div>
+                                <label for="address"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                <textarea id="address" name="address" rows="3"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm"
+                                    minlength="5" maxlength="255"><%= user.address %></textarea>
+                            </div>
+                            <div id="editProfileActions" class="flex justify-end gap-3 pt-4 hidden">
+                                <button type="button" id="cancelEditProfileBtn"
+                                    class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
+                                    Cancel Changes
+                                </button>
+                                <button type="submit"
+                                    class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-6 mt-4">
+                <div class="w-full md:w-1/2 bg-white rounded-xl shadow-md p-6">
                     <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                        <i class="fas fa-user-edit mr-3 text-gray-700"></i> Edit Profile Information
+                        <i class="fas fa-lock mr-3 text-gray-700"></i> Password Management
                     </h3>
-                    <!-- Error Message Display for Edit Profile Form -->
-                    <div id="editProfileErrorMessageDisplay" class="page-error-display" role="alert">
-                        <!-- Content will be set by EJS for server-side errors, or by JavaScript for client-side errors -->
-                    </div>
-                    <form id="editProfileForm" action="/profile/edit" method="POST" class="space-y-4">
-                        <div>
-                            <label for="usernameDisplay" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                            <!-- Display username as static text -->
-                            <p id="usernameDisplay" class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700 select-none">
-                                <%= user.username %>
-                            </p>
-                        </div>
-                        <div>
-                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                            <textarea id="address" name="address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="5" maxlength="255"><%= user.address %></textarea>
-                        </div>
-                        <div id="editProfileActions" class="flex justify-end gap-3 pt-4 hidden">
-                            <button type="button" id="cancelEditProfileBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
-                                Cancel Changes
-                            </button>
-                            <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Password Management & Security Questions in a row for larger screens -->
-        <div class="flex flex-col md:flex-row gap-6 mt-4">
-            <!-- Password Management Card -->
-            <div class="w-full md:w-1/2 bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                    <i class="fas fa-lock mr-3 text-gray-700"></i> Password Management
-                </h3>
-                <p class="text-gray-700 mb-4 text-sm">Need to reset your password?</p>
-                <button id="changePasswordBtn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm">
-                    Change Password
-                </button>
-            </div>
-
-            <!-- Security Questions Card -->
-            <div class="w-full md:w-1/2 bg-white rounded-xl shadow-md p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                    <i class="fas fa-question-circle mr-3 text-gray-700"></i> Security Questions
-                </h3>
-                <p class="text-gray-700 mb-4 text-sm">
-                    Set up or update your security questions for enhanced account recovery.
-                </p>
-                <button id="manageSecurityQuestionsBtn" class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm">
-                    Manage Security Questions
-                </button>
-            </div>
-        </div>
-    </main>
-
-    <!-- Security Questions Modal -->
-    <div id="securityQuestionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-            <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Manage Security Questions</h3>
-
-            <!-- Error Message Display for Security Questions Modal -->
-            <div id="securityQuestionsErrorMessageDisplay" class="modal-error-display" role="alert">
-                <!-- Content will be set by JavaScript -->
-            </div>
-
-            <form id="securityQuestionsForm" class="space-y-5">
-                <!-- Question 1 -->
-                <div>
-                    <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Security Question</label>
-                    <select id="question" name="question" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
-                        <option value="" disabled selected>Select a question</option>
-                        <option value="What was the name of your favorite fictional character?">What was the name of your favorite fictional character?</option>
-                        <option value="What was the first album you ever fully listened?">What was the first album you ever fully listened?</option>
-                        <option value="What was the name of your favorite teacher in high school?">What was the name of your favorite teacher in high school?</option>
-                        <option value="What was the first movie you remember seeing in a theater?">What was the first movie you remember seeing in a theater?</option>
-                        <option value="What was the first concert you ever attended?">What was the first concert you ever attended?</option>
-                        <option value="What is the name of a historical figure you admire?">What is the name of a historical figure you admire?</option>
-                        <option value="What was the first job you had that wasn't for a company?">What was the first job you had that wasn't for a company?</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="answer" class="block text-sm font-medium text-gray-700 mb-1">Answer</label>
-                    <input type="text" id="answer" name="answer" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="1" maxlength="100">
-                </div>
-
-                <!-- Password Confirmation -->
-                <div>
-                    <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm with Password</label>
-                    <div class="relative">
-                        <input type="password" id="currentPassword" name="currentPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="8" maxlength="50">
-                        <!-- Eye icon for confirm password visibility toggle -->
-                        <svg id="toggleCurrentPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path id="currentEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" id="cancelSecurityQuestionsBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
-                        Save
+                    <p class="text-gray-700 mb-4 text-sm">Need to reset your password?</p>
+                    <button id="changePasswordBtn"
+                        class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm">
+                        Change Password
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- Change Password Modal -->
-    <div id="changePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-            <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Change Password</h3>
-
-            <!-- Unified Error Message Display for Change Password Modal -->
-            <div id="changePasswordErrorMessageDisplay" class="modal-error-display" role="alert">
-                <!-- Content will be set by JavaScript for client-side errors -->
-            </div>
-
-            <form id="changePasswordForm" class="space-y-5">
-                <div>
-                    <label for="oldPassword" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                    <div class="relative">
-                        <input type="password" id="oldPassword" name="oldPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="8" maxlength="50">
-                        <!-- Eye icon for old password visibility toggle -->
-                        <svg id="toggleOldPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path id="oldEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
-                        </svg>
-                    </div>
-                </div>
-                <!-- New Password Input Group -->
-                <div>
-                    <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                    <div class="relative">
-                        <input type="password" id="newPassword" name="newPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="8" maxlength="50">
-                        <!-- Eye icon for new password visibility toggle -->
-                        <svg id="toggleNewPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path id="newEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
-                        </svg>
-                    </div>
-                    <!-- Password Strength and Requirements Section for New Password -->
-                    <div class="mt-2">
-                        <div class="password-strength-bar">
-                            <div id="newStrengthBarFill" class="password-strength-bar-fill"></div>
-                        </div>
-                        <div class="flex justify-between items-center mt-1.5">
-                            <p id="newStrengthText" class="text-sm text-gray-600">Password Strength: Very Weak</p>
-                            <button type="button" id="openNewComplexityModal" class="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded-md px-1">
-                                Requirements
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <!-- Confirm New Password Input Group -->
-                <div>
-                    <label for="confirmNewPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                    <div class="relative">
-                        <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm" minlength="8" maxlength="50">
-                        <!-- Eye icon for confirm new password visibility toggle -->
-                        <svg id="toggleConfirmNewPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path id="confirmNewEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" id="cancelChangePasswordBtn" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
-                        Save Changes
+                <div class="w-full md:w-1/2 bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-question-circle mr-3 text-gray-700"></i> Security Questions
+                    </h3>
+                    <p class="text-gray-700 mb-4 text-sm">
+                        Set up or update your security questions for enhanced account recovery.
+                    </p>
+                    <button id="manageSecurityQuestionsBtn"
+                        class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm">
+                        Manage Security Questions
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Password Complexity Modal (for New Password) -->
-    <div id="newComplexityModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-900">Password Requirements</h3>
-                <button id="closeNewComplexityModal" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
             </div>
-            <div id="newPasswordComplexityList" class="text-sm text-gray-700">
-                <p class="font-semibold mb-1">Your password must contain:</p>
-                <ul class="list-disc list-inside ml-4 space-y-1">
-                    <li id="newModalLengthCheck" class="text-gray-700">At least 8 characters</li>
-                    <li id="newModalUppercaseCheck" class="text-gray-700">An uppercase letter</li>
-                    <li id="newModalLowercaseCheck" class="text-gray-700">A lowercase letter</li>
-                    <li id="newModalNumberCheck" class="text-gray-700">A number</li>
-                    <li id="newModalSpecialCharCheck" class="text-gray-700">A special character (!@#$%^&*)</li>
-                </ul>
+        </main>
+
+        <div id="securityQuestionsModal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+                <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Manage Security Questions</h3>
+
+                <div id="securityQuestionsErrorMessageDisplay" class="modal-error-display" role="alert">
+                </div>
+
+                <form id="securityQuestionsForm" class="space-y-5">
+                    <div>
+                        <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Security
+                            Question</label>
+                        <select id="question" name="question"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm">
+                            <option value="" disabled selected>Select a question</option>
+                            <option value="What was the name of your favorite fictional character?">What was the name of
+                                your favorite fictional character?</option>
+                            <option value="What was the first album you ever fully listened?">What was the first album
+                                you ever fully listened?</option>
+                            <option value="What was the name of your favorite teacher in high school?">What was the name
+                                of your favorite teacher in high school?</option>
+                            <option value="What was the first movie you remember seeing in a theater?">What was the
+                                first movie you remember seeing in a theater?</option>
+                            <option value="What was the first concert you ever attended?">What was the first concert you
+                                ever attended?</option>
+                            <option value="What is the name of a historical figure you admire?">What is the name of a
+                                historical figure you admire?</option>
+                            <option value="What was the first job you had that wasn't for a company?">What was the first
+                                job you had that wasn't for a company?</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="answer" class="block text-sm font-medium text-gray-700 mb-1">Answer</label>
+                        <input type="text" id="answer" name="answer"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm"
+                            minlength="1" maxlength="100">
+                    </div>
+
+                    <div>
+                        <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm with
+                            Password</label>
+                        <div class="relative">
+                            <input type="password" id="currentPassword" name="currentPassword"
+                                class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm"
+                                minlength="8" maxlength="50">
+                            <svg id="toggleCurrentPassword"
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200"
+                                xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path id="currentEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" id="cancelSecurityQuestionsBtn"
+                            class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
+                            Save
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-    </div>
+
+        <div id="changePasswordModal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+                <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">Change Password</h3>
+
+                <div id="changePasswordErrorMessageDisplay" class="modal-error-display" role="alert">
+                </div>
+
+                <form id="changePasswordForm" class="space-y-5">
+                    <div>
+                        <label for="oldPassword" class="block text-sm font-medium text-gray-700 mb-1">Current
+                            Password</label>
+                        <div class="relative">
+                            <input type="password" id="oldPassword" name="oldPassword"
+                                class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm"
+                                minlength="8" maxlength="50">
+                            <svg id="toggleOldPassword"
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200"
+                                xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path id="oldEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">New
+                            Password</label>
+                        <div class="relative">
+                            <input type="password" id="newPassword" name="newPassword"
+                                class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm"
+                                minlength="8" maxlength="50">
+                            <svg id="toggleNewPassword"
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200"
+                                xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path id="newEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                            </svg>
+                        </div>
+                        <div class="mt-2">
+                            <div class="password-strength-bar">
+                                <div id="newStrengthBarFill" class="password-strength-bar-fill"></div>
+                            </div>
+                            <div class="flex justify-between items-center mt-1.5">
+                                <p id="newStrengthText" class="text-sm text-gray-600">Password Strength: Very Weak</p>
+                                <button type="button" id="openNewComplexityModal"
+                                    class="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded-md px-1">
+                                    Requirements
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="confirmNewPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm New
+                            Password</label>
+                        <div class="relative">
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword"
+                                class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500 text-sm"
+                                minlength="8" maxlength="50">
+                            <svg id="toggleConfirmNewPassword"
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors duration-200"
+                                xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path id="confirmNewEyeSlashPath" class="hidden" d="M1 1l22 22"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" id="cancelChangePasswordBtn"
+                            class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors font-medium shadow-sm">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="newComplexityModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">Password Requirements</h3>
+                    <button id="closeNewComplexityModal"
+                        class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+                </div>
+                <div id="newPasswordComplexityList" class="text-sm text-gray-700">
+                    <p class="font-semibold mb-1">Your password must contain:</p>
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        <li id="newModalLengthCheck" class="text-gray-700">At least 8 characters</li>
+                        <li id="newModalUppercaseCheck" class="text-gray-700">An uppercase letter</li>
+                        <li id="newModalLowercaseCheck" class="text-gray-700">A lowercase letter</li>
+                        <li id="newModalNumberCheck" class="text-gray-700">A number</li>
+                        <li id="newModalSpecialCharCheck" class="text-gray-700">A special character (!@#$%^&*)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
 
-    <script>
-        // Store the original profile image source globally so EJS can access it
-        const ORIGINAL_PROFILE_IMAGE_SRC = "https://placehold.co/128x128/cccccc/333333?text=User";
+        <script>
+            const ORIGINAL_PROFILE_IMAGE_SRC = "https://placehold.co/128x128/cccccc/333333?text=User";
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize tempProfileImageSrc with the user's current profile image or default
-            let tempProfileImageSrc = document.getElementById('profileImage').src;
+            document.addEventListener('DOMContentLoaded', function () {
+                let tempProfileImageSrc = document.getElementById('profileImage').src;
+                const profilePictureContainer = document.getElementById('profilePictureContainer');
+                const profilePictureUpload = document.getElementById('profilePictureUpload');
+                const profileImage = document.getElementById('profileImage');
+                const profilePicActions = document.getElementById('profilePicActions');
+                const saveProfilePicBtn = document.getElementById('saveProfilePicBtn');
+                const cancelProfilePicBtn = document.getElementById('cancelProfilePicBtn');
+                const mainPageSuccessMessageDisplay = document.getElementById('mainPageSuccessMessageDisplay');
+                const mainPageErrorMessageDisplay = document.getElementById('mainPageErrorMessageDisplay');
 
-            // Get references to the elements for profile picture upload
-            const profilePictureContainer = document.getElementById('profilePictureContainer');
-            const profilePictureUpload = document.getElementById('profilePictureUpload');
-            const profileImage = document.getElementById('profileImage');
-            const profilePicActions = document.getElementById('profilePicActions'); // New div for buttons
-            const saveProfilePicBtn = document.getElementById('saveProfilePicBtn');
-            const cancelProfilePicBtn = document.getElementById('cancelProfilePicBtn');
-            const mainPageSuccessMessageDisplay = document.getElementById('mainPageSuccessMessageDisplay'); // Reference to main page success display
-            const mainPageErrorMessageDisplay = document.getElementById('mainPageErrorMessageDisplay'); // Reference to main page error display
+                profilePictureContainer.addEventListener('click', () => {
+                    profilePictureUpload.click();
+                });
 
+                profilePictureUpload.addEventListener('change', (event) => {
+                    const file = event.target.files[0];
 
-            // Add a click listener to the container (which includes the overlay)
-            profilePictureContainer.addEventListener('click', () => {
-                // Programmatically click the hidden file input
-                profilePictureUpload.click();
-            });
+                    if (file) {
+                        const reader = new FileReader();
 
-            // Listen for changes on the file input (when a file is selected)
-            profilePictureUpload.addEventListener('change', (event) => {
-                const file = event.target.files[0]; // Get the first selected file
+                        reader.onload = (e) => {
+                            profileImage.src = e.target.result;
+                            tempProfileImageSrc = e.target.result;
+                            profilePicActions.classList.remove('hidden');
+                            hideMessage(mainPageErrorMessageDisplay);
+                            hideMessage(mainPageSuccessMessageDisplay);
+                        };
 
-                if (file) {
-                    const reader = new FileReader(); // Create a FileReader object
+                        reader.readAsDataURL(file);
+                    }
+                });
 
-                    reader.onload = (e) => {
-                        // Set the image source to the result for immediate preview
-                        profileImage.src = e.target.result;
-                        // Store the temporary image source
-                        tempProfileImageSrc = e.target.result;
-                        // Show the save/cancel buttons
-                        profilePicActions.classList.remove('hidden');
-                        hideMessage(mainPageErrorMessageDisplay); // Hide any previous errors
-                        hideMessage(mainPageSuccessMessageDisplay); // Hide any previous successes
+                saveProfilePicBtn.addEventListener('click', async () => {
+                    const file = profilePictureUpload.files[0];
+                    if (!file) {
+                        displayMessage(mainPageErrorMessageDisplay, ['Please select an image to upload.'], 'error');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('profileImage', file);
+
+                    try {
+                        const response = await fetch('/profile/picture', {
+                            method: 'POST',
+                            body: formData,
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            tempProfileImageSrc = null;
+                            profilePictureUpload.value = '';
+                            profilePicActions.classList.add('hidden');
+                            displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Profile picture updated!'], 'success');
+                            hideMessage(mainPageErrorMessageDisplay);
+                        } else {
+                            console.error('Profile picture upload failed:', result.message);
+                            displayMessage(mainPageErrorMessageDisplay, [result.message || 'Failed to upload profile picture.'], 'error');
+                            hideMessage(mainPageSuccessMessageDisplay);
+                        }
+                    } catch (error) {
+                        console.error('Network or unexpected error during profile picture upload:', error);
+                        displayMessage(mainPageErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+                        hideMessage(mainPageSuccessMessageDisplay);
+                    }
+                });
+
+                cancelProfilePicBtn.addEventListener('click', () => {
+                    profileImage.src = "<%= user.profile_image_blob ? `/profile/image/${user.id}` : ORIGINAL_PROFILE_IMAGE_SRC %>";
+                    profilePictureUpload.value = '';
+                    tempProfileImageSrc = null;
+                    profilePicActions.classList.add('hidden');
+                    hideMessage(mainPageErrorMessageDisplay);
+                    hideMessage(mainPageSuccessMessageDisplay);
+                });
+
+                const manageSecurityQuestionsBtn = document.getElementById('manageSecurityQuestionsBtn');
+                const securityQuestionsModal = document.getElementById('securityQuestionsModal');
+                const cancelSecurityQuestionsBtn = document.getElementById('cancelSecurityQuestionsBtn');
+                const securityQuestionsForm = document.getElementById('securityQuestionsForm');
+                const questionSelect = document.getElementById('question');
+                const answerInput = document.getElementById('answer');
+                const currentPasswordInput = document.getElementById('currentPassword');
+                const securityQuestionsErrorMessageDisplay = document.getElementById('securityQuestionsErrorMessageDisplay');
+
+                const toggleCurrentPassword = document.getElementById('toggleCurrentPassword');
+                const currentEyeSlashPath = document.getElementById('currentEyeSlashPath');
+
+                function displayMessage(displayElement, messages, type) {
+                    displayElement.classList.remove('show', 'bg-red-100', 'text-red-700', 'border-red-400', 'bg-green-100', 'text-green-800', 'border-green-400');
+                    displayElement.innerHTML = '';
+
+                    if (messages && messages.length > 0) {
+                        displayElement.innerHTML = `<p>${messages[0]}</p>`;
+                        displayElement.classList.add('show');
+                        if (type === 'error') {
+                            displayElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                            displayElement.classList.remove('bg-green-100', 'text-green-800', 'border-green-400');
+                        } else if (type === 'success') {
+                            displayElement.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
+                            displayElement.classList.remove('bg-red-100', 'text-red-700', 'border-red-400');
+                        }
+                    }
+                }
+
+                function hideMessage(displayElement) {
+                    displayElement.classList.remove('show', 'bg-red-100', 'text-red-700', 'border-red-400', 'bg-green-100', 'text-green-800', 'border-green-400');
+                    displayElement.innerHTML = '';
+                }
+
+                manageSecurityQuestionsBtn.addEventListener('click', () => {
+                    securityQuestionsModal.classList.remove('hidden');
+                    hideMessage(securityQuestionsErrorMessageDisplay);
+                    hideMessage(mainPageSuccessMessageDisplay);
+                    questionSelect.value = '';
+                    answerInput.value = '';
+                    currentPasswordInput.value = '';
+                    currentPasswordInput.setAttribute('type', 'password');
+                    currentEyeSlashPath.classList.add('hidden');
+                });
+
+                cancelSecurityQuestionsBtn.addEventListener('click', () => {
+                    securityQuestionsModal.classList.add('hidden');
+                });
+
+                securityQuestionsModal.addEventListener('click', (event) => {
+                    if (event.target === securityQuestionsModal) {
+                        securityQuestionsModal.classList.add('hidden');
+                    }
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && securityQuestionsModal.classList.contains('hidden') === false) {
+                        securityQuestionsModal.classList.add('hidden');
+                    }
+                });
+
+                questionSelect.addEventListener('change', () => {
+                    hideMessage(securityQuestionsErrorMessageDisplay);
+                    hideMessage(mainPageSuccessMessageDisplay);
+                });
+                answerInput.addEventListener('input', () => {
+                    hideMessage(securityQuestionsErrorMessageDisplay);
+                    hideMessage(mainPageSuccessMessageDisplay);
+                });
+                currentPasswordInput.addEventListener('input', () => {
+                    hideMessage(securityQuestionsErrorMessageDisplay);
+                    hideMessage(mainPageSuccessMessageDisplay);
+                });
+
+                securityQuestionsForm.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+
+                    let clientErrors = [];
+
+                    const selectedOption = questionSelect.options[questionSelect.selectedIndex];
+                    const questionText = selectedOption.textContent.trim();
+                    const answer = answerInput.value.trim();
+                    const currentPassword = currentPasswordInput.value;
+
+                    if (!questionText || questionSelect.value === "") {
+                        clientErrors.push('Please select a security question.');
+                    }
+                    if (!answer || answer.length < 1 || answer.length > 100) {
+                        clientErrors.push('Security answer must be between 1 and 100 characters long.');
+                    }
+                    if (!currentPassword || currentPassword.length < 8 || currentPassword.length > 50) {
+                        clientErrors.push('Current password must be between 8 and 50 characters long.');
+                    }
+
+                    if (clientErrors.length > 0) {
+                        displayMessage(securityQuestionsErrorMessageDisplay, clientErrors, 'error');
+                        return;
+                    } else {
+                        hideMessage(securityQuestionsErrorMessageDisplay);
+                    }
+
+                    try {
+                        const response = await fetch('/profile/question', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                question: questionText,
+                                answer: answer,
+                                currentPassword: currentPassword
+                            }),
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Security question updated successfully!'], 'success');
+                            hideMessage(securityQuestionsErrorMessageDisplay);
+                            questionSelect.value = '';
+                            answerInput.value = '';
+                            currentPasswordInput.value = '';
+                            securityQuestionsModal.classList.add('hidden');
+
+                        } else {
+                            console.error('Security questions update failed:', result.message);
+                            displayMessage(securityQuestionsErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
+                            hideMessage(mainPageSuccessMessageDisplay);
+                        }
+                    } catch (error) {
+                        console.error('Network or unexpected error during security questions update:', error);
+                        displayMessage(securityQuestionsErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+                        hideMessage(mainPageSuccessMessageDisplay);
+                    }
+                });
+
+                const changePasswordBtn = document.getElementById('changePasswordBtn');
+                const changePasswordModal = document.getElementById('changePasswordModal');
+                const cancelChangePasswordBtn = document.getElementById('cancelChangePasswordBtn');
+                const changePasswordForm = document.getElementById('changePasswordForm');
+                const oldPasswordInput = document.getElementById('oldPassword');
+                const newPasswordInput = document.getElementById('newPassword');
+                const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+                const changePasswordErrorMessageDisplay = document.getElementById('changePasswordErrorMessageDisplay');
+
+                const newStrengthBarFill = document.getElementById('newStrengthBarFill');
+                const newStrengthText = document.getElementById('newStrengthText');
+                const newComplexityModal = document.getElementById('newComplexityModal');
+                const openNewComplexityModalBtn = document.getElementById('openNewComplexityModal');
+                const closeNewComplexityModalBtn = document.getElementById('closeNewComplexityModal');
+                const newModalLengthCheck = document.getElementById('newModalLengthCheck');
+                const newModalUppercaseCheck = document.getElementById('newModalUppercaseCheck');
+                const newModalLowercaseCheck = document.getElementById('newModalLowercaseCheck');
+                const newModalNumberCheck = document.getElementById('newModalNumberCheck');
+                const newModalSpecialCharCheck = document.getElementById('newModalSpecialCharCheck');
+
+                const toggleNewPassword = document.getElementById('toggleNewPassword');
+                const newEyeSlashPath = document.getElementById('newEyeSlashPath');
+                const toggleConfirmNewPassword = document.getElementById('toggleConfirmNewPassword');
+                const confirmNewEyeSlashPath = document.getElementById('confirmNewEyeSlashPath');
+                const toggleOldPassword = document.getElementById('toggleOldPassword');
+                const oldEyeSlashPath = document.getElementById('oldEyeSlashPath');
+
+                function updateCheckUI(element, isMet) {
+                    element.classList.remove('text-red-600', 'text-green-600', 'text-gray-700');
+                    if (isMet) {
+                        element.classList.add('text-green-600');
+                    } else {
+                        element.classList.add('text-red-600');
+                    }
+                }
+
+                function checkPasswordComplexity(passwordInput, strengthBarFill, strengthText, modalLengthCheck, modalUppercaseCheck, modalLowercaseCheck, modalNumberCheck, modalSpecialCharCheck) {
+                    const password = passwordInput.value;
+                    let checksMet = 0;
+
+                    const checks = {
+                        length: password.length >= 8,
+                        uppercase: /[A-Z]/.test(password),
+                        lowercase: /[a-z]/.test(password),
+                        number: /[0-9]/.test(password),
+                        special: /[!@#$%^&*]/.test(password),
                     };
 
-                    // Read the file as a Data URL (base64 encoded string)
-                    reader.readAsDataURL(file);
-                }
-            });
+                    updateCheckUI(modalLengthCheck, checks.length);
+                    updateCheckUI(modalUppercaseCheck, checks.uppercase);
+                    updateCheckUI(modalLowercaseCheck, checks.lowercase);
+                    updateCheckUI(modalNumberCheck, checks.number);
+                    updateCheckUI(modalSpecialCharCheck, checks.special);
 
-            // Event listener for Save Profile Pic button
-            saveProfilePicBtn.addEventListener('click', async () => {
-                const file = profilePictureUpload.files[0];
-                if (!file) {
-                    displayMessage(mainPageErrorMessageDisplay, ['Please select an image to upload.'], 'error');
-                    return;
-                }
+                    checksMet = Object.values(checks).filter(Boolean).length;
 
-                // --- FIX: Send as FormData for Multer to process BLOB ---
-                const formData = new FormData();
-                formData.append('profileImage', file); // 'profileImage' is the field name for the backend
+                    const totalChecks = 5;
+                    const strengthPercentage = (checksMet / totalChecks) * 100;
+                    strengthBarFill.style.width = `${strengthPercentage}%`;
 
-                try {
-                    const response = await fetch('/profile/picture', { // Backend endpoint expects multipart/form-data
-                        method: 'POST',
-                        body: formData, // Send the FormData object directly. Browser sets Content-Type automatically.
-                        // DO NOT set 'Content-Type': 'application/json' here, as it conflicts with FormData.
-                    });
+                    let strengthColor = '#e0e0e0';
+                    let strengthMessage = 'Very Weak';
 
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        tempProfileImageSrc = null;
-                        profilePictureUpload.value = ''; // Clear the file input
-                        profilePicActions.classList.add('hidden');
-                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Profile picture updated!'], 'success');
-                        hideMessage(mainPageErrorMessageDisplay); // Hide any error messages
-                    } else {
-                        console.error('Profile picture upload failed:', result.message);
-                        displayMessage(mainPageErrorMessageDisplay, [result.message || 'Failed to upload profile picture.'], 'error');
-                        hideMessage(mainPageSuccessMessageDisplay); // Hide any success messages
+                    if (checksMet === 1) {
+                        strengthColor = '#f87171';
+                        strengthMessage = 'Weak';
+                    } else if (checksMet === 2) {
+                        strengthColor = '#fbbf24';
+                        strengthMessage = 'Fair';
+                    } else if (checksMet === 3) {
+                        strengthColor = '#fcd34d';
+                        strengthMessage = 'Good';
+                    } else if (checksMet === 4) {
+                        strengthColor = '#84cc16';
+                        strengthMessage = 'Strong';
+                    } else if (checksMet === 5) {
+                        strengthColor = '#22c55e';
+                        strengthMessage = 'Very Strong';
                     }
-                } catch (error) {
-                    console.error('Network or unexpected error during profile picture upload:', error);
-                    displayMessage(mainPageErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+
+                    strengthBarFill.style.backgroundColor = strengthColor;
+                    strengthText.textContent = `Password Strength: ${strengthMessage}`;
+
+                    return checksMet === totalChecks;
+                }
+
+                changePasswordBtn.addEventListener('click', () => {
+                    changePasswordModal.classList.remove('hidden');
+                    hideMessage(changePasswordErrorMessageDisplay);
                     hideMessage(mainPageSuccessMessageDisplay);
-                }
-            });
+                    oldPasswordInput.value = '';
+                    newPasswordInput.value = '';
+                    confirmNewPasswordInput.value = '';
+                    checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
+                    oldPasswordInput.setAttribute('type', 'password');
+                    oldEyeSlashPath.classList.add('hidden');
+                    newPasswordInput.setAttribute('type', 'password');
+                    newEyeSlashPath.classList.add('hidden');
+                    confirmNewPasswordInput.setAttribute('type', 'password');
+                    confirmNewEyeSlashPath.classList.add('hidden');
+                });
 
-            // Event listener for Cancel Profile Pic button
-            cancelProfilePicBtn.addEventListener('click', () => {
-                // Revert the image to the original source (either initial or last saved)
-                // If user.profile_image_blob exists, it will point to the BLOB retrieval endpoint
-                // Otherwise, it falls back to the default placeholder.
-                // The EJS logic for profileImageSrc handles this on initial load.
-                profileImage.src = "<%= user.profile_image_blob ? `/profile/image/${user.id}` : ORIGINAL_PROFILE_IMAGE_SRC %>";
-                profilePictureUpload.value = ''; // Clear the file input
-                tempProfileImageSrc = null; // Clear temporary storage
-                // Hide the save/cancel buttons
-                profilePicActions.classList.add('hidden');
-                hideMessage(mainPageErrorMessageDisplay); // Hide any errors
-                hideMessage(mainPageSuccessMessageDisplay); // Hide any successes
-            });
+                cancelChangePasswordBtn.addEventListener('click', () => {
+                    changePasswordModal.classList.add('hidden');
+                });
 
-
-            // Get references for the security questions modal
-            const manageSecurityQuestionsBtn = document.getElementById('manageSecurityQuestionsBtn');
-            const securityQuestionsModal = document.getElementById('securityQuestionsModal');
-            const cancelSecurityQuestionsBtn = document.getElementById('cancelSecurityQuestionsBtn');
-            const securityQuestionsForm = document.getElementById('securityQuestionsForm'); // New: Reference to the form
-            const questionSelect = document.getElementById('question'); // Changed from question1Select
-            const answerInput = document.getElementById('answer'); // Changed from answer1Input
-            const currentPasswordInput = document.getElementById('currentPassword'); // Added for security questions modal password
-            const securityQuestionsErrorMessageDisplay = document.getElementById('securityQuestionsErrorMessageDisplay'); // New: Error display for security questions
-
-
-            // Toggle password visibility elements for current password in security questions modal
-            const toggleCurrentPassword = document.getElementById('toggleCurrentPassword');
-            const currentEyeSlashPath = document.getElementById('currentEyeSlashPath');
-
-            // Function to display messages (errors or success) in a unified area
-            function displayMessage(displayElement, messages, type) {
-                // Clear previous states and content
-                displayElement.classList.remove('show', 'bg-red-100', 'text-red-700', 'border-red-400', 'bg-green-100', 'text-green-800', 'border-green-400');
-                displayElement.innerHTML = '';
-
-                if (messages && messages.length > 0) {
-                    displayElement.innerHTML = `<p>${messages[0]}</p>`; // Display only the first message for simplicity
-                    displayElement.classList.add('show');
-                    if (type === 'error') {
-                        displayElement.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
-                        displayElement.classList.remove('bg-green-100', 'text-green-800', 'border-green-400'); // Ensure success classes are removed
-                    } else if (type === 'success') {
-                        displayElement.classList.add('bg-green-100', 'text-green-800', 'border-green-400');
-                        displayElement.classList.remove('bg-red-100', 'text-red-700', 'border-red-400'); // Ensure error classes are removed
+                changePasswordModal.addEventListener('click', (event) => {
+                    if (event.target === changePasswordModal) {
+                        changePasswordModal.classList.add('hidden');
                     }
-                }
-            }
+                });
 
-            // Function to hide any message display area
-            function hideMessage(displayElement) {
-                displayElement.classList.remove('show', 'bg-red-100', 'text-red-700', 'border-red-400', 'bg-green-100', 'text-green-800', 'border-green-400');
-                displayElement.innerHTML = '';
-            }
-
-
-            // Show the modal when "Manage Security Questions" button is clicked
-            manageSecurityQuestionsBtn.addEventListener('click', () => {
-                securityQuestionsModal.classList.remove('hidden');
-                hideMessage(securityQuestionsErrorMessageDisplay); // Clear errors on open
-                hideMessage(mainPageSuccessMessageDisplay); // Clear success on open
-                questionSelect.value = ''; // Changed from question1Select
-                answerInput.value = ''; // Clear answer field
-                currentPasswordInput.value = ''; // Clear password field
-                // Ensure eye icon is reset
-                currentPasswordInput.setAttribute('type', 'password');
-                currentEyeSlashPath.classList.add('hidden');
-            });
-
-            // Hide security questions modal when cancel button is clicked
-            cancelSecurityQuestionsBtn.addEventListener('click', () => {
-                securityQuestionsModal.classList.add('hidden');
-            });
-
-            // Hide security questions modal when clicking outside
-            securityQuestionsModal.addEventListener('click', (event) => {
-                if (event.target === securityQuestionsModal) {
-                    securityQuestionsModal.classList.add('hidden');
-                }
-            });
-
-            // Hide security questions modal when Escape key is pressed
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && securityQuestionsModal.classList.contains('hidden') === false) {
-                    securityQuestionsModal.classList.add('hidden');
-                }
-            });
-
-            // Event listeners to hide messages when user interacts with fields
-            questionSelect.addEventListener('change', () => { // Changed from question1Select
-                hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(mainPageSuccessMessageDisplay);
-            });
-            answerInput.addEventListener('input', () => { // Changed from answer1Input
-                hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(mainPageSuccessMessageDisplay);
-            });
-            currentPasswordInput.addEventListener('input', () => {
-                hideMessage(securityQuestionsErrorMessageDisplay);
-                hideMessage(mainPageSuccessMessageDisplay);
-            });
-
-
-            // --- Security Questions Form Submission Logic ---
-            securityQuestionsForm.addEventListener('submit', async function(event) {
-                event.preventDefault(); // Prevent default HTML submission
-
-                let clientErrors = [];
-
-                const selectedOption = questionSelect.options[questionSelect.selectedIndex]; // Changed from question1Select
-                const questionText = selectedOption.textContent.trim(); // Get the actual text
-                const answer = answerInput.value.trim(); // Changed from answer1Input
-                const currentPassword = currentPasswordInput.value;
-
-                if (!questionText || questionSelect.value === "") { // Check if a question is selected
-                    clientErrors.push('Please select a security question.');
-                }
-                if (!answer || answer.length < 1 || answer.length > 100) { // Added length check
-                    clientErrors.push('Security answer must be between 1 and 100 characters long.');
-                }
-                if (!currentPassword || currentPassword.length < 8 || currentPassword.length > 50) { // Added length check
-                    clientErrors.push('Current password must be between 8 and 50 characters long.');
-                }
-
-                if (clientErrors.length > 0) {
-                    displayMessage(securityQuestionsErrorMessageDisplay, clientErrors, 'error');
-                    return;
-                } else {
-                    hideMessage(securityQuestionsErrorMessageDisplay);
-                }
-
-                try {
-                    const response = await fetch('/profile/question', { // New backend endpoint
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            question: questionText, // Send the text
-                            answer: answer,
-                            currentPassword: currentPassword
-                        }),
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Security question updated successfully!'], 'success');
-                        hideMessage(securityQuestionsErrorMessageDisplay); // Ensure error is hidden
-                        // Clear fields on success
-                        questionSelect.value = ''; // Changed from question1Select
-                        answerInput.value = ''; // Changed from answer1Input
-                        currentPasswordInput.value = '';
-                        securityQuestionsModal.classList.add('hidden');
-
-                    } else {
-                        console.error('Security questions update failed:', result.message);
-                        displayMessage(securityQuestionsErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
-                        hideMessage(mainPageSuccessMessageDisplay); // Ensure success is hidden
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && changePasswordModal.classList.contains('hidden') === false) {
+                        changePasswordModal.classList.add('hidden');
                     }
-                } catch (error) {
-                    console.error('Network or unexpected error during security questions update:', error);
-                    displayMessage(securityQuestionsErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
-                    hideMessage(mainPageSuccessMessageDisplay);
-                }
-            });
+                });
 
-
-            // --- Change Password Modal Logic ---
-            const changePasswordBtn = document.getElementById('changePasswordBtn');
-            const changePasswordModal = document.getElementById('changePasswordModal');
-            const cancelChangePasswordBtn = document.getElementById('cancelChangePasswordBtn');
-            const changePasswordForm = document.getElementById('changePasswordForm');
-            const oldPasswordInput = document.getElementById('oldPassword');
-            const newPasswordInput = document.getElementById('newPassword');
-            const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
-            const changePasswordErrorMessageDisplay = document.getElementById('changePasswordErrorMessageDisplay');
-            // mainPageSuccessMessageDisplay is already defined globally
-
-
-            // Password complexity elements for new password
-            const newStrengthBarFill = document.getElementById('newStrengthBarFill');
-            const newStrengthText = document.getElementById('newStrengthText');
-            const newComplexityModal = document.getElementById('newComplexityModal');
-            const openNewComplexityModalBtn = document.getElementById('openNewComplexityModal');
-            const closeNewComplexityModalBtn = document.getElementById('closeNewComplexityModal');
-            const newModalLengthCheck = document.getElementById('newModalLengthCheck');
-            const newModalUppercaseCheck = document.getElementById('newModalUppercaseCheck');
-            const newModalLowercaseCheck = document.getElementById('newModalLowercaseCheck');
-            const newModalNumberCheck = document.getElementById('newModalNumberCheck');
-            const newModalSpecialCharCheck = document.getElementById('newModalSpecialCharCheck');
-
-            // Toggle password visibility elements for new password
-            const toggleNewPassword = document.getElementById('toggleNewPassword');
-            const newEyeSlashPath = document.getElementById('newEyeSlashPath');
-            const toggleConfirmNewPassword = document.getElementById('toggleConfirmNewPassword');
-            const confirmNewEyeSlashPath = document.getElementById('confirmNewEyeSlashPath');
-            const toggleOldPassword = document.getElementById('toggleOldPassword'); // Added for old password
-            const oldEyeSlashPath = document.getElementById('oldEyeSlashPath'); // Added for old password
-
-
-            // Helper function to update check UI for password complexity
-            function updateCheckUI(element, isMet) {
-                element.classList.remove('text-red-600', 'text-green-600', 'text-gray-700');
-                if (isMet) {
-                    element.classList.add('text-green-600');
-                } else {
-                    element.classList.add('text-red-600');
-                }
-            }
-
-            // Function to check password complexity and update UI for a given password input
-            function checkPasswordComplexity(passwordInput, strengthBarFill, strengthText, modalLengthCheck, modalUppercaseCheck, modalLowercaseCheck, modalNumberCheck, modalSpecialCharCheck) {
-                const password = passwordInput.value;
-                let checksMet = 0;
-
-                const checks = {
-                    length: password.length >= 8,
-                    uppercase: /[A-Z]/.test(password),
-                    lowercase: /[a-z]/.test(password),
-                    number: /[0-9]/.test(password),
-                    special: /[!@#$%^&*]/.test(password),
+                const preventClipboardActions = (event) => {
+                    event.preventDefault();
                 };
 
-                updateCheckUI(modalLengthCheck, checks.length);
-                updateCheckUI(modalUppercaseCheck, checks.uppercase);
-                updateCheckUI(modalLowercaseCheck, checks.lowercase);
-                updateCheckUI(modalNumberCheck, checks.number);
-                updateCheckUI(modalSpecialCharCheck, checks.special);
+                oldPasswordInput.addEventListener('copy', preventClipboardActions);
+                oldPasswordInput.addEventListener('paste', preventClipboardActions);
+                oldPasswordInput.addEventListener('cut', preventClipboardActions);
 
-                checksMet = Object.values(checks).filter(Boolean).length;
+                newPasswordInput.addEventListener('copy', preventClipboardActions);
+                newPasswordInput.addEventListener('paste', preventClipboardActions);
+                newPasswordInput.addEventListener('cut', preventClipboardActions);
 
-                const totalChecks = 5;
-                const strengthPercentage = (checksMet / totalChecks) * 100;
-                strengthBarFill.style.width = `${strengthPercentage}%`;
+                confirmNewPasswordInput.addEventListener('copy', preventClipboardActions);
+                confirmNewPasswordInput.addEventListener('paste', preventClipboardActions);
+                confirmNewPasswordInput.addEventListener('cut', preventClipboardActions);
 
-                let strengthColor = '#e0e0e0'; // Default gray
-                let strengthMessage = 'Very Weak';
+                currentPasswordInput.addEventListener('copy', preventClipboardActions);
+                currentPasswordInput.addEventListener('paste', preventClipboardActions);
+                currentPasswordInput.addEventListener('cut', preventClipboardActions);
 
-                if (checksMet === 1) {
-                    strengthColor = '#f87171'; // Red
-                    strengthMessage = 'Weak';
-                } else if (checksMet === 2) {
-                    strengthColor = '#fbbf24'; // Amber
-                    strengthMessage = 'Fair';
-                } else if (checksMet === 3) {
-                    strengthColor = '#fcd34d'; // Yellow
-                    strengthMessage = 'Good';
-                } else if (checksMet === 4) {
-                    strengthColor = '#84cc16'; // Lime Green
-                    strengthMessage = 'Strong';
-                } else if (checksMet === 5) {
-                    strengthColor = '#22c55e'; // Green
-                    strengthMessage = 'Very Strong';
-                }
+                newPasswordInput.addEventListener('input', function () {
+                    checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
+                    hideMessage(changePasswordErrorMessageDisplay);
+                });
 
-                strengthBarFill.style.backgroundColor = strengthColor;
-                strengthText.textContent = `Password Strength: ${strengthMessage}`;
+                confirmNewPasswordInput.addEventListener('input', function () {
+                    hideMessage(changePasswordErrorMessageDisplay);
+                });
 
-                return checksMet === totalChecks;
-            }
+                changePasswordForm.addEventListener('submit', async function (event) {
+                    event.preventDefault();
 
-            // Show Change Password Modal
-            changePasswordBtn.addEventListener('click', () => {
-                changePasswordModal.classList.remove('hidden');
-                hideMessage(changePasswordErrorMessageDisplay); // Clear errors on open
-                hideMessage(mainPageSuccessMessageDisplay); // Clear success messages on open
-                oldPasswordInput.value = ''; // Clear password fields
-                newPasswordInput.value = '';
-                confirmNewPasswordInput.value = '';
-                // Reset complexity UI on modal open
-                checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
-                // Reset eye icons
-                oldPasswordInput.setAttribute('type', 'password');
-                oldEyeSlashPath.classList.add('hidden');
-                newPasswordInput.setAttribute('type', 'password');
-                newEyeSlashPath.classList.add('hidden');
-                confirmNewPasswordInput.setAttribute('type', 'password');
-                confirmNewEyeSlashPath.classList.add('hidden');
-            });
+                    let clientErrors = [];
 
-            // Hide Change Password Modal
-            cancelChangePasswordBtn.addEventListener('click', () => {
-                changePasswordModal.classList.add('hidden');
-            });
-
-            // Hide Change Password Modal when clicking outside
-            changePasswordModal.addEventListener('click', (event) => {
-                if (event.target === changePasswordModal) {
-                    changePasswordModal.classList.add('hidden');
-                }
-            });
-
-            // Hide Change Password Modal when Escape key is pressed
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && changePasswordModal.classList.contains('hidden') === false) {
-                    changePasswordModal.classList.add('hidden');
-                }
-            });
-
-            // --- NEW: Prevent copy/paste/cut on password fields ---
-            const preventClipboardActions = (event) => {
-                event.preventDefault();
-            };
-
-            oldPasswordInput.addEventListener('copy', preventClipboardActions);
-            oldPasswordInput.addEventListener('paste', preventClipboardActions);
-            oldPasswordInput.addEventListener('cut', preventClipboardActions);
-
-            newPasswordInput.addEventListener('copy', preventClipboardActions);
-            newPasswordInput.addEventListener('paste', preventClipboardActions);
-            newPasswordInput.addEventListener('cut', preventClipboardActions);
-
-            confirmNewPasswordInput.addEventListener('copy', preventClipboardActions);
-            confirmNewPasswordInput.addEventListener('paste', preventClipboardActions);
-            confirmNewPasswordInput.addEventListener('cut', preventClipboardActions);
-
-            currentPasswordInput.addEventListener('copy', preventClipboardActions);
-            currentPasswordInput.addEventListener('paste', preventClipboardActions);
-            currentPasswordInput.addEventListener('cut', preventClipboardActions);
-
-            // Event listener for new password input
-            newPasswordInput.addEventListener('input', function() {
-                checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
-                hideMessage(changePasswordErrorMessageDisplay); // Hide errors as user types
-            });
-
-            // Event listener for confirm new password input
-            confirmNewPasswordInput.addEventListener('input', function() {
-                hideMessage(changePasswordErrorMessageDisplay); // Hide errors as user types
-            });
-
-            // Event listener for Change Password form submission
-            changePasswordForm.addEventListener('submit', async function(event) {
-                event.preventDefault(); // Prevent default HTML submission
-
-                let clientErrors = []; // Array to collect client-side validation errors
-
-                // Validate old password is not empty and meets length requirements
-                if (!oldPasswordInput.value.trim() || oldPasswordInput.value.length < 8 || oldPasswordInput.value.length > 50) {
-                    clientErrors.push('Current password must be between 8 and 50 characters long.');
-                }
-
-                const isNewPasswordComplex = checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
-
-                // Client-side password match check
-                if (newPasswordInput.value !== confirmNewPasswordInput.value) {
-                    clientErrors.push('New passwords do not match.');
-                }
-                // Client-side password complexity check
-                if (!isNewPasswordComplex) {
-                    clientErrors.push('New password does not meet complexity requirements.');
-                }
-                // Client-side new password length check
-                if (newPasswordInput.value.length < 8 || newPasswordInput.value.length > 50) {
-                    clientErrors.push('New password must be between 8 and 50 characters long.');
-                }
-
-                // If there are client-side errors, display them and prevent form submission
-                if (clientErrors.length > 0) {
-                    displayMessage(changePasswordErrorMessageDisplay, clientErrors, 'error');
-                    return; // Stop here if client-side validation fails
-                } else {
-                    hideMessage(changePasswordErrorMessageDisplay); // Clear client-side errors if validation passes
-                }
-
-                // Proceed with fetch API call if client-side validation passes
-                try {
-                    const response = await fetch('/password/change', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            oldPassword: oldPasswordInput.value,
-                            newPassword: newPasswordInput.value,
-                        }),
-                    });
-
-                    const result = await response.json(); // Assuming backend always returns JSON
-
-                    if (response.ok) {
-                        hideMessage(changePasswordErrorMessageDisplay); // Ensure modal error is hidden
-                        changePasswordModal.classList.add('hidden'); // Hide the modal
-                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Password changed successfully!'], 'success'); // Show success on main page
-                        // Clear form fields after successful submission
-                        oldPasswordInput.value = '';
-                        newPasswordInput.value = '';
-                        confirmNewPasswordInput.value = '';
-                    } else { // Status 4xx, 5xx indicates an error
-                        console.error('Password change failed:', result.message);
-                        displayMessage(changePasswordErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error'); // Show error in modal
-                        // Do not clear fields so user can correct
+                    if (!oldPasswordInput.value.trim() || oldPasswordInput.value.length < 8 || oldPasswordInput.value.length > 50) {
+                        clientErrors.push('Current password must be between 8 and 50 characters long.');
                     }
-                } catch (error) {
-                    console.error('Network or unexpected error during password change:', error);
-                    displayMessage(changePasswordErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error'); // Show generic error
-                }
-            });
 
-            // --- Toggle Old Password Visibility Logic ---
-            toggleOldPassword.addEventListener('click', function() {
-                const type = oldPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                oldPasswordInput.setAttribute('type', type);
-                oldEyeSlashPath.classList.toggle('hidden');
-            });
+                    const isNewPasswordComplex = checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
 
-            // --- Toggle New Password Visibility Logic ---
-            toggleNewPassword.addEventListener('click', function() {
-                const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                newPasswordInput.setAttribute('type', type);
-                newEyeSlashPath.classList.toggle('hidden');
-            });
+                    if (newPasswordInput.value !== confirmNewPasswordInput.value) {
+                        clientErrors.push('New passwords do not match.');
+                    }
+                    if (!isNewPasswordComplex) {
+                        clientErrors.push('New password does not meet complexity requirements.');
+                    }
+                    if (newPasswordInput.value.length < 8 || newPasswordInput.value.length > 50) {
+                        clientErrors.push('New password must be between 8 and 50 characters long.');
+                    }
 
-            // --- Toggle Confirm New Password Visibility Logic ---
-            toggleConfirmNewPassword.addEventListener('click', function() {
-                const type = confirmNewPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                confirmNewPasswordInput.setAttribute('type', type);
-                confirmNewEyeSlashPath.classList.toggle('hidden');
-            });
+                    if (clientErrors.length > 0) {
+                        displayMessage(changePasswordErrorMessageDisplay, clientErrors, 'error');
+                        return;
+                    } else {
+                        hideMessage(changePasswordErrorMessageDisplay);
+                    }
 
-            // --- Toggle Current Password (Security Questions Modal) Visibility Logic ---
-            toggleCurrentPassword.addEventListener('click', function() {
-                const type = currentPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                currentPasswordInput.setAttribute('type', type);
-                currentEyeSlashPath.classList.toggle('hidden');
-            });
+                    try {
+                        const response = await fetch('/password/change', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                oldPassword: oldPasswordInput.value,
+                                newPassword: newPasswordInput.value,
+                            }),
+                        });
 
-            // --- New Complexity Modal Functionality ---
-            openNewComplexityModalBtn.addEventListener('click', () => {
-                newComplexityModal.classList.add('show');
-                // Ensure modal content is up-to-date based on current new password input
-                checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
-            });
+                        const result = await response.json();
 
-            closeNewComplexityModalBtn.addEventListener('click', () => {
-                newComplexityModal.classList.remove('show');
-            });
+                        if (response.ok) {
+                            hideMessage(changePasswordErrorMessageDisplay);
+                            changePasswordModal.classList.add('hidden');
+                            displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Password changed successfully!'], 'success');
+                            oldPasswordInput.value = '';
+                            newPasswordInput.value = '';
+                            confirmNewPasswordInput.value = '';
+                        } else {
+                            console.error('Password change failed:', result.message);
+                            displayMessage(changePasswordErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
+                        }
+                    } catch (error) {
+                        console.error('Network or unexpected error during password change:', error);
+                        displayMessage(changePasswordErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+                    }
+                });
 
-            newComplexityModal.addEventListener('click', (event) => {
-                if (event.target === newComplexityModal) {
+                toggleOldPassword.addEventListener('click', function () {
+                    const type = oldPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    oldPasswordInput.setAttribute('type', type);
+                    oldEyeSlashPath.classList.toggle('hidden');
+                });
+
+                toggleNewPassword.addEventListener('click', function () {
+                    const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    newPasswordInput.setAttribute('type', type);
+                    newEyeSlashPath.classList.toggle('hidden');
+                });
+
+                toggleConfirmNewPassword.addEventListener('click', function () {
+                    const type = confirmNewPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    confirmNewPasswordInput.setAttribute('type', type);
+                    confirmNewEyeSlashPath.classList.toggle('hidden');
+                });
+
+                toggleCurrentPassword.addEventListener('click', function () {
+                    const type = currentPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    currentPasswordInput.setAttribute('type', type);
+                    currentEyeSlashPath.classList.toggle('hidden');
+                });
+
+                openNewComplexityModalBtn.addEventListener('click', () => {
+                    newComplexityModal.classList.add('show');
+                    checkPasswordComplexity(newPasswordInput, newStrengthBarFill, newStrengthText, newModalLengthCheck, newModalUppercaseCheck, newModalLowercaseCheck, newModalNumberCheck, newModalSpecialCharCheck);
+                });
+
+                closeNewComplexityModalBtn.addEventListener('click', () => {
                     newComplexityModal.classList.remove('show');
+                });
+
+                newComplexityModal.addEventListener('click', (event) => {
+                    if (event.target === newComplexityModal) {
+                        newComplexityModal.classList.remove('show');
+                    }
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && newComplexityModal.classList.contains('show')) {
+                        newComplexityModal.classList.remove('show');
+                    }
+                });
+
+                const addressInput = document.getElementById('address');
+                const editProfileActions = document.getElementById('editProfileActions');
+                const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
+                const editProfileForm = document.getElementById('editProfileForm');
+                const editProfileErrorMessageDisplay = document.getElementById('editProfileErrorMessageDisplay');
+
+                const originalUsernameDisplay = document.getElementById('usernameDisplay').textContent.trim();
+                let originalAddress = addressInput.value;
+
+                function checkIfEdited() {
+                    const isAddressEdited = addressInput.value !== originalAddress;
+
+                    if (isAddressEdited) {
+                        editProfileActions.classList.remove('hidden');
+                    } else {
+                        editProfileActions.classList.add('hidden');
+                    }
                 }
-            });
 
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && newComplexityModal.classList.contains('show')) {
-                    newComplexityModal.classList.remove('show');
-                }
-            });
+                addressInput.addEventListener('input', () => {
+                    checkIfEdited();
+                    hideMessage(editProfileErrorMessageDisplay);
+                });
 
-            // --- Edit Profile Form Logic ---
-            // Removed usernameInput reference as it's no longer an input for editing
-            const addressInput = document.getElementById('address');
-            const editProfileActions = document.getElementById('editProfileActions');
-            const cancelEditProfileBtn = document.getElementById('cancelEditProfileBtn');
-            const editProfileForm = document.getElementById('editProfileForm');
-            const editProfileErrorMessageDisplay = document.getElementById('editProfileErrorMessageDisplay'); // New: Error display for edit profile
-
-            // Store original values (originalUsername is still needed for display, but not for input comparison)
-            const originalUsernameDisplay = document.getElementById('usernameDisplay').textContent.trim();
-            let originalAddress = addressInput.value;
-
-            // Function to check if any field has been edited
-            function checkIfEdited() {
-                // Only check address, as username is static text
-                const isAddressEdited = addressInput.value !== originalAddress;
-
-                if (isAddressEdited) {
-                    editProfileActions.classList.remove('hidden');
-                } else {
+                cancelEditProfileBtn.addEventListener('click', () => {
+                    addressInput.value = originalAddress;
                     editProfileActions.classList.add('hidden');
-                }
-            }
+                    hideMessage(editProfileErrorMessageDisplay);
+                });
 
-            // Add event listeners to input fields
-            addressInput.addEventListener('input', () => {
-                checkIfEdited();
-                hideMessage(editProfileErrorMessageDisplay); // Hide errors as user types
-            });
+                editProfileForm.addEventListener('submit', async function (event) {
+                    event.preventDefault();
 
-            // Handle Cancel Changes button click
-            cancelEditProfileBtn.addEventListener('click', () => {
-                // No need to reset usernameInput.value as it's not an input
-                addressInput.value = originalAddress;
-                editProfileActions.classList.add('hidden'); // Hide buttons after canceling
-                hideMessage(editProfileErrorMessageDisplay); // Hide errors on cancel
-            });
+                    let clientErrors = [];
+                    const address = addressInput.value.trim();
 
-            // Event listener for Edit Profile form submission
-            editProfileForm.addEventListener('submit', async function(event) {
-                event.preventDefault(); // Prevent default HTML submission
+                    if (!address || address.length < 5 || address.length > 255) {
+                        clientErrors.push('Address must be between 5 and 255 characters long.');
+                    }
 
-                let clientErrors = [];
-                const address = addressInput.value.trim();
+                    if (clientErrors.length > 0) {
+                        displayMessage(editProfileErrorMessageDisplay, clientErrors, 'error');
+                        return;
+                    } else {
+                        hideMessage(editProfileErrorMessageDisplay);
+                    }
 
-                if (!address || address.length < 5 || address.length > 255) {
-                    clientErrors.push('Address must be between 5 and 255 characters long.');
-                }
+                    try {
+                        const response = await fetch('/profile/edit', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                address: address
+                            }),
+                        });
 
-                if (clientErrors.length > 0) {
-                    displayMessage(editProfileErrorMessageDisplay, clientErrors, 'error');
-                    return;
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            originalAddress = address;
+                            editProfileActions.classList.add('hidden');
+                            displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Profile updated successfully!'], 'success');
+                            hideMessage(editProfileErrorMessageDisplay);
+                        } else {
+                            console.error('Profile update failed:', result.message);
+                            displayMessage(editProfileErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
+                            hideMessage(mainPageSuccessMessageDisplay);
+                        }
+                    } catch (error) {
+                        console.error('Network or unexpected error during profile update:', error);
+                        displayMessage(editProfileErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+                        hideMessage(mainPageSuccessMessageDisplay);
+                    }
+                });
+
+                const serverErrorMessages = <% - JSON.stringify(error_messages || []) %>;
+                const serverSuccessMessages = <% - JSON.stringify(success_messages || []) %>;
+
+                if (serverErrorMessages.length > 0) {
+                    displayMessage(editProfileErrorMessageDisplay, serverErrorMessages, 'error');
                 } else {
                     hideMessage(editProfileErrorMessageDisplay);
                 }
 
-                try {
-                    const response = await fetch('/profile/edit', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            address: address
-                        }),
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        originalAddress = address; // Update original address on successful save
-                        editProfileActions.classList.add('hidden');
-                        displayMessage(mainPageSuccessMessageDisplay, [result.message || 'Profile updated successfully!'], 'success');
-                        hideMessage(editProfileErrorMessageDisplay);
-                    } else {
-                        console.error('Profile update failed:', result.message);
-                        displayMessage(editProfileErrorMessageDisplay, [result.message || 'An unexpected error occurred.'], 'error');
-                        hideMessage(mainPageSuccessMessageDisplay);
-                    }
-                } catch (error) {
-                    console.error('Network or unexpected error during profile update:', error);
-                    displayMessage(editProfileErrorMessageDisplay, ['Network error or server unreachable. Please try again.'], 'error');
+                if (serverSuccessMessages.length > 0) {
+                    displayMessage(mainPageSuccessMessageDisplay, serverSuccessMessages, 'success');
+                } else {
                     hideMessage(mainPageSuccessMessageDisplay);
                 }
             });
-
-
-            // --- Initial Load: Display server-side flash messages if any ---
-            // This relies on EJS to pass error_messages and success_messages from the server.
-            // Ensure these are passed from your backend controller when rendering this EJS file.
-            const serverErrorMessages = <%- JSON.stringify(error_messages || []) %>;
-            const serverSuccessMessages = <%- JSON.stringify(success_messages || []) %>;
-
-            if (serverErrorMessages.length > 0) {
-                displayMessage(editProfileErrorMessageDisplay, serverErrorMessages, 'error');
-            } else {
-                hideMessage(editProfileErrorMessageDisplay);
-            }
-
-            if (serverSuccessMessages.length > 0) {
-                displayMessage(mainPageSuccessMessageDisplay, serverSuccessMessages, 'success');
-            } else {
-                hideMessage(mainPageSuccessMessageDisplay);
-            }
-        });
-    </script>
+        </script>
 </body>
+
 </html>

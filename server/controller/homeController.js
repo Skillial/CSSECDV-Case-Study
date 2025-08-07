@@ -1,19 +1,16 @@
 const { OccasioDB } = require('./../config/db');
 const { auditLogger } = require('./../middleware/auditLogger')
 
-// Define a constant for the maximum allowed search term length
 const MAX_SEARCH_LENGTH = 100;
 
 const controller = {
 
     page: (req, res) => {
-        // Retrieve last login report from session set by Passport.js
         const lastLoginReport = req.session.lastLoginReport;
-        // Clear the session variable immediately after retrieving it
         delete req.session.lastLoginReport;
 
         const urlMessage = req.query.message;
-        const urlMessageType = req.query.type; // 'success' or 'error'
+        const urlMessageType = req.query.type;
 
         if (urlMessage && urlMessageType) {
             req.flash(urlMessageType, urlMessage);
@@ -23,11 +20,10 @@ const controller = {
 
         if (req.user.role === 'admin') {
             try {
-                // Fetch customer data for the dashboard
+
                 const customerStmt = OccasioDB.prepare("SELECT id, username, address, created_at FROM accounts WHERE role = 'customer'");
                 const customers = customerStmt.all();
 
-                // Fetch employee data (users with 'manager' role) and their assigned categories
                 const employeeCategoriesStmt = OccasioDB.prepare(`
                     SELECT
                         a.id,
@@ -45,16 +41,14 @@ const controller = {
                 `);
                 let employees = employeeCategoriesStmt.all();
 
-                // Process employees to convert assigned_categories_json string into an array
                 employees = employees.map(employee => ({
                     ...employee,
                     assignedItems: employee.assigned_categories_json ? employee.assigned_categories_json.split(',') : []
                 }));
-                // Render the dashboard, passing the fetched data and last login report
                 res.render('dashboard', {
                     customers: customers,
                     employees: employees,
-                    lastLoginReport: lastLoginReport || null // Pass the report to the template
+                    lastLoginReport: lastLoginReport || null
                 });
 
             } catch (dbError) {
@@ -64,7 +58,6 @@ const controller = {
             }
         } else if (req.user.role === 'manager') {
             try {
-                // Fetch employee data (users with 'manager' role) and their assigned categories
                 const employeeCategoriesStmt = OccasioDB.prepare(`
                     SELECT
                         a.id,
@@ -82,16 +75,14 @@ const controller = {
                 `);
                 let currentManagerAssignments = employeeCategoriesStmt.all(req.user.id);
 
-                // Process assignments to convert assigned_categories_json string into an array
                 currentManagerAssignments = currentManagerAssignments.map(employee => ({
                     ...employee,
                     assignedItems: employee.assigned_categories_json ? employee.assigned_categories_json.split(',') : []
                 }));
 
-                // Render the ordersinventory page, passing the current manager's assignments and last login report
                 res.render('ordersinventory', {
                     managerAssignments: currentManagerAssignments.length > 0 ? currentManagerAssignments[0].assignedItems : [],
-                    lastLoginReport: lastLoginReport || null // Pass the report to the template
+                    lastLoginReport: lastLoginReport || null
                 });
             } catch (dbError) {
                 console.error("Database query error on ordersinventory load:", dbError.message);
@@ -103,9 +94,7 @@ const controller = {
                 const initialLimit = 8;
                 const { search, category } = req.query;
 
-                // Backend validation for search term length
                 if (search && search.length > MAX_SEARCH_LENGTH) {
-                    // 🪵 Audit Log: Input Validation Failure
                     auditLogger({
                         eventType: 'Input Validation',
                         userId: req.user.id,
@@ -115,7 +104,7 @@ const controller = {
                         description: `Search term exceeded maximum length. Term: "${search}"`
                     });
                     req.flash('error', `Search term cannot exceed ${MAX_SEARCH_LENGTH} characters.`);
-                    return res.redirect('/home'); // Redirect back to home with an error
+                    return res.redirect('/home');
                 }
 
                 let queryParams = [];
@@ -161,12 +150,11 @@ const controller = {
                     return { ...product, imageUrl };
                 });
 
-                // Pass products, current filters, and last login report to the template
                 res.render('home', {
                     products: productsWithImages,
                     search: search || '',
                     category: category || '',
-                    lastLoginReport: lastLoginReport || null // Pass the report to the template
+                    lastLoginReport: lastLoginReport || null
                 });
 
             } catch (dbError) {
@@ -185,9 +173,7 @@ const controller = {
             const { search, category } = req.query;
             const offset = (page - 1) * limit;
 
-            // Backend validation for search term length
             if (search && search.length > MAX_SEARCH_LENGTH) {
-                // 🪵 Audit Log: Input Validation Failure
                 auditLogger({
                     eventType: 'Input Validation',
                     userId: req.user.id,

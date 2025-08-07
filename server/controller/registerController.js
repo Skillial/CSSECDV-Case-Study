@@ -18,7 +18,6 @@ const controller = {
         const ip_address = req.ip;
         let errors = [];
 
-        // --- Input Validation ---
         if (!username || !password || !confirmPassword) errors.push('Please fill in all fields.');
         if (username && (username.length < 3 || username.length > 20)) errors.push('Username must be between 3 and 20 characters long.');
         if (password && password.length > 50) errors.push('Password cannot exceed 50 characters.');
@@ -57,7 +56,7 @@ const controller = {
                 );
                 const accountInfo = insertAccountStmt.run(username, hashedPassword, 'customer', 0, null, null, currentTime, currentTime, currentTime, null, null);
                 newAccountId = accountInfo.lastInsertRowid;
-                
+
                 const insertPasswordHistoryStmt = OccasioDB.prepare('INSERT INTO password_history (account_id, password_hash, created_at) VALUES (?, ?, ?)');
                 insertPasswordHistoryStmt.run(newAccountId, hashedPassword, currentTime);
             })();
@@ -80,7 +79,6 @@ const controller = {
         const ip_address = req.ip;
         let errors = [];
 
-        // --- Input Validation ---
         if (!username || !password || !confirmPassword) errors.push('Please fill in all fields.');
         if (username && (username.length < 3 || username.length > 20)) errors.push('Username must be between 3 and 20 characters long.');
         if (password && password.length > 50) errors.push('Password cannot exceed 50 characters.');
@@ -91,7 +89,7 @@ const controller = {
         if (!passwordRegex.lowercase.test(password)) errors.push('Password must contain a lowercase letter.');
         if (!passwordRegex.number.test(password)) errors.push('Password must contain a number.');
         if (!passwordRegex.specialChar.test(password)) errors.push('Password must contain a special character (!@#$%^&*).');
-        
+
         if (errors.length > 0) {
             auditLogger({ eventType: 'Input Validation', userId: adminId, username: adminUsername, ip_address, status: 'Failure', description: `Admin registration failed for '${username}'. Reason: ${errors[0]}` });
             return res.status(400).json({ message: errors.join('<br>') });
@@ -102,7 +100,7 @@ const controller = {
             if (existingUser) {
                 throw new Error('Username already exists.');
             }
-            
+
             const hashedPassword = await hashString(password);
             const currentTime = new Date().toISOString();
             let newAdminId;
@@ -137,7 +135,6 @@ const controller = {
         const ip_address = req.ip;
         let errors = [];
 
-        // --- Input Validation ---
         if (!username || !password || !confirmPassword) errors.push('Please fill in all fields.');
         if (username && (username.length < 3 || username.length > 20)) errors.push('Username must be between 3 and 20 characters long.');
         if (password && password.length > 50) errors.push('Password cannot exceed 50 characters.');

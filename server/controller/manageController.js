@@ -1,12 +1,9 @@
-// Import necessary modules
 const { OccasioDB } = require('./../config/db');
 const multer = require('multer');
 const { auditLogger } = require('./../middleware/auditLogger')
 
-// Configure multer
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Define constants for validation
 const MIN_PRICE = 0.01;
 const MAX_PRICE = 999999.99;
 const MIN_STOCK = 0;
@@ -26,7 +23,6 @@ const MAX_TAG_LENGTH_TYPE_OPTION = 50;
 const MAX_TAG_LENGTH_FEATURE = 100;
 const MAX_IMAGES = 5;
 
-// Helper function
 const getManagerCategories = (employeeId) => {
     const selectCategoriesStmt = OccasioDB.prepare('SELECT category_name FROM employee_categories WHERE employee_id = ?');
     const categories = selectCategoriesStmt.all(employeeId);
@@ -41,7 +37,6 @@ const controller = {
         const { product_name, product_full_name, description, category, brand, sku, price, stock, type, type_options, features } = req.body;
         const errors = [];
 
-        // --- Backend Validation ---
         if (!product_name || product_name.trim() === '') errors.push('Product Name is required.');
         else if (product_name.length < MIN_PRODUCT_NAME_LENGTH || product_name.length > MAX_PRODUCT_NAME_LENGTH) errors.push(`Product Name must be between ${MIN_PRODUCT_NAME_LENGTH} and ${MAX_PRODUCT_NAME_LENGTH} characters.`);
         if (!product_full_name || product_full_name.trim() === '') errors.push('Product Full Name is required.');
@@ -68,7 +63,6 @@ const controller = {
         if (req.files && req.files.length > MAX_IMAGES) errors.push(`You can upload a maximum of ${MAX_IMAGES} images.`);
 
         if (errors.length > 0) {
-            // 🪵 Audit Log: Input Validation Failure
             auditLogger({
                 eventType: 'Input Validation',
                 userId: req.user.id,
@@ -79,7 +73,6 @@ const controller = {
             });
             return res.status(400).json({ message: errors[0] });
         }
-        // --- End Backend Validation ---
 
         try {
             const parsedTypeOptions = type_options ? JSON.stringify(typeOptionsArray) : null;
@@ -96,7 +89,6 @@ const controller = {
                 });
             })();
 
-            // 🪵 Audit Log: Product Added Successfully
             auditLogger({
                 eventType: 'Order Management',
                 userId: req.user.id,
@@ -117,7 +109,6 @@ const controller = {
                 statusCode = 409;
                 responseMessage = 'Product with this SKU already exists.';
             }
-            // 🪵 Audit Log: Product Add Failure
             auditLogger({
                 eventType: 'Account Management',
                 userId: req.user.id,
@@ -136,7 +127,6 @@ const controller = {
         const { product_name, product_full_name, description, category, brand, sku, price, stock, type, type_options, features, existingImageIds } = req.body;
         const errors = [];
 
-        // --- Backend Validation ---
         if (!product_name || product_name.trim() === '') errors.push('Product Name is required.');
         else if (product_name.length < MIN_PRODUCT_NAME_LENGTH || product_name.length > MAX_PRODUCT_NAME_LENGTH) errors.push(`Product Name must be between ${MIN_PRODUCT_NAME_LENGTH} and ${MAX_PRODUCT_NAME_LENGTH} characters.`);
         if (!product_full_name || product_full_name.trim() === '') errors.push('Product Full Name is required.');
@@ -165,7 +155,6 @@ const controller = {
         if (totalImagesAfterUpdate > MAX_IMAGES) errors.push(`You can have a maximum of ${MAX_IMAGES} images.`);
 
         if (errors.length > 0) {
-            // 🪵 Audit Log: Input Validation Failure
             auditLogger({
                 eventType: 'Input Validation',
                 userId: req.user.id,
@@ -176,7 +165,6 @@ const controller = {
             });
             return res.status(400).json({ message: errors[0] });
         }
-        // --- End Backend Validation ---
 
         try {
             const parsedTypeOptions = type_options ? JSON.stringify(typeOptionsArray) : null;
@@ -187,7 +175,6 @@ const controller = {
                 const updateProductStmt = OccasioDB.prepare(`UPDATE products SET product_name = ?, product_full_name = ?, description = ?, category = ?, brand = ?, sku = ?, price = ?, stock = ?, type = ?, type_options = ?, features = ?, updated_at = ? WHERE id = ?`);
                 updateProductStmt.run(product_name, product_full_name, description || null, category, brand, sku, parsedPrice, parsedStock, type || null, parsedTypeOptions, parsedFeatures, currentTime, productId);
 
-                // Image handling logic
                 const idsToKeep = existingImageIds ? existingImageIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id)) : [];
                 if (idsToKeep.length > 0) {
                     const placeholders = idsToKeep.map(() => '?').join(',');
@@ -205,7 +192,6 @@ const controller = {
                 }
             })();
 
-            // 🪵 Audit Log: Product Edited Successfully
             auditLogger({
                 eventType: 'Order Management',
                 userId: req.user.id,
@@ -226,7 +212,6 @@ const controller = {
                 statusCode = 409;
                 responseMessage = 'Product with this SKU already exists.';
             }
-            // 🪵 Audit Log: Product Edit Failure
             auditLogger({
                 eventType: 'Account Management',
                 userId: req.user.id,
@@ -252,7 +237,6 @@ const controller = {
             const info = deleteProductStmt.run(productId);
 
             if (info.changes === 0) {
-                // 🪵 Audit Log: Delete Failure (Not Found)
                 auditLogger({
                     eventType: 'Account Management',
                     userId: req.user.id,
@@ -264,7 +248,6 @@ const controller = {
                 return res.status(404).json({ message: 'Product not found.' });
             }
 
-            // 🪵 Audit Log: Product Deleted Successfully
             auditLogger({
                 eventType: 'Order Management',
                 userId: req.user.id,
@@ -276,7 +259,6 @@ const controller = {
             res.status(200).json({ message: 'Product deleted successfully!' });
 
         } catch (error) {
-            // 🪵 Audit Log: Delete Failure (Error)
             auditLogger({
                 eventType: 'Account Management',
                 userId: req.user.id,
@@ -294,7 +276,6 @@ const controller = {
         const orderId = req.params.id;
         const { status } = req.body;
 
-        // --- Validation ---
         if (!status) {
             auditLogger({ eventType: 'Input Validation', userId: req.user.id, username: req.user.username, ip_address: req.ip, status: 'Failure', description: `Order status update failed for order ID ${orderId}. Reason: Status is required.` });
             return res.status(400).json({ message: 'New status is required.' });
@@ -304,7 +285,6 @@ const controller = {
             auditLogger({ eventType: 'Input Validation', userId: req.user.id, username: req.user.username, ip_address: req.ip, status: 'Failure', description: `Order status update failed for order ID ${orderId}. Reason: Invalid status '${status}'.` });
             return res.status(400).json({ message: 'Invalid order status provided.' });
         }
-        // --- End Validation ---
 
         try {
             const updateOrderStmt = OccasioDB.prepare('UPDATE orders SET status = ?, updated_at = ? WHERE id = ?');
@@ -334,7 +314,7 @@ const controller = {
 
     getProducts: async (req, res) => {
         try {
-            const managerId = req.user.id; // Get manager ID from authenticated user
+            const managerId = req.user.id;
             const managerAssignedCategories = getManagerCategories(managerId);
 
             let products = [];
@@ -353,39 +333,35 @@ const controller = {
                 );
                 products = selectProductsStmt.all(...managerAssignedCategories);
             } else {
-                // If manager has no assigned categories, return no products
                 products = [];
             }
 
-            // Transform image_data to base64 URL for frontend display
             const productsWithImages = products.map(product => {
                 let imageUrl = null;
                 if (product.image_data && product.image_mime_type) {
                     imageUrl = `data:${product.image_mime_type};base64,${product.image_data.toString('base64')}`;
                 }
 
-                // Parse type_options and features from JSON string back to array/string if needed for frontend
                 let typeOptionsString = '';
                 try {
                     const parsed = JSON.parse(product.type_options);
                     typeOptionsString = Array.isArray(parsed) ? parsed.join(',') : '';
-                } catch (e) { /* ignore parse error, keep empty string */ }
+                } catch (e) { }
 
                 let featuresString = '';
                 try {
                     const parsed = JSON.parse(product.features);
                     featuresString = Array.isArray(parsed) ? parsed.join(',') : '';
-                } catch (e) { /* ignore parse error, keep empty string */ }
+                } catch (e) { }
 
                 return {
                     ...product,
-                    image_data: undefined, // Remove raw BLOB data from response
-                    image_mime_type: undefined, // Remove raw MIME type from response
-                    image_url: imageUrl, // Add base64 URL for the first image
-                    // Provide all image IDs for the edit modal to track existing images
+                    image_data: undefined,
+                    image_mime_type: undefined,
+                    image_url: imageUrl,
                     existing_image_ids: product.image_ids_csv ? product.image_ids_csv.split(',').map(Number) : [],
-                    type_options: typeOptionsString, // Convert back to comma-separated string
-                    features: featuresString // Convert back to comma-separated string
+                    type_options: typeOptionsString,
+                    features: featuresString
                 };
             });
 
@@ -452,18 +428,15 @@ const controller = {
 
     getDashboardData: async (req, res) => {
         try {
-   
-            // 3. Fetch Audit Logs
+
             const auditLogStmt = OccasioDB.prepare("SELECT * FROM audit_logs ORDER BY timestamp DESC");
             const auditLogs = auditLogStmt.all();
 
-            // 4. Send all data in a single JSON response
             res.status(200).json(
                 auditLogs
             );
 
         } catch (error) {
-            // Log the error using the audit logger for tracking
             auditLogger({
                 eventType: 'Access Control',
                 userId: req.user.id,
