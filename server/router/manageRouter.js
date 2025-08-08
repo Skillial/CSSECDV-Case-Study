@@ -11,6 +11,6 @@ router.get('/get/product/image/:id', ensureManager, controller.getProductImage);
 router.get('/get/orders', ensureManager, controller.getOrders);
 router.post('/update/status/:id', ensureManager, controller.updateOrderStatus);
 router.get('/get/categories', ensureManager, controller.getCategories);
-router.get('/get/dashboard', ensureAdmin, controller.getDashboardData);
+router.get('/get/audit', ensureAdmin, controller.getAuditLogs);
 
 module.exports = router;

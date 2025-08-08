@@ -426,7 +426,7 @@ const controller = {
         }
     },
 
-    getDashboardData: async (req, res) => {
+    getAuditLogs: async (req, res) => {
         try {
 
             const auditLogStmt = OccasioDB.prepare("SELECT * FROM audit_logs ORDER BY timestamp DESC");

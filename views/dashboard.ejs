@@ -739,7 +739,7 @@
                     }
                     transactions = await transactionsResponse.json();
 
-                    const auditLogsResponse = await fetch('/get/dashboard');
+                    const auditLogsResponse = await fetch('/get/audit');
                     if (!auditLogsResponse.ok) {
                         throw new Error(`Failed to fetch audit logs: ${auditLogsResponse.statusText}`);
                     }
