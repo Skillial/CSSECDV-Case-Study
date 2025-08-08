@@ -967,8 +967,8 @@
                     }
                 });
 
-                const serverErrorMessages = <% - JSON.stringify(error_messages || []) %>;
-                const serverSuccessMessages = <% - JSON.stringify(success_messages || []) %>;
+                const serverErrorMessages = <%- JSON.stringify(error_messages || []) %>;
+                const serverSuccessMessages = <%- JSON.stringify(success_messages || []) %>;
 
                 if (serverErrorMessages.length > 0) {
                     displayMessage(editProfileErrorMessageDisplay, serverErrorMessages, 'error');
