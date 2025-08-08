@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <link rel="icon" href="/img/logo.png" type="image/png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
@@ -70,7 +71,7 @@
 
         <div class="md:w-1/2 p-6 hidden md:flex items-center justify-center bg-white">
             <img class="rounded-2xl max-w-full h-auto object-cover shadow-lg transform hover:scale-105 transition duration-300"
-                src="https://placehold.co/600x400/F0F0F0/333333?text=Welcome!"
+                src="img/logo.png"
                 onerror="this.onerror=null;this.src='https://placehold.co/600x400/F8F8F8/333333?text=Welcome!';"
                 alt="Abstract design or company logo">
         </div>
@@ -278,7 +279,7 @@
             <% if (error_messages && error_messages.length > 0) { %>
                 showUnifiedErrors([
                     <% error_messages.forEach(function (msg, index) { %>
-                    `<%= msg.replace(/` / g, '\\`') %>`<%= (index < error_messages.length - 1) ? ',' : '' %>
+                    `<%= msg.replace(/`/g, '\\`') %>`<%= (index < error_messages.length - 1) ? ',' : '' %>
                     <% }); %>
                 ]);
             <% } else { %>
