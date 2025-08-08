@@ -355,7 +355,7 @@
                 }
 
             <% if (success_messages && success_messages.length > 0) { %>
-                    showToast(`<%= success_messages[0].replace(/` / g, '\\`') %> `, false);
+                    showToast(`<%= success_messages[0].replace(/`/g, '\\`') %> `, false);
             <% } %>
 
             <% if (error_messages && error_messages.length > 0) { %>

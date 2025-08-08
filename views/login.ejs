@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login </title>
+    <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -37,6 +37,7 @@
                         class="w-full p-3 pr-10 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition duration-200 text-gray-800"
                         type="text" name="username" placeholder="Username" aria-label="username" required minlength="3"
                         maxlength="20">
+
                 </div>
 
                 <div class="relative">
@@ -106,34 +107,38 @@
             }
 
             <% if (error_messages && error_messages.length > 0) { %>
-                showUnifiedMessage(`<%= error_messages[0].replace(/` / g, '\\`') %> `, 'error');
+                showUnifiedMessage(`<%= error_messages[0].replace(/`/g, '\\`') %> `, 'error');
             <% } else if (success_messages && success_messages.length > 0) { %>
                 showUnifiedMessage(`<%= success_messages[0].replace(/`/g, '\\`') %>`, 'success');
             <% } else { %>
                 hideUnifiedMessage();
             <% } %>
 
+            // Hide messages when user starts typing in username or password fields
             usernameInput.addEventListener('input', hideUnifiedMessage);
             passwordInput.addEventListener('input', hideUnifiedMessage);
 
+            // Client-side validation on form submission
             loginForm.addEventListener('submit', function(event) {
                 let clientErrors = [];
                 const username = usernameInput.value.trim();
                 const password = passwordInput.value;
 
+                // Username length validation
                 if (username.length < 3 || username.length > 20) {
                     clientErrors.push('Username must be between 3 and 20 characters long.');
                 }
 
+                // Password length validation
                 if (password.length < 8 || password.length > 50) {
                     clientErrors.push('Password must be between 8 and 50 characters long.');
                 }
 
                 if (clientErrors.length > 0) {
-                    event.preventDefault(); 
+                    event.preventDefault(); // Stop form submission
                     showUnifiedMessage(clientErrors.join('<br>'), 'error');
                 } else {
-                    hideUnifiedMessage(); 
+                    hideUnifiedMessage(); // Clear any previous errors
                 }
             });
         });
